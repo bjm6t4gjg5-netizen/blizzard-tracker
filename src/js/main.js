@@ -36,8 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   initAllCharts();
   renderPctScenariosV5();
-  initSimulators();
-  startAutoRefresh();
+    startAutoRefresh();
   doRefresh();
   setInterval(updateClock, 1000);
   setInterval(updateRefreshLabel, 5000);
@@ -514,85 +513,7 @@ function initElevChart(){
 // ═══════════════════════════════════════════════════════════
 // SIMULATOR — updates charts too
 // ═══════════════════════════════════════════════════════════
-function initSimulators(){ REG.forEach(r=>initSim(r.id)); }
-function initSim(id){
-  simState[id]={pct:0,playing:false};
-  const slider=document.getElementById(id+'-sim-slider');
-  const play=document.getElementById(id+'-sim-play');
-  const reset=document.getElementById(id+'-sim-reset');
-  if(!slider) return;
-  const r=REG.find(r=>r.id===id);
-  slider.addEventListener('input',e=>{
-    const livePct=STATE[id]?.pct||0;
-    const val=Math.max(livePct,+e.target.value);
-    simState[id].pct=val; slider.value=val;
-    updateSliderGradient(slider,val,r?.color);
-    updateSimDisplay(id,val);
-    updateSimOnChart(id,val);
-  });
-  play?.addEventListener('click',()=>toggleSimPlay(id));
-  reset?.addEventListener('click',()=>{
-    clearInterval(simIntervals[id]);simState[id].playing=false;if(play)play.textContent='▶ Play';
-    simState[id].pct=STATE[id]?.pct||0;slider.value=simState[id].pct;
-    updateSliderGradient(slider,simState[id].pct,r?.color);
-    updateSimDisplay(id,simState[id].pct);updateSimOnChart(id,simState[id].pct);
-  });
-}
-function toggleSimPlay(id){
-  const play=document.getElementById(id+'-sim-play'),r=REG.find(r=>r.id===id);
-  if(simState[id].playing){clearInterval(simIntervals[id]);simState[id].playing=false;if(play)play.textContent='▶ Play';}
-  else{
-    simState[id].playing=true;if(play)play.textContent='⏸ Pause';
-    simIntervals[id]=setInterval(()=>{
-      const livePct=STATE[id]?.pct||0;
-      simState[id].pct=Math.min(100,Math.max(livePct,simState[id].pct+.4));
-      const s=document.getElementById(id+'-sim-slider');
-      if(s){s.value=simState[id].pct;updateSliderGradient(s,simState[id].pct,r?.color);}
-      updateSimDisplay(id,simState[id].pct);updateSimOnChart(id,simState[id].pct);
-      if(simState[id].pct>=100){clearInterval(simIntervals[id]);simState[id].playing=false;if(play)play.textContent='▶ Play';}
-    },100);
-  }
-}
-function updateSliderGradient(slider,pct,color){ slider.style.background=`linear-gradient(to right,${color||'#007AFF'} ${pct}%,rgba(14,165,233,.15) ${pct}%)`; }
-
-function updateSimDisplay(id,pct){
-  const distMi=(pct/100)*TOTAL_MI; const goals=GOALS[id];
-  set(id+'-sim-pct',pct.toFixed(1)+'%'); set(id+'-sim-mi',distMi.toFixed(2)+' mi');
-  const rows=goals.scenarios.map(s=>{
-    const profile=s.flatPace?buildNonLinearProfile(goals,s.flatPace,100):buildGoalProfile(goals,100);
-    const atNow=profile.find(p=>p.mi>=distMi)?.sec||0;
-    const total=profile.at(-1)?.sec||0;
-    const elapsed=Math.round(atNow); const finish=Math.round(total);
-    return `<div class="sim-row"><span style="color:${s.color}">${s.emoji} ${s.label}</span><span style="font-family:var(--font-mono);font-size:12px">Elapsed: ${fmtHMS(elapsed)} · Finish: ${fmtHMS(finish)}</span></div>`;
-  }); const rowEl=document.getElementById(id+'-sim-rows'); if(rowEl) rowEl.innerHTML=rows.join('');
-  // on-track
-  const goalPt=buildGoalProfile(goals,100).find(p=>p.mi>=distMi); const goalSec=goalPt?.sec||0;
-  const scGoalPt=buildGoalProfile(goals,100).find(p=>p.mi>=distMi); const actual=scGoalPt?.sec||0;
-  const trackEl=document.getElementById(id+'-sim-track');
-  if(trackEl){if(pct<1){trackEl.textContent='Drag to simulate the race';trackEl.className='on-track-banner on-track-neutral';}else{const goalFinish=buildGoalProfile(goals,100).at(-1)?.sec||0;trackEl.textContent=`🎯 Projected finish: ${fmtHMS(Math.round(goalFinish))} (${goals.goalLabel})`;trackEl.className='on-track-banner on-track-neutral';}}
-}
-
 // Update chart to show sim position + projections from that point
-function updateSimOnChart(id,pct){
-  const ch=charts[id+'-pace']; if(!ch) return;
-  const goals=GOALS[id]; const distMi=(pct/100)*TOTAL_MI; if(distMi<.1) return;
-  // For each scenario, split at simPct: solid up to sim pos, dotted after
-  ch.data.datasets.forEach((ds,i)=>{ if(ds.label.includes('📍')||ds.label.includes('→')||ds.label.includes('sim')) ch.data.datasets.splice(i,1); });
-  ch.update('none');
-}
-
-function updateSimTrack(id){
-  const s=STATE[id]; if(!s||s.status!=='running') return;
-  const livePct=s.pct;
-  if(simState[id]&&simState[id].pct<livePct){
-    simState[id].pct=livePct;
-    const slider=document.getElementById(id+'-sim-slider');
-    const r=REG.find(r=>r.id===id);
-    if(slider){slider.value=livePct;updateSliderGradient(slider,livePct,r?.color);}
-    updateSimDisplay(id,livePct);
-  }
-}
-
 // ═══════════════════════════════════════════════════════════
 // MINI MAPS + FULL MAP
 // ═══════════════════════════════════════════════════════════
@@ -1128,6 +1049,25 @@ const _origSimRace = window.simRace;
 window.simRace = function(stage) {
   _origSimRace(stage);
   setTimeout(() => {
+    // Update all UI from new state
+    REG.forEach(r => {
+      const s = STATE[r.id];
+      if (s && s.status !== 'pre') {
+        // Build realistic pace history up to current point for chart
+        const goals = GOALS[r.id];
+        const pace  = s.elapsedSec / Math.max(s.distMi, 0.01);
+        // Synthesize pace history at key mile markers
+        s.paceHistory = [];
+        const profile = buildNonLinearProfile(goals, pace, 100);
+        profile.filter(p => p.mi > 0 && p.mi <= s.distMi).forEach(p => {
+          s.paceHistory.push({ mi: p.mi, elapsedSec: Math.round(p.sec) });
+        });
+        // Add actual current position
+        s.paceHistory.push({ mi: s.distMi, elapsedSec: s.elapsedSec });
+        computeETA(s, goals);
+      }
+      renderRunner(r.id);
+    });
     updateHeaderStatus();
     updateFamSpotETAs();
     updateFamMapMarkers();
