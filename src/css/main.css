@@ -711,3 +711,23 @@ main { flex: 1 0 auto; }
   box-shadow: var(--shadow-card);
 }
 .notif-promo-text { flex: 1; }
+
+/* ══ Dev Tab ══ */
+.dev-sub-tabs { display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:4px; }
+.dev-sub-tab { padding:7px 14px; border-radius:var(--radius-md); border:none; background:none; font-size:13px; font-weight:500; color:var(--text-tertiary); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.dev-sub-tab:hover { background:var(--fill-blue); color:var(--accent); }
+.dev-sub-tab.active { background:var(--blue); color:#fff; }
+.dev-panel { display:none; }
+.dev-panel.active { display:block; }
+
+/* ══ Runner stats ══ */
+.runner-stats-section { margin-bottom:14px; }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-bottom:12px; }
+.pr-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.pr-card-header { padding:8px 12px; background:var(--blue-xxlight); border-bottom:1px solid var(--separator); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; color:var(--text-tertiary); }
+.race-history-row { display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--separator); font-size:13px; }
+.race-history-row:last-child { border:none; }
+.race-history-date { font-size:10px; color:var(--text-muted); font-family:var(--font-mono); width:70px; flex-shrink:0; }
+.race-history-name { flex:1; font-weight:500; color:var(--text-primary); }
+.race-history-time { font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--accent); }
+.pr-badge { display:inline-block; font-size:9px; background:rgba(255,149,0,.15); color:var(--orange); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:700; }

@@ -11,6 +11,8 @@ import {
   fetchRunnerData, fmtHMS, fmtPace, parsePaceStr, fmtGoalTime, FIELD_CDF,
 } from '../data/runners.js';
 import { fetchWeather, getRaceDayHours, getCurrentHourIndex, extractHourData, getWeatherIcon, analyzeRaceImpact } from '../data/weather.js';
+import { loadRaces, computePRs, computeCareerTotals, timeToSec, fmtPaceFromSec, SAMPLE_RACES } from '../data/race-history.js';
+import { mountDevTab, unmountDevTab } from './dev-tab.js';
 
 const L = window.L;
 const Chart = window.Chart;
@@ -28,6 +30,9 @@ const GOALS = {};
 REG.forEach(r => { STATE[r.id] = makeRunnerState(r); GOALS[r.id] = loadGoals(r.id); });
 
 let fullMap=null, mapInited=false;
+// Expose globals for dev-tab.js
+window._devREG   = REG;
+window._devGOALS = GOALS;
 const miniMaps={}, markers={}, miniMarkers={};
 let wxLoaded=false, wxData=null;
 const charts={};
@@ -53,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPctScenariosV5();
     updateHeaderStatus();
     updateFamSpotETAs();
+    REG.forEach(r => renderRunnerStats(r.id));
   }, 200);
 });
 
@@ -576,6 +582,67 @@ function updateMarker(id,pct){
   if(s&&r) m.getPopup()?.setContent(`<b>${r.emoji} ${r.name}</b><br>${s.distMi.toFixed(2)} mi · ${fmtHMS(s.elapsedSec)}`);
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// RUNNER STATS — career history, PRs, total distance
+// ═══════════════════════════════════════════════════════════
+function renderRunnerStats(id) {
+  const el = document.getElementById('stats-section-' + id); if (!el) return;
+  const r = REG.find(r => r.id === id); if (!r) return;
+  const races  = loadRaces(id).sort((a,b) => b.date.localeCompare(a.date));
+  if (!races.length) { el.innerHTML=''; return; }
+  const totals = computeCareerTotals(races);
+  const prs    = computePRs(races);
+
+  const prRow = (label, r) => r ? `
+    <div style="padding:9px 12px;border-bottom:1px solid var(--separator);display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary)">${label}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text-primary);margin-top:1px">${r.name}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${r.date} · ${r.location||''}</div>
+      </div>
+      <div style="font-size:20px;font-weight:700;color:${r.color || 'var(--blue)'};font-family:var(--font-mono)">${r.time}</div>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🏅 Career Stats & Personal Bests</div>
+        <span style="font-size:10px;color:var(--text-muted);margin-left:auto">${races.length} races tracked</span>
+      </div>
+      <!-- Career totals -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));border-bottom:1px solid var(--separator)">
+        ${[
+          ['Total Races', totals.totalRaces],
+          ['Total Miles', totals.totalMiles.toLocaleString()],
+          ['Marathons',   totals.marathons],
+          ['Halfs',       totals.halfs],
+        ].map(([lbl,val])=>`<div style="padding:10px 14px;border-right:1px solid var(--separator)">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary)">${lbl}</div>
+          <div style="font-size:22px;font-weight:700;color:${r.color};margin-top:2px">${val}</div>
+        </div>`).join('')}
+      </div>
+      <!-- PRs -->
+      <div style="border-bottom:1px solid var(--separator)">
+        ${prRow('Marathon PR', prs.marathon ? {...prs.marathon, color: r.color} : null)}
+        ${prRow('Half Marathon PR', prs.half ? {...prs.half, color: r.color} : null)}
+      </div>
+      <!-- Recent race history -->
+      <div style="padding:8px 12px 4px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-tertiary);margin-bottom:6px">Recent Races</div>
+        ${races.slice(0,5).map(race => {
+          const pr = Object.values(prs).some(p => p?.id === race.id);
+          return `<div class="race-history-row">
+            <span class="race-history-date">${race.date.slice(0,7)}</span>
+            <span class="race-history-name">${pr?'<span class="pr-badge">PR</span>':''}${race.name}</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:980px;background:var(--fill-blue);color:var(--accent);margin-right:6px">${race.type}</span>
+            <span class="race-history-time">${race.time}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
 // ═══════════════════════════════════════════════════════════
 // WEATHER
 // ═══════════════════════════════════════════════════════════
@@ -683,6 +750,9 @@ window.devLogin = function() {
     document.getElementById('dev-header-tools').style.display = 'flex';
     document.getElementById('dev-footer-link').textContent = '🛠 Developer (active)';
     document.getElementById('dev-footer-link').style.color = 'var(--orange)';
+    // Mount dev database tab
+    window._devREG = REG; window._devGOALS = GOALS;
+    mountDevTab(REG, GOALS);
     notify('🛠 Developer mode ON');
   } else {
     document.getElementById('dev-err').style.display = 'block';
@@ -694,7 +764,9 @@ window.devLogout = function() {
   document.getElementById('dev-header-tools').style.display = 'none';
   document.getElementById('dev-footer-link').textContent = '🛠 Developer';
   document.getElementById('dev-footer-link').style.color = '';
-  simRace('pre'); // reset to pre-race state
+  unmountDevTab();
+  simRace('pre');
+  showTab('family');
   notify('Developer mode off');
 };
 
