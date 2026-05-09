@@ -657,59 +657,58 @@ function updateMarker(id,pct){
 // ═══════════════════════════════════════════════════════════
 function renderRunnerStats(id) {
   const el = document.getElementById('stats-section-' + id); if (!el) return;
-  const r = REG.find(r => r.id === id); if (!r) return;
+  const r  = REG.find(r => r.id === id); if (!r) return;
   const races  = loadRaces(id).sort((a,b) => b.date.localeCompare(a.date));
-  if (!races.length) { el.innerHTML=''; return; }
+  if (!races.length) { el.innerHTML = ''; return; }
   const totals = computeCareerTotals(races);
   const prs    = computePRs(races);
+  const color  = r.color || '#007AFF';
 
-  const prRow = (label, r) => r ? `
-    <div style="padding:9px 12px;border-bottom:1px solid var(--separator);display:flex;align-items:center;gap:10px">
-      <div style="flex:1">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary)">${label}</div>
-        <div style="font-size:13px;font-weight:500;color:var(--text-primary);margin-top:1px">${r.name}</div>
-        <div style="font-size:10px;color:var(--text-muted)">${r.date} · ${r.location||''}</div>
-      </div>
-      <div style="font-size:20px;font-weight:700;color:${r.color || 'var(--blue)'};font-family:var(--font-mono)">${r.time}</div>
-    </div>` : '';
+  // Career stat pill
+  const pill = (lbl, val) => `<div style="text-align:center;padding:8px 10px">
+    <div style="font-size:18px;font-weight:700;color:${color};letter-spacing:-0.3px">${val}</div>
+    <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-tertiary);margin-top:2px">${lbl}</div>
+  </div>`;
 
-  el.innerHTML = `
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">🏅 Career Stats & Personal Bests</div>
-        <span style="font-size:10px;color:var(--text-muted);margin-left:auto">${races.length} races tracked</span>
-      </div>
-      <!-- Career totals -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));border-bottom:1px solid var(--separator)">
-        ${[
-          ['Total Races', totals.totalRaces],
-          ['Total Miles', totals.totalMiles.toLocaleString()],
-          ['Marathons',   totals.marathons],
-          ['Halfs',       totals.halfs],
-        ].map(([lbl,val])=>`<div style="padding:10px 14px;border-right:1px solid var(--separator)">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary)">${lbl}</div>
-          <div style="font-size:22px;font-weight:700;color:${r.color};margin-top:2px">${val}</div>
-        </div>`).join('')}
-      </div>
-      <!-- PRs -->
-      <div style="border-bottom:1px solid var(--separator)">
-        ${prRow('Marathon PR', prs.marathon ? {...prs.marathon, color: r.color} : null)}
-        ${prRow('Half Marathon PR', prs.half ? {...prs.half, color: r.color} : null)}
-      </div>
-      <!-- Recent race history -->
-      <div style="padding:8px 12px 4px">
-        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-tertiary);margin-bottom:6px">Recent Races</div>
-        ${races.slice(0,5).map(race => {
-          const pr = Object.values(prs).some(p => p?.id === race.id);
-          return `<div class="race-history-row">
-            <span class="race-history-date">${race.date.slice(0,7)}</span>
-            <span class="race-history-name">${pr?'<span class="pr-badge">PR</span>':''}${race.name}</span>
-            <span style="font-size:10px;padding:1px 6px;border-radius:980px;background:var(--fill-blue);color:var(--accent);margin-right:6px">${race.type}</span>
-            <span class="race-history-time">${race.time}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+  // PR row
+  const prRow = (lbl, race) => race ? `<div style="display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--separator)">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-tertiary)">${lbl}</div>
+      <div style="font-size:12px;font-weight:500;color:var(--text-primary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${race.name}</div>
+      <div style="font-size:10px;color:var(--text-muted)">${race.date.slice(0,7)} · ${race.location||''}</div>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:${color};font-family:var(--font-mono);flex-shrink:0">${race.time}</div>
+  </div>` : '';
+
+  el.innerHTML = `<div class="card" style="margin-top:14px">
+    <div class="card-header" style="background:${color}10;border-bottom:1px solid ${color}20">
+      <div class="card-title" style="color:${color}">🏅 Career Stats</div>
+      <span style="font-size:10px;color:var(--text-muted);margin-left:auto">${races.length} races</span>
+    </div>
+    <!-- Totals row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--separator)">
+      ${pill('Races', totals.totalRaces)}
+      ${pill('Miles', totals.totalMiles.toLocaleString())}
+      ${pill('Marathons', totals.marathons)}
+      ${pill('Halfs', totals.halfs)}
+    </div>
+    <!-- PRs -->
+    ${prRow('Marathon PR', prs.marathon ? {...prs.marathon, color} : null)}
+    ${prRow('Half Marathon PR', prs.half ? {...prs.half, color} : null)}
+    <!-- Recent races -->
+    <div style="padding:6px 0 2px">
+      <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-tertiary);padding:4px 14px 6px">Recent</div>
+      ${races.slice(0,5).map(race => {
+        const isPR = Object.values(prs).some(p => p?.id === race.id);
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 14px;border-top:1px solid var(--separator)">
+          <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);width:58px;flex-shrink:0">${race.date.slice(0,7)}</span>
+          <span style="flex:1;font-size:12px;color:var(--text-primary);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isPR?'<span style="font-size:9px;background:rgba(255,149,0,.15);color:#b36200;padding:1px 4px;border-radius:4px;margin-right:4px;font-weight:600">PR</span>':''}${race.name}</span>
+          <span style="font-size:10px;padding:1px 5px;border-radius:980px;background:${color}15;color:${color};flex-shrink:0">${race.type}</span>
+          <span style="font-size:12px;font-weight:600;color:${color};font-family:var(--font-mono);flex-shrink:0">${race.time}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
