@@ -68,11 +68,13 @@ export const COURSE = [
   { lat: 40.6599, lng: -73.9714, mi: 3.42 },
   { lat: 40.6590, lng: -73.9709, mi: 3.53 },
 
-  // Southern tip out-and-back turnaround ~mile 3.6
-  { lat: 40.6581, lng: -73.9703, mi: 3.64 },
-  { lat: 40.6590, lng: -73.9709, mi: 3.74 },
-  { lat: 40.6599, lng: -73.9714, mi: 3.85 },
-  { lat: 40.6609, lng: -73.9715, mi: 3.96 },
+  // Southern section loop — stays inside Prospect Park
+  { lat: 40.6590, lng: -73.9706, mi: 3.36 },
+  { lat: 40.6577, lng: -73.9698, mi: 3.48 },
+  { lat: 40.6568, lng: -73.9690, mi: 3.58 }, // southern tip, Machate Circle area
+  { lat: 40.6577, lng: -73.9698, mi: 3.68 },
+  { lat: 40.6590, lng: -73.9706, mi: 3.79 },
+  { lat: 40.6602, lng: -73.9712, mi: 3.90 },
 
   // Head east then north through Southern section
   { lat: 40.6617, lng: -73.9708, mi: 4.06 },

@@ -172,6 +172,13 @@
 
 <!-- ══ FAMILY HQ (default first tab) ══ -->
 <div class="pane active" id="pane-family">
+
+  <!-- Celebrate banner -->
+  <div class="celebrate-banner gap-md">
+    <div class="celebrate-title">💙 Team Blizzard · RBC Brooklyn Half 2026 ⚡</div>
+    <div class="celebrate-sub">Saturday, May 16 · 7:00 AM ET · Brooklyn Museum → Coney Island · 13.1 miles</div>
+  </div>
+
   <div class="fam-hero gap-md">
     <div class="fam-hero-left">
       <div class="fam-cd-label">Race starts in</div>
@@ -184,7 +191,8 @@
         <div class="cd-sep">:</div>
         <div class="cd-unit"><div class="cd-num" id="fam-cd-s">—</div><div class="cd-lbl">Sec</div></div>
       </div>
-      <div class="fam-hero-race">RBC Brooklyn Half · Brooklyn Museum → Coney Island · 13.1 miles</div>
+      <div class="fam-hero-race" style="margin-top:10px;font-size:12px;color:var(--text-secondary)">🏁 Brooklyn Museum · Eastern Pkwy & Washington Ave</div>
+      <div class="fam-hero-race">🏆 Coney Island Boardwalk</div>
     </div>
     <div class="fam-hero-right">
       <div class="fam-photo-row">
@@ -195,9 +203,10 @@
     </div>
   </div>
 
+  <!-- Runner status cards -->
   <div class="fam-grid gap-md">
     <div class="mini-card" style="border-top:3px solid #007AFF">
-      <div class="mini-runner-name" style="color:#007AFF">⚡ Catherine</div>
+      <div class="mini-runner-name" style="color:#007AFF">💙 Catherine Blizzard</div>
       <div class="mini-row"><span class="mini-key">Status</span><span id="fam-gf-st" class="mini-val" style="color:#007AFF">Pre-race</span></div>
       <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-gf-d" class="mini-val">—</span></div>
       <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-gf-e" class="mini-val">—</span></div>
@@ -206,7 +215,7 @@
     </div>
     <div class="vs-center"><div class="vs-text">VS</div></div>
     <div class="mini-card" style="border-top:3px solid #5856D6">
-      <div class="mini-runner-name" style="color:#5856D6">💜 Helaine</div>
+      <div class="mini-runner-name" style="color:#5856D6">⚡ Helaine Blizzard</div>
       <div class="mini-row"><span class="mini-key">Status</span><span id="fam-mom-st" class="mini-val" style="color:#5856D6">Pre-race</span></div>
       <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-mom-d" class="mini-val">—</span></div>
       <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-mom-e" class="mini-val">—</span></div>
@@ -215,13 +224,50 @@
     </div>
   </div>
 
-  <div class="lead-banner gap-md">
-    <div class="lead-title" id="lead-banner-text">Team Blizzard · May 16 · 7:00 AM ET</div>
-    <div class="lead-sub">Brooklyn Museum → Prospect Park loop → Ocean Pkwy → Coney Island · 13.1 miles</div>
+  <!-- Travel / hometown cards -->
+  <div class="travel-grid gap-md">
+    <div class="travel-card">
+      <div class="travel-icon">💙</div>
+      <div class="travel-name">Catherine Blizzard</div>
+      <div class="travel-detail">
+        📍 <strong>461 Central Park West</strong>, New York, NY<br>
+        🚇 Subway to Brooklyn Museum start<br>
+        🎯 Goal: Sub-90 min · Corral 5
+      </div>
+      <div class="travel-badge">🏅 Berlin · Boston · BKH 2023</div>
+    </div>
+    <div class="travel-card">
+      <div class="travel-icon">⚡</div>
+      <div class="travel-name">Helaine Blizzard</div>
+      <div class="travel-detail">
+        ✈️ Traveling from <strong>Dallas, TX</strong><br>
+        🏨 Staying in Brooklyn for race weekend<br>
+        🎯 Goal: Sub-2:10 · Corral 7
+      </div>
+      <div class="travel-badge">🏅 Boston · Eugene · Dallas</div>
+    </div>
   </div>
 
-  <div class="spot-list">
-    <div class="card-header"><div class="card-title">Best spectator spots 📍</div></div>
+  <!-- Notification button -->
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn btn-ghost btn-sm" onclick="openNotifModal()" style="gap:6px">🔔 Race Notifications</button>
+  </div>
+
+  <!-- Live map on Family HQ -->
+  <div class="card gap-md">
+    <div class="card-header">
+      <div class="card-title">Live Course Map · 2026 Official Route</div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-tertiary)"><span style="width:16px;height:2.5px;background:#007AFF;display:inline-block;border-radius:2px"></span>Course</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-tertiary)"><span style="width:8px;height:8px;border-radius:50%;background:#FF9500;display:inline-block"></span>Key spots</span>
+      </div>
+    </div>
+    <div id="fam-map"></div>
+  </div>
+
+  <!-- Spectator spots with ETAs -->
+  <div class="spot-list gap-md">
+    <div class="card-header"><div class="card-title">Best spectator spots 📍 · Catherine ETA</div></div>
     <div class="spot-row"><div class="spot-badge badge-blue">~1.5mi</div><div><div class="spot-name">Grand Army Plaza</div><div class="spot-detail">2/3 to Grand Army Plaza · runners pass the arch</div></div><div id="fam-spot-0" class="spot-eta"></div></div>
     <div class="spot-row"><div class="spot-badge badge-blue">~3.1mi</div><div><div class="spot-name">Parkside Ave — park entry</div><div class="spot-detail">Q/B to Parkside Ave</div></div><div id="fam-spot-1" class="spot-eta"></div></div>
     <div class="spot-row"><div class="spot-badge badge-blue">~6.5mi</div><div><div class="spot-name">Prospect Park SW exit</div><div class="spot-detail">F to 15th St–Prospect Park</div></div><div id="fam-spot-2" class="spot-eta"></div></div>
@@ -229,6 +275,7 @@
     <div class="spot-row"><div class="spot-badge badge-blue">~11.2mi</div><div><div class="spot-name">Ocean Pkwy / Neptune Ave</div><div class="spot-detail">D/N to Bay Pkwy</div></div><div id="fam-spot-4" class="spot-eta"></div></div>
     <div class="spot-row"><div class="spot-badge badge-orange">FINISH</div><div><div class="spot-name">Coney Island Boardwalk 🏆</div><div class="spot-detail">D/N/F/Q to Coney Island–Stillwell Ave</div></div><div id="fam-spot-5" class="spot-eta"></div></div>
   </div>
+
 </div>
 
 <!-- ══ CATHERINE ══ -->
@@ -238,7 +285,7 @@
     <img src="/photo-running.jpeg" class="runner-hero-bg" alt="" aria-hidden="true" style="object-position:center 40%">
     <div class="runner-hero-content">
       <div>
-        <div class="runner-hero-name">⚡ Catherine Blizzard</div>
+        <div class="runner-hero-name">💙 Catherine Blizzard</div>
         <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · RMGBEVSK · Sub-90 goal</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
@@ -345,12 +392,13 @@
   <div class="runner-hero-section gap-md" style="background:linear-gradient(135deg,#1e1060,#3b1d8a,#5856D6)">
     <div class="runner-hero-content">
       <div>
-        <div class="runner-hero-name">💜 Helaine Blizzard</div>
+        <div class="runner-hero-name">⚡ Helaine Blizzard</div>
         <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · RRM2PLD3</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
         <span class="runner-hero-badge">🏅 Boston ✓</span>
         <span class="runner-hero-badge">🏅 Eugene ✓</span>
+        <span class="runner-hero-badge">🏅 Dallas ✓</span>
         <button class="runner-settings-btn" onclick="openRunnerSettings('mom')">⚙ Settings</button>
       </div>
     </div>
@@ -497,6 +545,10 @@
         <div class="gender-row"><span style="color:#5856D6">♂ Men</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:46%;background:rgba(88,86,214,.5)"></div></div><span>46%</span></div>
         <div class="gender-row"><span style="color:#34C759">⚥ NB</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:2%;background:rgba(52,199,89,.5)"></div></div><span>2%</span></div>
         <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--separator)">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary);margin-bottom:8px">⚡ Helaine · Medians by Age Group</div>
+        <div id="helaine-age-groups"></div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--separator)">
           <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary);margin-bottom:8px">Women's Medians by Age Group</div>
           <div id="women-age-groups"></div>
         </div>

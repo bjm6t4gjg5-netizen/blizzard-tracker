@@ -8,8 +8,8 @@ export const RACE_START = new Date('2026-05-16T07:00:00');
 
 // ── Default registry ─────────────────────────────────────
 const DEFAULT_REGISTRY = [
-  { id:'gf',  name:'Catherine Blizzard', trackId:'RMGBEVSK', emoji:'⚡', color:'#007AFF', fixed:true },
-  { id:'mom', name:'Helaine Blizzard',   trackId:'RRM2PLD3', emoji:'💜', color:'#5856D6', fixed:true },
+  { id:'gf',  name:'Catherine Blizzard', trackId:'RMGBEVSK', emoji:'💙', color:'#007AFF', fixed:true },
+  { id:'mom', name:'Helaine Blizzard',   trackId:'RRM2PLD3', emoji:'⚡', color:'#5856D6', fixed:true },
 ];
 
 export function loadRegistry() {

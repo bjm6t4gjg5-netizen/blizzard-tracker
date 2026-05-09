@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildPanes();
   renderAll();
   initAllCharts();
-  renderPctScenarios();
+  renderPctScenariosV5();
   initSimulators();
   startAutoRefresh();
   doRefresh();
@@ -62,7 +62,7 @@ function buildTabs() {
   const add=document.createElement('div'); add.className='tab-add-btn'; add.textContent='⊕'; add.title='Add runner'; add.onclick=openGlobalSettings; bar.appendChild(add);
   setupDragDrop();
 }
-const TAB_META = { gf:'⚡ Catherine', mom:'💜 Helaine', family:'🏠 Family HQ', map:'🗺 Live Map', weather:'🌤 Weather', stats:'📊 Stats' };
+const TAB_META = { gf:'💙 Catherine', mom:'⚡ Helaine', family:'🏠 Family HQ', map:'🗺 Live Map', weather:'🌤 Weather', stats:'📊 Stats' };
 function makeTab(id) {
   const r=REG.find(r=>r.id===id);
   const label=TAB_META[id]||`${r?.emoji||'🏃'} ${r?.name?.split(' ')[0]||id}`;
@@ -926,7 +926,7 @@ window.saveRunnerSettings = function() {
   const dob    = document.getElementById('rs-dob')?.value;
   if (gender || dob) savePersonalInfo(id, { gender: gender||'F', dob: dob||'' });
   _origSaveRunnerSettings();
-  renderAgeGroups();
+  renderAgeGroups(); renderHelainerStats();
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -935,7 +935,7 @@ window.saveRunnerSettings = function() {
 const _patchedRenderRunner = renderRunner;
 // Patch in header status updates after each render
 const origRenderAll = renderAll;
-function patchedRenderAll() { origRenderAll(); updateHeaderStatus(); updateFamSpotETAs(); renderAgeGroups(); }
+function patchedRenderAll() { origRenderAll(); updateHeaderStatus(); updateFamSpotETAs(); renderAgeGroups(); renderHelainerStats(); }
 
 function updateHeaderStatus() {
   ['gf','mom'].forEach(id => {
@@ -950,7 +950,354 @@ function updateHeaderStatus() {
 // Patch the doRefresh to also update header
 const origDoRefresh = window.manualRefresh;
 document.addEventListener('DOMContentLoaded', () => {
-  renderAgeGroups();
+  renderAgeGroups(); renderHelainerStats();
   // After initial render, update header
   setTimeout(() => { updateHeaderStatus(); updateFamSpotETAs(); }, 500);
 });
+
+// ═══════════════════════════════════════════════════════════
+// v5: TOUR / ONBOARDING
+// ═══════════════════════════════════════════════════════════
+const TOUR_STEPS = [
+  {
+    step: 1, title: "Welcome to Blizzard Tracker! 👋",
+    body: "This is your race day command center for Catherine and Helaine at the RBC Brooklyn Half 2026. Let me show you around in 30 seconds.",
+    highlight: "🏠 Family HQ is your home dashboard — live stats, map, and spectator spots all in one place.",
+    action: null,
+  },
+  {
+    step: 2, title: "The tab bar 🗂",
+    body: "Tap any tab to switch views. You can drag tabs to reorder them however you like. The ⊕ button adds a new runner.",
+    highlight: "👉 Try dragging the '⚡ Catherine' tab to a different position right now.",
+    action: () => showTab('gf'),
+  },
+  {
+    step: 3, title: "Live tracking ⚡",
+    body: "Catherine's page shows her live distance, pace, and predicted finish time. The pace chart shows her goal line vs scenarios.",
+    highlight: "🎯 The red dashed line = Sub-90 goal. Click legend items to show/hide scenarios.",
+    action: () => showTab('gf'),
+  },
+  {
+    step: 4, title: "The Simulator 🎮",
+    body: "Drag the simulator slider to preview any point in the race. Let's simulate mile 6 so you can see what race day looks like!",
+    highlight: "⬇️ Drag the slider below to see live predictions update.",
+    action: () => { showTab('gf'); window.simRace && simRace('park'); },
+  },
+  {
+    step: 5, title: "Runner Settings ⚙️",
+    body: "Each runner has a settings panel where you change their goal time, milestone paces, gender, and date of birth for accurate age-group stats.",
+    highlight: "👉 Click '⚙ Settings' in Catherine's hero section to try it.",
+    action: () => { showTab('gf'); },
+  },
+  {
+    step: 6, title: "Adding a runner ➕",
+    body: "Tap the ⊕ button in the tab bar to add any runner with an RTRT tracker ID — family, friends, pacers, anyone!",
+    highlight: "You'll need their bib number or RTRT ID from the official tracking link.",
+    action: () => openGlobalSettings(),
+  },
+  {
+    step: 7, title: "Race Day Notifications 🔔",
+    body: "Enable push notifications to get alerted at milestones — 25%, 50%, 75%, and the finish line. Set your preferences below.",
+    highlight: "Allow notifications when your browser asks — so you don't miss a thing on race day!",
+    action: () => { showTab('family'); },
+  },
+  {
+    step: 8, title: "You're all set! 🎉",
+    body: "Race day is May 16 at 7:00 AM ET. Keep this page open on your phone or add it to your home screen as an app for the best experience.",
+    highlight: "📱 iPhone: Safari → Share → 'Add to Home Screen'. iPad works too!",
+    action: () => { showTab('family'); window.simRace && simRace('pre'); },
+  },
+];
+
+let tourStep = 0;
+let tourActive = false;
+
+function startTour() {
+  tourStep = 0;
+  tourActive = true;
+  renderTourStep();
+}
+
+function renderTourStep() {
+  const existing = document.getElementById('tour-overlay');
+  if (existing) existing.remove();
+  if (!tourActive || tourStep >= TOUR_STEPS.length) { endTour(); return; }
+
+  const s = TOUR_STEPS[tourStep];
+  if (s.action) s.action();
+
+  const el = document.createElement('div');
+  el.className = 'tour-overlay'; el.id = 'tour-overlay';
+  el.innerHTML = `
+    <div class="tour-card">
+      <div class="tour-step-pill">Step ${s.step} of ${TOUR_STEPS.length}</div>
+      <div class="tour-title">${s.title}</div>
+      <div class="tour-body">${s.body}</div>
+      <div class="tour-highlight">${s.highlight}</div>
+      <div class="tour-footer">
+        <div class="tour-dots">${TOUR_STEPS.map((_,i)=>`<div class="tour-dot${i===tourStep?' active':''}"></div>`).join('')}</div>
+        ${tourStep > 0 ? `<button class="btn btn-ghost btn-sm" onclick="tourPrev()">← Back</button>` : ''}
+        ${tourStep < TOUR_STEPS.length - 1
+          ? `<button class="btn btn-sm" onclick="tourNext()">Next →</button>`
+          : `<button class="btn btn-sm btn-success" onclick="endTour()">🎉 Let's go!</button>`}
+        <button class="btn btn-ghost btn-sm" onclick="endTour()" style="color:var(--text-muted)">Skip</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+window.tourNext = function() { tourStep++; renderTourStep(); };
+window.tourPrev = function() { tourStep = Math.max(0, tourStep-1); renderTourStep(); };
+window.endTour  = function() {
+  tourActive = false;
+  document.getElementById('tour-overlay')?.remove();
+  localStorage.setItem('blizzard_tour_done', '1');
+};
+
+// Auto-start tour on first visit
+document.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem('blizzard_tour_done')) {
+    setTimeout(startTour, 1500);
+  }
+});
+
+// Tour info button always available
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.createElement('button');
+  btn.className = 'tour-info-btn'; btn.title = 'App guide / tour'; btn.textContent = '?';
+  btn.onclick = startTour;
+  document.body.appendChild(btn);
+});
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATION PREFERENCES
+// ═══════════════════════════════════════════════════════════
+const NOTIF_PREFS_KEY = 'blizzard_notif_prefs';
+const DEFAULT_NOTIF_PREFS = {
+  milestone25: true, milestone50: true, milestone75: true,
+  milestone90: true, finish: true, spectator: true,
+};
+
+function loadNotifPrefs() {
+  try { const s = localStorage.getItem(NOTIF_PREFS_KEY); if (s) return {...DEFAULT_NOTIF_PREFS,...JSON.parse(s)}; } catch {}
+  return {...DEFAULT_NOTIF_PREFS};
+}
+function saveNotifPrefs(prefs) { localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs)); }
+
+window.openNotifModal = function() {
+  const existing = document.getElementById('notif-modal');
+  if (existing) { existing.classList.add('open'); return; }
+  const prefs = loadNotifPrefs();
+  const defs = [
+    { key:'milestone25', label:'📍 25% complete (mile ~3)' },
+    { key:'milestone50', label:'📍 Halfway! (mile ~6.5)' },
+    { key:'milestone75', label:'📍 75% done (mile ~10)' },
+    { key:'milestone90', label:'📍 Almost there! (mile ~12)' },
+    { key:'finish',      label:'🏆 Finish line crossed' },
+    { key:'spectator',   label:'⏱ Spectator spot ETAs (when running near)' },
+  ];
+  const m = document.createElement('div');
+  m.className = 'modal-overlay open'; m.id = 'notif-modal';
+  m.innerHTML = `<div class="modal-sheet" style="position:relative;max-width:400px">
+    <div class="modal-handle"></div>
+    <button class="modal-close-btn" onclick="document.getElementById('notif-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">🔔 Notification Preferences</div>
+    <p style="font-size:13px;color:var(--text-tertiary);margin-bottom:14px">Get notified at these race milestones. You'll need to allow notifications when your browser asks.</p>
+    <div id="notif-pref-list">${defs.map(d=>`
+      <div class="notif-pref-row">
+        <label>${d.label}</label>
+        <label class="notif-toggle">
+          <input type="checkbox" id="np-${d.key}" ${prefs[d.key]?'checked':''} onchange="saveNotifPref('${d.key}',this.checked)">
+          <span class="notif-toggle-slider"></span>
+        </label>
+      </div>`).join('')}</div>
+    <div style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn" onclick="requestNotificationPermission().then(()=>notify('Notifications enabled ✓'))" style="flex:1">Enable Notifications</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('notif-modal').classList.remove('open')">Done</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+};
+
+window.saveNotifPref = function(key, val) {
+  const p = loadNotifPrefs(); p[key] = val; saveNotifPrefs(p);
+};
+
+// ═══════════════════════════════════════════════════════════
+// GENDER/AGE PERCENTILE PROJECTIONS (patch stats render)
+// ═══════════════════════════════════════════════════════════
+function getAgeGroupCDF(gender, ageGroup) {
+  // Women's percentile CDFs by age group (estimated from race data)
+  const WOMEN_CDFS = {
+    '18–24': [[4800,0.5],[5400,2],[5700,5],[6000,12],[6300,20],[6600,30],[6900,40],[7200,51],[7500,61],[7800,70],[8100,77],[8700,85],[9600,92],[11400,99]],
+    '25–29': [[4800,0.5],[5400,1.5],[5700,4],[6000,9],[6300,17],[6600,27],[6900,37],[7200,48],[7500,58],[7800,67],[8100,74],[8700,82],[9600,91],[11400,99]],
+    '30–34': [[5100,0.5],[5700,3],[6000,8],[6300,16],[6600,26],[6900,37],[7200,48],[7500,58],[7800,67],[8100,74],[8700,83],[9600,92],[11400,99]],
+    '35–39': [[5400,1],[5700,3],[6000,8],[6300,17],[6600,27],[6900,38],[7200,49],[7500,59],[7800,68],[8100,75],[8700,84],[9600,93],[11400,99]],
+    '40–44': [[5400,1],[6000,6],[6300,14],[6600,24],[6900,35],[7200,46],[7500,57],[7800,66],[8100,74],[8400,80],[8700,85],[9600,93],[11400,99]],
+    '45–49': [[5700,1],[6000,4],[6300,11],[6600,20],[6900,31],[7200,43],[7500,54],[7800,64],[8100,72],[8700,82],[9600,91],[11400,99]],
+    '50–54': [[6000,2],[6300,7],[6600,15],[6900,26],[7200,38],[7500,50],[7800,61],[8100,70],[8700,81],[9600,91],[11400,99]],
+    '55–59': [[6300,2],[6600,7],[6900,16],[7200,28],[7500,41],[7800,53],[8100,63],[8700,77],[9600,89],[11400,99]],
+    '60+':   [[6900,3],[7200,10],[7500,22],[7800,36],[8100,50],[8700,67],[9600,83],[11400,99]],
+  };
+  const MEN_CDFS = {
+    '18–24': [[4200,0.5],[4800,2],[5400,5],[5700,11],[6000,20],[6300,31],[6600,42],[6900,53],[7200,63],[7800,75],[8400,84],[9600,94],[11400,99]],
+    '25–29': [[4200,0.5],[4800,2],[5400,5],[5700,10],[6000,18],[6300,28],[6600,39],[6900,50],[7200,60],[7800,73],[8400,83],[9600,93],[11400,99]],
+    '30–34': [[4500,0.5],[5100,3],[5700,9],[6000,17],[6300,27],[6600,38],[6900,49],[7200,59],[7800,72],[8400,82],[9600,92],[11400,99]],
+    '35–39': [[4800,0.5],[5400,3],[5700,8],[6000,16],[6300,26],[6600,37],[6900,48],[7200,58],[7800,71],[8400,81],[9600,92],[11400,99]],
+    '40–44': [[5100,1],[5700,4],[6000,10],[6300,19],[6600,30],[6900,41],[7200,52],[7800,65],[8400,76],[9000,85],[10200,93],[11400,99]],
+    '45–49': [[5400,1],[6000,5],[6300,13],[6600,22],[6900,33],[7200,44],[7800,58],[8400,70],[9000,80],[10200,90],[11400,99]],
+    '50–54': [[5700,1],[6000,4],[6300,10],[6600,18],[6900,28],[7200,39],[7800,53],[8400,66],[9000,77],[10200,88],[11400,99]],
+    '55–59': [[6000,1],[6300,5],[6600,12],[6900,21],[7200,33],[7800,48],[8400,62],[9000,74],[10200,85],[11400,99]],
+    '60+':   [[6300,2],[6600,7],[6900,15],[7200,26],[7800,42],[8400,57],[9000,70],[10200,83],[11400,99]],
+  };
+  const cdfs = gender === 'M' ? MEN_CDFS : WOMEN_CDFS;
+  return cdfs[ageGroup] || cdfs['25–29'];
+}
+
+function getAgeGroupPercentile(sec, gender, ageGroup) {
+  const cdf = getAgeGroupCDF(gender, ageGroup);
+  for (let i = 0; i < cdf.length - 1; i++) {
+    if (sec <= cdf[i][0]) return 100 - cdf[i][1];
+    if (sec <= cdf[i+1][0]) {
+      const t = (sec - cdf[i][0]) / (cdf[i+1][0] - cdf[i][0]);
+      return Math.round(100 - (cdf[i][1] + (cdf[i+1][1] - cdf[i][1]) * t));
+    }
+  }
+  return 1;
+}
+
+// Override renderPctScenarios to use age/gender
+function renderPctScenariosV5() {
+  const runners = [
+    { id:'gf',  color:'#007AFF', label:'⚡ Catherine' },
+    { id:'mom', color:'#5856D6', label:'💜 Helaine'   },
+  ];
+  runners.forEach(({id, color, label}) => {
+    const goals  = GOALS[id]; if(!goals) return;
+    const info   = loadPersonalInfo(id);
+    const age    = getAge(info.dob);
+    const ageGrp = getAgeGroup(age);
+    const gender = info.gender || 'F';
+    const genderLabel = gender === 'M' ? 'Men' : gender === 'F' ? 'Women' : 'Non-binary';
+
+    const el = document.getElementById(id+'-pct-rows'); if(!el) return;
+    const rows = goals.scenarios.map(s => {
+      const profile = s.flatPace ? buildNonLinearProfile(goals,s.flatPace,100) : buildGoalProfile(goals,100);
+      const sec = Math.round(profile.at(-1)?.sec||0);
+      const pctOverall = getPercentile(sec);
+      const pctAgeGrp  = getAgeGroupPercentile(sec, gender, ageGrp);
+      return `<div class="pct-row">
+        <span style="color:${s.color}">${s.emoji} ${s.label}</span>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-mono);font-size:11px">${fmtHMS(sec)}</div>
+          <div style="font-size:10px;color:var(--text-tertiary)">Overall top ${pctOverall}% · ${genderLabel} ${ageGrp} top ${pctAgeGrp}%</div>
+        </div>
+      </div>`;
+    });
+    const gSec = Math.round(buildGoalProfile(goals,100).at(-1)?.sec||0);
+    const gPct = getAgeGroupPercentile(gSec, gender, ageGrp);
+    rows.push(`<div class="pct-row">
+      <span style="color:#FF3B30">🎯 ${goals.goalLabel}</span>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-mono);font-size:11px">${fmtHMS(gSec)}</div>
+        <div style="font-size:10px;color:var(--text-tertiary)">${genderLabel} ${ageGrp} top ${gPct}%</div>
+      </div>
+    </div>`);
+    el.innerHTML = rows.join('');
+
+    const bigEl = document.getElementById(id+'-pct-big');
+    if (bigEl) { bigEl.textContent = `Top ${gPct}%`; bigEl.style.color = color; }
+    const subEl = document.getElementById(id+'-pct-sub');
+    if (subEl) subEl.textContent = `${genderLabel} · Age group ${ageGrp} · Age ${age} at race`;
+  });
+}
+
+// Call it on DOMContentLoaded and after settings save
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(renderPctScenariosV5, 200);
+  renderAgeGroups(); renderHelainerStats();
+});
+
+// Also patch Helaine age groups
+function renderHelainerStats() {
+  const el = document.getElementById('helaine-age-groups'); if (!el) return;
+  const info = loadPersonalInfo('mom');
+  const age  = getAge(info.dob);
+  const grp  = getAgeGroup(age);
+  const gender = info.gender || 'F';
+  const table = gender === 'M' ? MEN_AGE_GROUPS : WOMEN_AGE_GROUPS;
+  el.innerHTML = (table || WOMEN_AGE_GROUPS).map(g => `
+    <div class="age-group-row${g.range===grp?' highlight':''}">
+      <span style="font-size:11px;color:var(--text-secondary)">${g.range}${g.range===grp?` <span style="color:#5856D6;font-size:10px">← Helaine</span>`:''}</span>
+      <span style="font-family:var(--font-mono);font-size:12px">${g.label} median</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEV MODE HEADER STATUS FIX
+// ═══════════════════════════════════════════════════════════
+// Override simRace to also update header
+const _origSimRace = window.simRace;
+window.simRace = function(stage) {
+  _origSimRace(stage);
+  // Force header update immediately
+  setTimeout(updateHeaderStatus, 50);
+  setTimeout(updateFamSpotETAs, 100);
+};
+
+// ═══════════════════════════════════════════════════════════
+// FAMILY MAP (embedded Leaflet on Family HQ)
+// ═══════════════════════════════════════════════════════════
+let famMapInited = false;
+const famMarkers = {};
+
+function initFamMap() {
+  if (famMapInited) return;
+  const el = document.getElementById('fam-map'); if(!el) return;
+  famMapInited = true;
+
+  const map = L.map(el, { center:[40.638,-73.974], zoom:11 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'© CARTO © OSM'}).addTo(map);
+  L.polyline(COURSE_LATLNGS,{color:'#007AFF',weight:4,opacity:.8}).addTo(map);
+
+  // Start and finish markers
+  CHECKPOINTS.filter(cp=>cp.spectator).forEach(cp=>{
+    const isEnd = cp.label.includes('Start')||cp.label.includes('Finish');
+    const col = isEnd ? '#FF9500' : '#007AFF';
+    L.circleMarker([cp.lat,cp.lng],{radius:isEnd?9:6,color:col,fillColor:col,fillOpacity:.3,weight:2.5})
+     .addTo(map).bindPopup(`<b>${cp.label}</b>`);
+  });
+
+  // Runner markers
+  REG.forEach(r=>{
+    const el2=document.createElement('div');
+    el2.style.cssText=`width:26px;height:26px;border-radius:50%;background:#fff;border:2.5px solid ${r.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${r.color};box-shadow:0 2px 8px rgba(0,0,0,.15)`;
+    el2.textContent=r.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    famMarkers[r.id]=L.marker(COURSE_LATLNGS[0],{icon:L.divIcon({className:'',html:el2.outerHTML,iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map).bindPopup(`${r.emoji} ${r.name}`);
+  });
+
+  setTimeout(()=>map.invalidateSize(),100);
+
+  // Store for updates
+  window._famMap = map;
+}
+
+// Update fam map markers when runner positions change
+function updateFamMapMarkers() {
+  REG.forEach(r=>{
+    const m=famMarkers[r.id]; const s=STATE[r.id]; if(!m||!s||s.pct<0.1) return;
+    const idx=Math.min(Math.floor(s.pct/100*(COURSE_LATLNGS.length-1)),COURSE_LATLNGS.length-1);
+    m.setLatLng(COURSE_LATLNGS[idx]);
+  });
+}
+
+// Init fam map on tab show
+const _origShowTab = window.showTab;
+window.showTab = function(id) {
+  _origShowTab(id);
+  if (id === 'family') { setTimeout(()=>{ initFamMap(); if(window._famMap) window._famMap.invalidateSize(); updateFamMapMarkers(); }, 100); }
+};
+
+// Also init on first load since family is the default tab
+document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(initFamMap, 600); });
+

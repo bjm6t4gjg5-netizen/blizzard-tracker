@@ -591,3 +591,86 @@ header { display:flex !important; height:56px; align-items:center; padding:0;
 .runner-hero-name { font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.4px;text-shadow:0 2px 10px rgba(0,0,0,.5); }
 .runner-hero-subtitle { font-size:11px;color:rgba(255,255,255,.8);margin-top:3px; }
 .runner-hero-badge { padding:4px 10px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);border-radius:980px;font-size:11px;color:#fff;font-weight:500; }
+
+/* ══════════════════════════════════════
+   v5 additions
+══════════════════════════════════════ */
+
+/* Sticky footer always at very bottom */
+html { height: 100%; }
+body { min-height: 100%; display: flex; flex-direction: column; }
+main { flex: 1 0 auto; }
+#app-footer { flex-shrink: 0; }
+
+/* Taller photo strip — runner hero bigger overall */
+.runner-hero-section .photo-strip { height: 140px; }
+.runner-hero-content { min-height: 140px; padding: 22px 20px 16px; }
+.runner-hero-name { font-size: 26px; }
+
+/* Tab active highlight */
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+
+/* Family HQ hero — celebratory */
+.fam-hero { min-height: 180px; }
+.fam-photo-row { height: 160px; }
+.fam-photo { object-fit: cover; }
+
+/* Travel / hometown cards in Family HQ */
+.travel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.travel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-card); }
+.travel-icon { font-size: 24px; margin-bottom: 6px; }
+.travel-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.travel-detail { font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
+.travel-badge { display: inline-block; margin-top: 6px; padding: 2px 8px; background: var(--fill-blue); border-radius: 6px; font-size: 10px; color: var(--accent); font-weight: 500; }
+
+/* Confetti/celebrate banner on Family HQ */
+.celebrate-banner {
+  background: linear-gradient(135deg, #007AFF, #38bdf8);
+  border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 12px;
+  color: #fff; position: relative; overflow: hidden;
+}
+.celebrate-banner::before {
+  content: '⚡ 💜 🏃 🎉 🏅 ⚡ 💜 🏃 🎉 🏅 ⚡ 💜';
+  position: absolute; top: -4px; right: 0; left: 0;
+  font-size: 11px; opacity: 0.25; letter-spacing: 4px; white-space: nowrap;
+}
+.celebrate-title { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; position: relative; z-index: 1; }
+.celebrate-sub   { font-size: 12px; opacity: 0.85; margin-top: 3px; position: relative; z-index: 1; }
+
+/* Map on Family HQ */
+#fam-map { height: 360px; width: 100%; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+/* Notification preferences */
+.notif-pref-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--separator); font-size: 14px; }
+.notif-pref-row:last-child { border: none; }
+.notif-pref-row label { flex: 1; color: var(--text-primary); }
+.notif-toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+.notif-toggle input { opacity: 0; width: 0; height: 0; }
+.notif-toggle-slider { position: absolute; cursor: pointer; inset: 0;
+  background: var(--fill-primary); border-radius: 13px; transition: .3s; }
+.notif-toggle-slider::before { content:''; position: absolute; width: 20px; height: 20px;
+  left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.notif-toggle input:checked + .notif-toggle-slider { background: var(--blue); }
+.notif-toggle input:checked + .notif-toggle-slider::before { transform: translateX(18px); }
+
+/* Onboarding tour overlay */
+.tour-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 5000;
+  display: flex; align-items: flex-end; justify-content: center; padding: 20px; }
+.tour-card { background: #fff; border-radius: 20px; padding: 24px; max-width: 420px; width: 100%;
+  animation: slide-up .3s cubic-bezier(.4,0,.2,1); position: relative; }
+.tour-step-pill { display: inline-block; padding: 2px 10px; background: var(--fill-blue);
+  border-radius: 980px; font-size: 11px; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+.tour-title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: var(--text-primary); margin-bottom: 8px; }
+.tour-body { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; }
+.tour-highlight { background: var(--fill-blue); border: 1.5px solid var(--blue); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--accent); margin-bottom: 14px; font-weight: 500; }
+.tour-footer { display: flex; gap: 8px; align-items: center; }
+.tour-dots { display: flex; gap: 5px; flex: 1; }
+.tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fill-primary); transition: background .2s; }
+.tour-dot.active { background: var(--blue); }
+.tour-info-btn { position: fixed; top: 64px; right: 12px; z-index: 400;
+  width: 32px; height: 32px; border-radius: 50%; background: #fff;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; cursor: pointer; color: var(--blue); transition: all .15s; }
+.tour-info-btn:hover { background: var(--fill-blue); }
