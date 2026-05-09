@@ -12,7 +12,6 @@ import {
 } from '../data/runners.js';
 import { fetchWeather, getRaceDayHours, getCurrentHourIndex, extractHourData, getWeatherIcon, analyzeRaceImpact } from '../data/weather.js';
 import { loadRaces, computePRs, computeCareerTotals, timeToSec, fmtPaceFromSec, SAMPLE_RACES } from '../data/race-history.js';
-import { mountDevTab, unmountDevTab } from './dev-tab.js';
 
 const L = window.L;
 const Chart = window.Chart;
@@ -20,7 +19,16 @@ const Chart = window.Chart;
 // Register Chart.js plugins safely
 function registerChartPlugins() {
   if (window.Chart && window.ChartZoom) {
-    try { window.Chart.register(window.ChartZoom); } catch(e) {}
+    try {
+      window.Chart.register(window.ChartZoom);
+      // Add zoom to CHART_OPTS now that plugin is registered
+      if (!CHART_OPTS.plugins.zoom) {
+        CHART_OPTS.plugins.zoom = {
+          zoom: { wheel:{enabled:true}, pinch:{enabled:true}, mode:'x' },
+          pan:  { enabled:true, mode:'x' }
+        };
+      }
+    } catch(e) {}
   }
 }
 registerChartPlugins();
@@ -47,14 +55,8 @@ REG.forEach(r => { STATE[r.id] = makeRunnerState(r); GOALS[r.id] = loadGoals(r.i
 
 let fullMap=null, mapInited=false;
 // Expose globals for dev-tab.js
-window._devREG      = REG;
-window._devGOALS    = GOALS;
-window.saveRegistry = saveRegistry;
-window.buildPaceChart = buildPaceChart;
-window.renderRunnerStats = renderRunnerStats;
-window.showTab = showTab;
-window.buildTabs = buildTabs;
-window.buildPanes = buildPanes;
+window._devREG   = REG;
+window._devGOALS = GOALS;
 const miniMaps={}, markers={}, miniMarkers={};
 let wxLoaded=false, wxData=null;
 const charts={};
@@ -428,7 +430,6 @@ function renderRunner(id) {
   if(mapInited&&pct>0) updateMarker(id,pct);
   updateMiniMarker(id,pct);
   updateLiveChart(id);
-  updateSimTrack(id);
   checkNotifications(id,s);
 }
 
@@ -466,7 +467,7 @@ const CHART_OPTS = {
   animation: { duration: 300 },
   plugins:{
     legend:{display:false},
-    zoom: window.ChartZoom ? {zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'},pan:{enabled:true,mode:'x'}} : undefined,
+    // zoom plugin added dynamically after registration (see registerChartPlugins)
     tooltip:{mode:'index',intersect:false,
       backgroundColor:'rgba(255,255,255,0.97)',titleColor:'#0c2340',bodyColor:'#1e4976',
       borderColor:'rgba(14,165,233,0.2)',borderWidth:1,
@@ -819,8 +820,6 @@ window.devLogin = function() {
     document.getElementById('dev-footer-link').textContent = '🛠 Developer (active)';
     document.getElementById('dev-footer-link').style.color = 'var(--orange)';
     // Mount dev database tab
-    window._devREG = REG; window._devGOALS = GOALS;
-    mountDevTab(REG, GOALS);
     notify('🛠 Developer mode ON');
   } else {
     document.getElementById('dev-err').style.display = 'block';
@@ -832,7 +831,6 @@ window.devLogout = function() {
   document.getElementById('dev-header-tools').style.display = 'none';
   document.getElementById('dev-footer-link').textContent = '🛠 Developer';
   document.getElementById('dev-footer-link').style.color = '';
-  unmountDevTab();
   simRace('pre');
   showTab('family');
   notify('Developer mode off');
