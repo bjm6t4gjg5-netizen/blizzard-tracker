@@ -611,7 +611,7 @@ main { flex: 1 0 auto; }
 .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
 
 /* Family HQ hero — celebratory */
-.fam-hero { min-height: 280px; }
+.fam-hero { min-height: 260px; }
 .fam-photo-row { height: 260px; }
 .fam-photo { object-fit: cover; }
 
