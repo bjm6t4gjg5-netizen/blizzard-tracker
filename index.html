@@ -16,75 +16,29 @@
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script>document.addEventListener('DOMContentLoaded',()=>{if(window.Chart&&window.ChartZoom)Chart.register(window.ChartZoom);});</script>
-<style>
-/* ── Extra styles for new header + photo hero + settings ── */
-.app-hero {
-  background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 50%, #38bdf8 100%);
-  padding: 18px 20px 14px; color: #fff; position: relative; overflow: hidden;
-}
-.app-hero::before {
-  content:''; position:absolute; inset:0;
-  background: radial-gradient(circle at 70% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
-}
-.hero-inner { position:relative; z-index:1; display:flex; align-items:center; gap:16px; }
-.hero-text {}
-.hero-race { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; opacity:.85; margin-bottom:3px; }
-.hero-title { font-size:28px; font-weight:700; letter-spacing:-0.5px; line-height:1.1; }
-.hero-sub   { font-size:12px; opacity:.8; margin-top:3px; letter-spacing:-0.1px; }
-.hero-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
-.hero-refresh-info { font-size:11px; opacity:.8; display:flex; align-items:center; gap:5px; font-family:SF Mono,Fira Code,Menlo,monospace; }
-.hero-spin { width:13px;height:13px;border:1.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:none;flex-shrink:0; }
-.hero-spin.on{display:block}
-.hero-btn { background:rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.3); color:#fff; height:32px; padding:0 14px; border-radius:980px; font-size:13px; font-weight:500; cursor:pointer; transition:background .15s; }
-.hero-btn:hover{background:rgba(255,255,255,.28)}
-.hero-countdown { display:flex; gap:2px; align-items:baseline; margin-top:10px; position:relative; z-index:1; }
-.hero-cd-unit { text-align:center; min-width:38px; }
-.hero-cd-num { font-size:22px; font-weight:700; letter-spacing:-0.5px; line-height:1; }
-.hero-cd-lbl { font-size:8px; opacity:.7; letter-spacing:0.5px; text-transform:uppercase; }
-.hero-cd-sep { font-size:18px; font-weight:300; opacity:.6; padding-bottom:4px; }
-.hero-stats { display:flex; gap:16px; margin-top:8px; position:relative; z-index:1; flex-wrap:wrap; }
-.hero-stat { }
-.hero-stat-val { font-size:16px; font-weight:700; letter-spacing:-0.3px; }
-.hero-stat-lbl { font-size:9px; opacity:.75; letter-spacing:0.5px; text-transform:uppercase; }
-
-/* Runner hero with photos */
-.runner-hero-section { position:relative; margin-bottom:14px; border-radius:16px; overflow:hidden; background:#0c2340; }
-.runner-hero-bg { position:absolute; inset:0; object-fit:cover; width:100%; height:100%; opacity:.35; filter:saturate(1.1); }
-.runner-hero-content { position:relative; z-index:1; padding:20px 18px 16px; display:flex; align-items:flex-end; gap:14px; min-height:120px; }
-.runner-hero-name { font-size:24px; font-weight:700; color:#fff; letter-spacing:-0.4px; text-shadow:0 1px 8px rgba(0,0,0,.4); }
-.runner-hero-subtitle { font-size:12px; color:rgba(255,255,255,.8); margin-top:2px; }
-.runner-hero-badge { padding:4px 10px; background:rgba(255,255,255,.2); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.3); border-radius:980px; font-size:11px; color:#fff; font-weight:500; }
-.photo-strip { display:flex; gap:0; height:90px; overflow:hidden; }
-.photo-strip img { flex:1; object-fit:cover; object-position:center top; transition:flex .3s ease; cursor:pointer; }
-.photo-strip img:hover { flex:2.5; }
-
-/* Runner settings modal */
-.rs-section { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin:14px 0 8px; }
-.rs-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.rs-splits-table { width:100%; border-collapse:collapse; font-size:13px; }
-.rs-splits-table td { padding:5px 4px; border-bottom:1px solid var(--separator); }
-
-/* icon button */
-.icon-btn { width:28px;height:28px;border-radius:50%;background:var(--fill-blue);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);transition:background .15s,color .15s; }
-.icon-btn:hover{background:rgba(0,122,255,.15);color:var(--blue)}
-
-/* goal strip */
-.goal-strip { padding:6px 14px 8px; border-top:1px solid var(--separator); }
-.goal-strip-inner { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; }
-
-/* tooltip */
-.tooltip-popup { animation:fadeIn .15s ease; }
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-
-/* info button */
-.info-btn { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(0,122,255,.12);color:var(--blue);font-size:10px;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;font-style:normal; }
-.info-btn:hover{background:rgba(0,122,255,.22)}
-</style>
 </head>
 <body>
 
 <!-- TOAST -->
 <div id="notif"><span>⚡</span><span id="notif-text">—</span></div>
+
+<!-- DEV LOGIN MODAL -->
+<div class="modal-overlay" id="dev-login-modal" onclick="if(event.target===this)closeDev()">
+  <div class="modal-sheet" style="position:relative;max-width:340px">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="font-size:17px">🛠 Developer Access</div>
+    <p style="font-size:13px;color:var(--text-tertiary);margin-bottom:14px">Enter password to unlock dev tools</p>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="dev-pw" type="password" placeholder="••••••••••••" onkeydown="if(event.key==='Enter')devLogin()">
+    </div>
+    <div id="dev-err" style="font-size:12px;color:var(--red);margin-bottom:8px;display:none">Wrong password</div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn" style="flex:1" onclick="devLogin()">Login</button>
+      <button class="btn btn-ghost" onclick="closeDev()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- GLOBAL SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
@@ -113,28 +67,27 @@
     <div class="modal-handle"></div>
     <button class="modal-close-btn" onclick="closeRunnerSettings()">✕</button>
     <div class="modal-title" id="rs-title">Race Settings</div>
-
     <div class="rs-section">Goal</div>
     <div class="rs-grid">
-      <div class="form-group"><label class="form-label">Goal finish time</label><input class="form-input" id="rs-goal-time" placeholder="1:30:00"></div>
+      <div class="form-group"><label class="form-label">Finish time goal</label><input class="form-input" id="rs-goal-time" placeholder="1:30:00"></div>
       <div class="form-group"><label class="form-label">Goal label</label><input class="form-input" id="rs-goal-label" placeholder="Sub-90"></div>
     </div>
-
-    <div class="rs-section">Milestone Target Paces</div>
-    <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px">Set your planned pace at each milestone (MM:SS per mile)</div>
+    <div class="rs-section">Personal Info (for field stats)</div>
     <div class="rs-grid">
-      <div class="form-group"><label class="form-label">At 5K pace/mi</label><input class="form-input" id="rs-pace-5k" placeholder="6:40"></div>
-      <div class="form-group"><label class="form-label">At 10K pace/mi</label><input class="form-input" id="rs-pace-10k" placeholder="6:45"></div>
-      <div class="form-group"><label class="form-label">At 15K pace/mi</label><input class="form-input" id="rs-pace-15k" placeholder="6:50"></div>
-      <div class="form-group"><label class="form-label">Finish kick pace/mi</label><input class="form-input" id="rs-pace-fin" placeholder="6:30"></div>
+      <div class="form-group"><label class="form-label">Gender</label>
+        <select class="form-input" id="rs-gender"><option value="F">Female</option><option value="M">Male</option><option value="NB">Non-binary</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Date of birth</label><input class="form-input" id="rs-dob" type="date" placeholder="1998-05-25"></div>
     </div>
-
-    <div class="rs-section">Split Goal Times <span class="info-btn" data-tip="splits">ⓘ</span></div>
-    <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px">Target elapsed time at each checkpoint (HH:MM:SS)</div>
-    <table class="rs-splits-table">
-      <tbody id="rs-splits-body"></tbody>
-    </table>
-
+    <div class="rs-section">Milestone Target Paces (MM:SS per mile)</div>
+    <div class="rs-grid">
+      <div class="form-group"><label class="form-label">At 5K</label><input class="form-input" id="rs-pace-5k" placeholder="6:40"></div>
+      <div class="form-group"><label class="form-label">At 10K</label><input class="form-input" id="rs-pace-10k" placeholder="6:45"></div>
+      <div class="form-group"><label class="form-label">At 15K</label><input class="form-input" id="rs-pace-15k" placeholder="6:50"></div>
+      <div class="form-group"><label class="form-label">Finish kick</label><input class="form-input" id="rs-pace-fin" placeholder="6:30"></div>
+    </div>
+    <div class="rs-section">Split Goal Times (HH:MM:SS elapsed)</div>
+    <table class="rs-splits-table"><tbody id="rs-splits-body"></tbody></table>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn" style="flex:1" onclick="saveRunnerSettings()">Save Settings</button>
       <button class="btn btn-ghost" onclick="closeRunnerSettings()">Cancel</button>
@@ -142,61 +95,168 @@
   </div>
 </div>
 
-<!-- HERO HEADER -->
-<div class="app-hero">
-  <div class="hero-inner">
-    <div class="hero-text">
-      <div class="hero-race">RBC Brooklyn Half 2026 · May 16</div>
-      <div class="hero-title">⚡ Blizzard Tracker</div>
-      <div class="hero-sub">Team Blizzard · Brooklyn Museum → Coney Island · 13.1 mi</div>
-    </div>
-    <div class="hero-right">
-      <div class="hero-refresh-info"><div class="hero-spin" id="spinRing"></div><span id="lastUpd">—</span></div>
-      <button class="hero-btn" onclick="manualRefresh()" id="refreshBtn">↻</button>
-      <button class="hero-btn" onclick="openGlobalSettings()">⚙</button>
+<!-- ══════════════════════════════════
+     HEADER — Option C Light
+══════════════════════════════════ -->
+<header id="app-header">
+  <!-- Left: Brand (light blue) -->
+  <div class="hdr-brand">
+    <svg width="28" height="32" viewBox="0 0 28 32" fill="none" class="hdr-runner-svg">
+      <ellipse cx="18" cy="4" rx="4" ry="4" fill="#007AFF"/>
+      <path d="M18 8 L13 20 L5 30 M18 8 L23 20 L26 29 M13 20 L11 29 M23 20 L21 29" stroke="#007AFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11 14 L23 11" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="hdr-title">Blizzard Tracker</div>
+      <div class="hdr-sub">RBC Brooklyn Half · May 16 · 2026</div>
     </div>
   </div>
-  <!-- live countdown in header -->
-  <div class="hero-countdown">
-    <div class="hero-cd-unit"><div class="hero-cd-num" id="cd-d">—</div><div class="hero-cd-lbl">Days</div></div>
-    <div class="hero-cd-sep">:</div>
-    <div class="hero-cd-unit"><div class="hero-cd-num" id="cd-h">—</div><div class="hero-cd-lbl">Hrs</div></div>
-    <div class="hero-cd-sep">:</div>
-    <div class="hero-cd-unit"><div class="hero-cd-num" id="cd-m">—</div><div class="hero-cd-lbl">Min</div></div>
-    <div class="hero-cd-sep">:</div>
-    <div class="hero-cd-unit"><div class="hero-cd-num" id="cd-s">—</div><div class="hero-cd-lbl">Sec</div></div>
-    <div style="margin-left:16px;opacity:.8;font-size:12px;align-self:center">to race start</div>
+
+  <!-- Divider -->
+  <div class="hdr-divider"></div>
+
+  <!-- Center: Countdown -->
+  <div class="hdr-cd" id="hdr-countdown">
+    <div class="hdr-cd-unit"><span class="hdr-cd-num" id="cd-d">—</span><span class="hdr-cd-lbl">days</span></div>
+    <span class="hdr-cd-sep">:</span>
+    <div class="hdr-cd-unit"><span class="hdr-cd-num" id="cd-h">—</span><span class="hdr-cd-lbl">hrs</span></div>
+    <span class="hdr-cd-sep">:</span>
+    <div class="hdr-cd-unit"><span class="hdr-cd-num" id="cd-m">—</span><span class="hdr-cd-lbl">min</span></div>
+    <span class="hdr-cd-sep">:</span>
+    <div class="hdr-cd-unit"><span class="hdr-cd-num" id="cd-s">—</span><span class="hdr-cd-lbl">sec</span></div>
   </div>
-</div>
+
+  <!-- Divider -->
+  <div class="hdr-divider"></div>
+
+  <!-- Right: runner statuses + controls -->
+  <div class="hdr-runners">
+    <div class="hdr-runner-pill" onclick="showTab('gf')">
+      <span class="hdr-runner-dot" style="background:#007AFF"></span>
+      <span class="hdr-runner-name">Catherine</span>
+      <span class="hdr-runner-status" id="hdr-gf-status">Pre-race</span>
+    </div>
+    <div class="hdr-runner-pill" onclick="showTab('mom')">
+      <span class="hdr-runner-dot" style="background:#5856D6"></span>
+      <span class="hdr-runner-name">Helaine</span>
+      <span class="hdr-runner-status" id="hdr-mom-status">Pre-race</span>
+    </div>
+  </div>
+
+  <div class="hdr-divider"></div>
+
+  <!-- Controls -->
+  <div class="hdr-controls">
+    <div class="hdr-refresh-info"><div class="spin-ring" id="spinRing"></div><span id="lastUpd" style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">—</span></div>
+    <button class="hdr-btn" onclick="manualRefresh()" id="refreshBtn">↻</button>
+    <button class="hdr-btn" onclick="openGlobalSettings()" title="Manage runners">⊕</button>
+  </div>
+
+  <!-- Dev sim buttons (hidden until dev login) -->
+  <div id="dev-header-tools" style="display:none;align-items:center;gap:6px;border-left:1px solid var(--border);padding-left:10px;margin-left:4px">
+    <span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">DEV</span>
+    <button class="dev-btn" onclick="simRace('pre')" title="Pre-race">🏁 Pre</button>
+    <button class="dev-btn" onclick="simRace('early')" title="Early race (3mi)">3mi</button>
+    <button class="dev-btn" onclick="simRace('park')" title="In Prospect Park (6mi)">6mi</button>
+    <button class="dev-btn" onclick="simRace('ocean')" title="Ocean Pkwy (9mi)">9mi</button>
+    <button class="dev-btn" onclick="simRace('late')" title="Late race (11mi)">11mi</button>
+    <button class="dev-btn" onclick="simRace('finish')" title="Finish!">🏆 Fin</button>
+    <button class="dev-btn dev-btn-red" onclick="devLogout()">Logout</button>
+  </div>
+</header>
 
 <!-- TAB BAR -->
 <nav id="tab-bar"></nav>
 
 <main>
 
-<!-- ══ CATHERINE ══ -->
-<div class="pane active" id="pane-gf">
+<!-- ══ FAMILY HQ (default first tab) ══ -->
+<div class="pane active" id="pane-family">
+  <div class="fam-hero gap-md">
+    <div class="fam-hero-left">
+      <div class="fam-cd-label">Race starts in</div>
+      <div class="fam-countdown-row">
+        <div class="cd-unit"><div class="cd-num" id="fam-cd-d">—</div><div class="cd-lbl">Days</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="fam-cd-h">—</div><div class="cd-lbl">Hrs</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="fam-cd-m">—</div><div class="cd-lbl">Min</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="fam-cd-s">—</div><div class="cd-lbl">Sec</div></div>
+      </div>
+      <div class="fam-hero-race">RBC Brooklyn Half · Brooklyn Museum → Coney Island · 13.1 miles</div>
+    </div>
+    <div class="fam-hero-right">
+      <div class="fam-photo-row">
+        <img src="/photo-boston-medals.jpeg" alt="Boston Marathon" class="fam-photo" style="object-position:center 20%">
+        <img src="/photo-eugene.jpeg" alt="Eugene Marathon" class="fam-photo" style="object-position:center 15%">
+        <img src="/photo-trashbag-both.jpeg" alt="Pre-race" class="fam-photo" style="object-position:center 15%">
+      </div>
+    </div>
+  </div>
 
-  <!-- HERO SECTION WITH PHOTOS -->
+  <div class="fam-grid gap-md">
+    <div class="mini-card" style="border-top:3px solid #007AFF">
+      <div class="mini-runner-name" style="color:#007AFF">⚡ Catherine</div>
+      <div class="mini-row"><span class="mini-key">Status</span><span id="fam-gf-st" class="mini-val" style="color:#007AFF">Pre-race</span></div>
+      <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-gf-d" class="mini-val">—</span></div>
+      <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-gf-e" class="mini-val">—</span></div>
+      <div class="mini-row"><span class="mini-key">Pace</span><span id="fam-gf-p" class="mini-val">—</span></div>
+      <div class="mini-row" style="border:none"><span class="mini-key">Pred. Finish</span><span id="fam-gf-eta" class="mini-val" style="color:#007AFF">—</span></div>
+    </div>
+    <div class="vs-center"><div class="vs-text">VS</div></div>
+    <div class="mini-card" style="border-top:3px solid #5856D6">
+      <div class="mini-runner-name" style="color:#5856D6">💜 Helaine</div>
+      <div class="mini-row"><span class="mini-key">Status</span><span id="fam-mom-st" class="mini-val" style="color:#5856D6">Pre-race</span></div>
+      <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-mom-d" class="mini-val">—</span></div>
+      <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-mom-e" class="mini-val">—</span></div>
+      <div class="mini-row"><span class="mini-key">Pace</span><span id="fam-mom-p" class="mini-val">—</span></div>
+      <div class="mini-row" style="border:none"><span class="mini-key">Pred. Finish</span><span id="fam-mom-eta" class="mini-val" style="color:#5856D6">—</span></div>
+    </div>
+  </div>
+
+  <div class="lead-banner gap-md">
+    <div class="lead-title" id="lead-banner-text">Team Blizzard · May 16 · 7:00 AM ET</div>
+    <div class="lead-sub">Brooklyn Museum → Prospect Park loop → Ocean Pkwy → Coney Island · 13.1 miles</div>
+  </div>
+
+  <div class="spot-list">
+    <div class="card-header"><div class="card-title">Best spectator spots 📍</div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~1.5mi</div><div><div class="spot-name">Grand Army Plaza</div><div class="spot-detail">2/3 to Grand Army Plaza · runners pass the arch</div></div><div id="fam-spot-0" class="spot-eta"></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~3.1mi</div><div><div class="spot-name">Parkside Ave — park entry</div><div class="spot-detail">Q/B to Parkside Ave</div></div><div id="fam-spot-1" class="spot-eta"></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~6.5mi</div><div><div class="spot-name">Prospect Park SW exit</div><div class="spot-detail">F to 15th St–Prospect Park</div></div><div id="fam-spot-2" class="spot-eta"></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~9.3mi</div><div><div class="spot-name">Ocean Pkwy / Church Ave</div><div class="spot-detail">Q/B to Church Ave</div></div><div id="fam-spot-3" class="spot-eta"></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~11.2mi</div><div><div class="spot-name">Ocean Pkwy / Neptune Ave</div><div class="spot-detail">D/N to Bay Pkwy</div></div><div id="fam-spot-4" class="spot-eta"></div></div>
+    <div class="spot-row"><div class="spot-badge badge-orange">FINISH</div><div><div class="spot-name">Coney Island Boardwalk 🏆</div><div class="spot-detail">D/N/F/Q to Coney Island–Stillwell Ave</div></div><div id="fam-spot-5" class="spot-eta"></div></div>
+  </div>
+</div>
+
+<!-- ══ CATHERINE ══ -->
+<div class="pane" id="pane-gf">
+  <!-- Hero with photos -->
   <div class="runner-hero-section gap-md">
-    <img src="/photo-running.jpeg" class="runner-hero-bg" alt="" aria-hidden="true">
+    <img src="/photo-running.jpeg" class="runner-hero-bg" alt="" aria-hidden="true" style="object-position:center 40%">
     <div class="runner-hero-content">
       <div>
         <div class="runner-hero-name">⚡ Catherine Blizzard</div>
-        <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · Tracker RMGBEVSK</div>
+        <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · RMGBEVSK · Sub-90 goal</div>
       </div>
-      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-        <span class="runner-hero-badge">🎯 Sub-90 Goal</span>
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
+        <span class="runner-hero-badge">🏅 Boston ✓</span>
         <span class="runner-hero-badge">🏅 Berlin ✓</span>
+        <span class="runner-hero-badge">🏅 BKH 2023 ✓</span>
+        <button class="runner-settings-btn" onclick="openRunnerSettings('gf')">⚙ Settings</button>
       </div>
     </div>
+    <!-- Photo strip — portrait photos need specific object-position per image -->
     <div class="photo-strip">
-      <img src="/photo-berlin.jpeg"  alt="Berlin Marathon medal" title="Berlin Marathon finisher 🏅">
-      <img src="/photo-beach.jpeg"   alt="Beach run" title="Training runs 🏖">
-      <img src="/photo-nyc.jpeg"     alt="NYC" title="NYC life 🗽">
-      <img src="/photo-met.jpeg"     alt="Met Museum" title="Culture days 🏛">
-      <img src="/photo-snow.jpeg"    alt="Snowy walk" title="All-weather runner ❄️">
-      <img src="/photo-beers.jpeg"   alt="Post race beers" title="The real finish line 🍺">
+      <div class="ps-item" style="background-image:url('/photo-bkh2023.jpeg');background-position:center 25%"   title="2023 Brooklyn Half medal 🏅"></div>
+      <div class="ps-item" style="background-image:url('/photo-kidrun.jpeg');background-position:center 20%"    title="St. Rita Spartans XC 🏃"></div>
+      <div class="ps-item" style="background-image:url('/photo-berlin.jpeg');background-position:center 30%"    title="Berlin Marathon 🍺"></div>
+      <div class="ps-item" style="background-image:url('/photo-boston-start.jpeg');background-position:center 25%" title="Boston Marathon start 🇺🇸"></div>
+      <div class="ps-item" style="background-image:url('/photo-beach.jpeg');background-position:center 30%"    title="Training runs 🏖"></div>
+      <div class="ps-item" style="background-image:url('/photo-met.jpeg');background-position:center 25%"      title="Culture days 🏛"></div>
+      <div class="ps-item" style="background-image:url('/photo-beers.jpeg');background-position:center 35%"   title="The real finish line 🍺"></div>
     </div>
   </div>
 
@@ -206,10 +266,7 @@
         <div class="runner-top-bar">
           <div class="avatar" style="background:rgba(0,122,255,.12);color:#007AFF;border:1.5px solid rgba(0,122,255,.3)">CB</div>
           <div><div class="runner-name">Catherine Blizzard</div><div class="runner-sub">Tracker · RMGBEVSK</div></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-            <div id="gf-pill" class="status-badge status-pre"><span class="status-dot"></span>Pre-race</div>
-            <button class="icon-btn" onclick="openRunnerSettings('gf')" title="Race settings">⚙</button>
-          </div>
+          <div id="gf-pill" class="status-badge status-pre" style="margin-left:auto"><span class="status-dot"></span>Pre-race</div>
         </div>
         <div class="stats-row">
           <div class="stat-cell"><div class="stat-label">Distance</div><div class="stat-num" id="gf-dist" style="color:#007AFF">—</div><div class="stat-unit">of 13.1 mi</div></div>
@@ -222,7 +279,7 @@
           <div class="cp-row" id="gf-cps"></div>
         </div>
         <div class="splits-section">
-          <div class="splits-label">Checkpoint Splits <span class="info-btn" data-tip="splits">ⓘ</span></div>
+          <div class="splits-label">Splits <span class="info-btn" data-tip="splits">ⓘ</span></div>
           <table class="splits-table">
             <colgroup><col style="width:38%"><col style="width:34%"><col style="width:28%"></colgroup>
             <thead><tr><th>Checkpoint</th><th>Clock Time</th><th>Pace</th></tr></thead>
@@ -255,7 +312,7 @@
       </div>
       <div class="card gap-md">
         <div class="card-header">
-          <div class="card-title">Pace on course · sub-90 goal vs scenarios <span class="info-btn" data-tip="pace-chart">ⓘ</span></div>
+          <div class="card-title">Pace chart <span class="info-btn" data-tip="pace-chart">ⓘ</span></div>
           <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['gf-pace']?.resetZoom()">Reset zoom</button>
         </div>
         <div class="chart-wrap">
@@ -264,12 +321,9 @@
         </div>
         <div id="gf-sc-badges" class="badge-row"></div>
       </div>
-      <button class="cheer-btn gap-md" id="cheer-btn-gf" onclick="sendCheer('gf')">
-        <span>📣</span> Send Cheer to Catherine
-      </button>
-      <!-- Simulator -->
+      <button class="cheer-btn gap-md" id="cheer-btn-gf" onclick="sendCheer('gf')"><span>📣</span> Send Cheer to Catherine</button>
       <div class="sim-section gap-md">
-        <div class="sim-title">🎮 Race Simulator <span class="info-btn" data-tip="simulator">ⓘ</span> <span style="font-size:10px;font-weight:400;color:var(--text-muted)">Drag · locks to live position during race</span></div>
+        <div class="sim-title">🎮 Simulator <span class="info-btn" data-tip="simulator">ⓘ</span></div>
         <div class="sim-controls">
           <button class="btn btn-sm" id="gf-sim-play">▶ Play</button>
           <button class="btn btn-sm btn-ghost" id="gf-sim-reset">↺</button>
@@ -277,8 +331,8 @@
           <div class="sim-stat"><div class="sim-stat-val" id="gf-sim-pct" style="color:#007AFF">0%</div><div class="sim-stat-lbl">Progress</div></div>
           <div class="sim-stat"><div class="sim-stat-val" id="gf-sim-mi" style="color:#007AFF">0.0 mi</div><div class="sim-stat-lbl">Distance</div></div>
         </div>
-        <div id="gf-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate the race</div>
-        <div id="gf-sim-rows" style="display:flex;flex-direction:column"></div>
+        <div id="gf-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate</div>
+        <div id="gf-sim-rows"></div>
       </div>
     </div>
   </div>
@@ -287,14 +341,25 @@
 
 <!-- ══ HELAINE ══ -->
 <div class="pane" id="pane-mom">
-  <!-- Helaine hero — abstract background -->
-  <div class="runner-hero-section gap-md" style="background:linear-gradient(135deg,#3b1d8a,#5856D6,#9b59b6)">
+  <!-- Helaine hero with photos of them together -->
+  <div class="runner-hero-section gap-md" style="background:linear-gradient(135deg,#1e1060,#3b1d8a,#5856D6)">
     <div class="runner-hero-content">
       <div>
         <div class="runner-hero-name">💜 Helaine Blizzard</div>
-        <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · Tracker RRM2PLD3</div>
+        <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · RRM2PLD3</div>
       </div>
-      <div style="margin-left:auto"><span class="runner-hero-badge">🏃 Runner</span></div>
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
+        <span class="runner-hero-badge">🏅 Boston ✓</span>
+        <span class="runner-hero-badge">🏅 Eugene ✓</span>
+        <button class="runner-settings-btn" onclick="openRunnerSettings('mom')">⚙ Settings</button>
+      </div>
+    </div>
+    <div class="photo-strip">
+      <div class="ps-item" style="background-image:url('/photo-boston-medals.jpeg');background-position:center 25%" title="Boston Marathon medals 🏅"></div>
+      <div class="ps-item" style="background-image:url('/photo-dallas.jpeg');background-position:center 20%" title="Dallas Marathon 🎄"></div>
+      <div class="ps-item" style="background-image:url('/photo-trashbag-helaine.jpeg');background-position:center 20%" title="Pre-race NYC look 🗑"></div>
+      <div class="ps-item" style="background-image:url('/photo-trashbag-both.jpeg');background-position:center 30%" title="Twin trash bags 🗑🗑"></div>
+      <div class="ps-item" style="background-image:url('/photo-eugene.jpeg');background-position:center 20%" title="Eugene Marathon 🌲"></div>
     </div>
   </div>
 
@@ -304,10 +369,7 @@
         <div class="runner-top-bar">
           <div class="avatar" style="background:rgba(88,86,214,.12);color:#5856D6;border:1.5px solid rgba(88,86,214,.3)">HB</div>
           <div><div class="runner-name">Helaine Blizzard</div><div class="runner-sub">Tracker · RRM2PLD3</div></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-            <div id="mom-pill" class="status-badge status-pre"><span class="status-dot"></span>Pre-race</div>
-            <button class="icon-btn" onclick="openRunnerSettings('mom')" title="Race settings">⚙</button>
-          </div>
+          <div id="mom-pill" class="status-badge status-pre" style="margin-left:auto"><span class="status-dot"></span>Pre-race</div>
         </div>
         <div class="stats-row">
           <div class="stat-cell"><div class="stat-label">Distance</div><div class="stat-num" id="mom-dist" style="color:#5856D6">—</div><div class="stat-unit">of 13.1 mi</div></div>
@@ -320,7 +382,7 @@
           <div class="cp-row" id="mom-cps"></div>
         </div>
         <div class="splits-section">
-          <div class="splits-label">Checkpoint Splits <span class="info-btn" data-tip="splits">ⓘ</span></div>
+          <div class="splits-label">Splits <span class="info-btn" data-tip="splits">ⓘ</span></div>
           <table class="splits-table">
             <colgroup><col style="width:38%"><col style="width:34%"><col style="width:28%"></colgroup>
             <thead><tr><th>Checkpoint</th><th>Clock Time</th><th>Pace</th></tr></thead>
@@ -353,7 +415,7 @@
       </div>
       <div class="card gap-md">
         <div class="card-header">
-          <div class="card-title">Pace on course · scenarios <span class="info-btn" data-tip="pace-chart">ⓘ</span></div>
+          <div class="card-title">Pace chart <span class="info-btn" data-tip="pace-chart">ⓘ</span></div>
           <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['mom-pace']?.resetZoom()">Reset zoom</button>
         </div>
         <div class="chart-wrap">
@@ -362,11 +424,9 @@
         </div>
         <div id="mom-sc-badges" class="badge-row"></div>
       </div>
-      <button class="cheer-btn gap-md" id="cheer-btn-mom" onclick="sendCheer('mom')" style="background:linear-gradient(135deg,#5856D6,#9B59B6)">
-        <span>📣</span> Send Cheer to Helaine
-      </button>
+      <button class="cheer-btn gap-md" id="cheer-btn-mom" onclick="sendCheer('mom')" style="background:linear-gradient(135deg,#5856D6,#9B59B6)"><span>📣</span> Send Cheer to Helaine</button>
       <div class="sim-section gap-md">
-        <div class="sim-title">🎮 Race Simulator <span class="info-btn" data-tip="simulator">ⓘ</span></div>
+        <div class="sim-title">🎮 Simulator <span class="info-btn" data-tip="simulator">ⓘ</span></div>
         <div class="sim-controls">
           <button class="btn btn-sm" id="mom-sim-play">▶ Play</button>
           <button class="btn btn-sm btn-ghost" id="mom-sim-reset">↺</button>
@@ -374,58 +434,22 @@
           <div class="sim-stat"><div class="sim-stat-val" id="mom-sim-pct" style="color:#5856D6">0%</div><div class="sim-stat-lbl">Progress</div></div>
           <div class="sim-stat"><div class="sim-stat-val" id="mom-sim-mi" style="color:#5856D6">0.0 mi</div><div class="sim-stat-lbl">Distance</div></div>
         </div>
-        <div id="mom-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate the race</div>
-        <div id="mom-sim-rows" style="display:flex;flex-direction:column"></div>
+        <div id="mom-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate</div>
+        <div id="mom-sim-rows"></div>
       </div>
     </div>
   </div>
   <div id="upd-mom" style="font-size:10px;color:var(--text-muted);text-align:right;margin-top:6px;font-family:var(--font-mono)">—</div>
 </div>
 
-<!-- ══ FAMILY HQ ══ -->
-<div class="pane" id="pane-family">
-  <div class="fam-grid gap-md">
-    <div class="mini-card" style="border-top:3px solid #007AFF">
-      <div class="mini-runner-name" style="color:#007AFF">⚡ Catherine</div>
-      <div class="mini-row"><span class="mini-key">Status</span><span id="fam-gf-st" class="mini-val" style="color:#007AFF">Pre-race</span></div>
-      <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-gf-d" class="mini-val">—</span></div>
-      <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-gf-e" class="mini-val">—</span></div>
-      <div class="mini-row"><span class="mini-key">Pace</span><span id="fam-gf-p" class="mini-val">—</span></div>
-      <div class="mini-row" style="border:none"><span class="mini-key">Pred. Finish</span><span id="fam-gf-eta" class="mini-val" style="color:#007AFF">—</span></div>
-    </div>
-    <div class="vs-center"><div class="vs-text">VS</div></div>
-    <div class="mini-card" style="border-top:3px solid #5856D6">
-      <div class="mini-runner-name" style="color:#5856D6">💜 Helaine</div>
-      <div class="mini-row"><span class="mini-key">Status</span><span id="fam-mom-st" class="mini-val" style="color:#5856D6">Pre-race</span></div>
-      <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-mom-d" class="mini-val">—</span></div>
-      <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-mom-e" class="mini-val">—</span></div>
-      <div class="mini-row"><span class="mini-key">Pace</span><span id="fam-mom-p" class="mini-val">—</span></div>
-      <div class="mini-row" style="border:none"><span class="mini-key">Pred. Finish</span><span id="fam-mom-eta" class="mini-val" style="color:#5856D6">—</span></div>
-    </div>
-  </div>
-  <div class="lead-banner gap-md">
-    <div class="lead-title">2026 RBC Brooklyn Half · Brooklyn, NY</div>
-    <div class="lead-sub">Brooklyn Museum → Prospect Park loop → Ocean Pkwy → Coney Island · 13.1 miles</div>
-  </div>
-  <div class="spot-list">
-    <div class="card-header"><div class="card-title">Best spectator spots</div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~1.5mi</div><div><div class="spot-name">Grand Army Plaza</div><div class="spot-detail">2/3 to Grand Army Plaza</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~3.1mi</div><div><div class="spot-name">Parkside Ave — park entry</div><div class="spot-detail">Q/B to Parkside Ave</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~6.5mi</div><div><div class="spot-name">Prospect Park SW exit</div><div class="spot-detail">F to 15th St–Prospect Park</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~9.3mi</div><div><div class="spot-name">Ocean Pkwy / Church Ave</div><div class="spot-detail">Q/B to Church Ave</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~11.2mi</div><div><div class="spot-name">Ocean Pkwy / Neptune Ave</div><div class="spot-detail">D/N to Bay Pkwy</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-orange">FINISH</div><div><div class="spot-name">Coney Island Boardwalk</div><div class="spot-detail">D/N/F/Q to Coney Island–Stillwell Ave</div></div></div>
-  </div>
-</div>
-
 <!-- ══ MAP ══ -->
 <div class="pane" id="pane-map">
   <div class="card gap-md">
-    <div class="card-header"><div class="card-title">2026 Official Course</div></div>
+    <div class="card-header"><div class="card-title">2026 Official Course · Brooklyn Museum → Coney Island</div></div>
     <div id="map"></div>
   </div>
   <div class="card">
-    <div class="card-header"><div class="card-title">Elevation profile · 246ft gain <span class="info-btn" data-tip="weather">ⓘ</span></div><button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['elev']?.resetZoom()">Reset zoom</button></div>
+    <div class="card-header"><div class="card-title">Elevation profile · 246ft gain</div><button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['elev']?.resetZoom()">Reset</button></div>
     <div class="chart-wrap" style="height:150px"><canvas id="elev-chart"></canvas></div>
   </div>
 </div>
@@ -433,7 +457,7 @@
 <!-- ══ WEATHER ══ -->
 <div class="pane" id="pane-weather">
   <div class="section-title">Race Day Weather <span class="info-btn" data-tip="weather">ⓘ</span></div>
-  <div class="section-sub">Prospect Park start area · May 16, 2026</div>
+  <div class="section-sub">Brooklyn · May 16, 2026 · 7AM start</div>
   <div class="card gap-md">
     <div class="wx-hero">
       <div id="wx-icon" class="wx-icon-big">—</div>
@@ -447,32 +471,62 @@
       <div class="wx-cell"><div class="wx-cell-label">Rain %</div><div class="wx-cell-val" id="wx-rain">—</div><div class="wx-cell-sub" id="wx-cloud">—% cloud</div></div>
     </div>
     <div id="wx-impact" class="wx-impact wx-warn">Fetching…</div>
-    <div id="wx-goal-adj" style="font-size:11px;color:var(--text-tertiary);padding:0 14px 12px;font-family:var(--font-mono)"></div>
   </div>
   <div class="card"><div class="card-header"><div class="card-title">Hourly forecast — race morning</div></div><div class="chart-wrap" style="height:180px"><canvas id="wx-hourly"></canvas></div></div>
 </div>
 
 <!-- ══ STATS ══ -->
 <div class="pane" id="pane-stats">
-  <div class="section-title">Race Stats <span class="info-btn" data-tip="percentile">ⓘ</span></div>
+  <div class="section-title">Race Stats & Field Analysis <span class="info-btn" data-tip="percentile">ⓘ</span></div>
   <div class="hist-grid gap-md">
     <div class="hist-card"><div class="hist-val" style="color:#007AFF">28,500</div><div class="hist-lbl">2025 Finishers</div></div>
     <div class="hist-card"><div class="hist-val">2:14:00</div><div class="hist-lbl">Overall Median</div></div>
     <div class="hist-card"><div class="hist-val" style="color:#34C759">1:15:37</div><div class="hist-lbl">Women's Winner</div></div>
-    <div class="hist-card"><div class="hist-val" style="color:#007AFF">2:20:00</div><div class="hist-lbl">Women's Median</div></div>
+    <div class="hist-card"><div class="hist-val" style="color:#5856D6">2:20:00</div><div class="hist-lbl">Women's Median</div></div>
     <div class="hist-card"><div class="hist-val" style="color:#FF9500">+1.9%</div><div class="hist-lbl">Elevation Penalty</div></div>
     <div class="hist-card"><div class="hist-val">~62°F</div><div class="hist-lbl">Typical Race Temp</div></div>
   </div>
-  <div class="card gap-md"><div class="card-header"><div class="card-title">Finish time distribution 2025</div><button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['dist']?.resetZoom()">Reset zoom</button></div><div class="chart-wrap" style="height:170px"><canvas id="dist-chart"></canvas></div></div>
-  <div class="section-title">Expected Percentile Finish</div>
+
+  <!-- Gender + Age group breakdown -->
+  <div class="section-title" style="margin-top:4px">Field Breakdown</div>
   <div class="grid-2 gap-md">
-    <div class="card"><div class="card-header" style="background:rgba(0,122,255,.06)"><div class="card-title">⚡ Catherine</div></div><div class="card-body"><div class="pct-big" id="gf-pct-big" style="color:#007AFF">—</div><div style="height:1px;background:var(--separator);margin:10px 0"></div><div id="gf-pct-rows"></div></div></div>
-    <div class="card"><div class="card-header" style="background:rgba(88,86,214,.06)"><div class="card-title">💜 Helaine</div></div><div class="card-body"><div class="pct-big" id="mom-pct-big" style="color:#5856D6">—</div><div style="height:1px;background:var(--separator);margin:10px 0"></div><div id="mom-pct-rows"></div></div></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">By Gender</div></div>
+      <div class="card-body">
+        <div class="gender-row"><span style="color:#007AFF">♀ Women</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:52%;background:rgba(0,122,255,.5)"></div></div><span>52%</span></div>
+        <div class="gender-row"><span style="color:#5856D6">♂ Men</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:46%;background:rgba(88,86,214,.5)"></div></div><span>46%</span></div>
+        <div class="gender-row"><span style="color:#34C759">⚥ NB</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:2%;background:rgba(52,199,89,.5)"></div></div><span>2%</span></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--separator)">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary);margin-bottom:8px">Women's Medians by Age Group</div>
+          <div id="women-age-groups"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Finish time distribution · 2025</div><button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['dist']?.resetZoom()">Reset</button></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="dist-chart"></canvas></div>
+    </div>
   </div>
-  <div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">Percentile lookup</div></div><div class="lookup-row"><span style="font-size:13px;color:var(--text-secondary)">Finish time</span><input id="lookup-time" class="lookup-input" value="2:00:00"><button class="btn btn-sm" onclick="lookupPct()">Look up</button><span id="pct-result" class="lookup-result"></span></div></div>
+
+  <div class="section-title" style="margin-top:4px">Percentile Projections</div>
+  <div class="grid-2 gap-md">
+    <div class="card"><div class="card-header" style="background:rgba(0,122,255,.06)"><div class="card-title">⚡ Catherine · F25–29</div></div><div class="card-body"><div class="pct-big" id="gf-pct-big" style="color:#007AFF">—</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;font-family:var(--font-mono)" id="gf-pct-sub">Overall field</div><div style="height:1px;background:var(--separator);margin:10px 0"></div><div id="gf-pct-rows"></div></div></div>
+    <div class="card"><div class="card-header" style="background:rgba(88,86,214,.06)"><div class="card-title">💜 Helaine · Scenarios</div></div><div class="card-body"><div class="pct-big" id="mom-pct-big" style="color:#5856D6">—</div><div style="height:1px;background:var(--separator);margin:10px 0"></div><div id="mom-pct-rows"></div></div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">Lookup any finish time</div></div><div class="lookup-row"><span style="font-size:13px;color:var(--text-secondary)">Finish time</span><input id="lookup-time" class="lookup-input" value="2:00:00"><button class="btn btn-sm" onclick="lookupPct()">Look up</button><span id="pct-result" class="lookup-result"></span></div></div>
 </div>
 
 </main>
+
+<!-- ══ FOOTER ══ -->
+<footer id="app-footer">
+  <div class="footer-inner">
+    <div class="footer-love">Made with ❤️ by <strong>Leon Schulte</strong> · May 2026</div>
+    <div class="footer-links">
+      <span class="footer-link" id="dev-footer-link" onclick="openDevLogin()">🛠 Developer</span>
+    </div>
+  </div>
+</footer>
 
 <script type="module" src="/src/js/main.js"></script>
 <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>

@@ -48,10 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════════════════════
 // TABS — drag-and-drop
 // ═══════════════════════════════════════════════════════════
-const FIXED_TABS = ['gf','mom','family','map','weather','stats'];
-let tabOrder = (() => {
-  try { return JSON.parse(localStorage.getItem('blizzard_tab_order'))||[...FIXED_TABS]; } catch { return [...FIXED_TABS]; }
-})();
+const FIXED_TABS = ['family','gf','mom','map','weather','stats'];
+// Clear stale tab order so family moves to front
+localStorage.removeItem('blizzard_tab_order');
+let tabOrder = [...FIXED_TABS];
 const saveTabOrder = () => localStorage.setItem('blizzard_tab_order', JSON.stringify(tabOrder));
 
 function buildTabs() {
@@ -432,21 +432,22 @@ function buildPaceChart(id) {
   const ctx=document.getElementById(id+'-pace-chart'); if(!ctx) return;
   if(charts[id+'-pace']){charts[id+'-pace'].destroy();delete charts[id+'-pace'];}
   const goals=GOALS[id];
-  const datasets=goals.scenarios.map(s=>({
-    label:s.emoji+' '+s.label,
-    data:(buildNonLinearProfile(goals,s.flatPace||null,100)||buildGoalProfile(goals,100)).map(p=>({x:p.mi,y:+(p.sec/60).toFixed(2)})),
-    borderColor:s.color,borderWidth:2,
-    borderDash:s.key==='runwalk'?[5,3]:[],
-    backgroundColor:'transparent',tension:.35,pointRadius:0,pointHoverRadius:4,
+  const datasets = goals.scenarios.map(s => ({
+    label: s.emoji + ' ' + s.label + ' (' + fmtHMS(Math.round((s.flatPace ? buildNonLinearProfile(goals, s.flatPace, 100) : buildGoalProfile(goals, 100)).at(-1)?.sec || 0)) + ')',
+    data: (s.flatPace ? buildNonLinearProfile(goals, s.flatPace, 100) : buildGoalProfile(goals, 100)).map(p => ({ x: p.mi, y: +(p.sec / 60).toFixed(2) })),
+    borderColor: s.color, borderWidth: 2,
+    borderDash: s.key === 'runwalk' ? [5, 3] : [],
+    backgroundColor: 'transparent', tension: .35, pointRadius: 0, pointHoverRadius: 4,
+    hidden: true, // hidden by default — user clicks legend to show
   }));
-  // Goal target line (split-based)
+  // Goal target line — VISIBLE by default, clearly labeled
   datasets.push({
-    label:'🎯 '+goals.goalLabel+' target',
-    data:buildSplitGoalLine(goals),
-    borderColor:'#FF3B30',borderWidth:2.5,borderDash:[8,5],
-    backgroundColor:'transparent',tension:.35,pointRadius:4,
-    pointBackgroundColor:'#FF3B30',pointBorderColor:'#fff',pointBorderWidth:1.5,
-    pointHoverRadius:6,
+    label: '🎯 ' + goals.goalLabel + ' TARGET line — not actual',
+    data: buildSplitGoalLine(goals),
+    borderColor: '#FF3B30', borderWidth: 2.5, borderDash: [8, 5],
+    backgroundColor: 'transparent', tension: .35, pointRadius: 5,
+    pointBackgroundColor: '#FF3B30', pointBorderColor: '#fff', pointBorderWidth: 1.5,
+    hidden: false, // visible by default
   });
   charts[id+'-pace']=new Chart(ctx,{type:'line',data:{datasets},options:CHART_OPTS});
   buildChartLegend(id+'-pace-legend',id+'-pace',datasets);
@@ -723,3 +724,233 @@ function notify(msg){ const el=document.getElementById('notif'),txt=document.get
 
 // Expose globals
 window.showTab=showTab; window.openRunnerSettings=openRunnerSettings; window.lookupPct=window.lookupPct;
+
+// ═══════════════════════════════════════════════════════════
+// DEV MODE — password login + race simulation
+// ═══════════════════════════════════════════════════════════
+const DEV_PW = 'sagichnicht';
+let devLoggedIn = false;
+
+window.openDevLogin = function() {
+  document.getElementById('dev-login-modal').classList.add('open');
+  document.getElementById('dev-pw').value = '';
+  document.getElementById('dev-err').style.display = 'none';
+  setTimeout(() => document.getElementById('dev-pw').focus(), 100);
+};
+window.closeDev = function() {
+  document.getElementById('dev-login-modal').classList.remove('open');
+};
+window.devLogin = function() {
+  const pw = document.getElementById('dev-pw').value;
+  if (pw === DEV_PW) {
+    devLoggedIn = true;
+    document.getElementById('dev-login-modal').classList.remove('open');
+    document.getElementById('dev-header-tools').style.display = 'flex';
+    document.getElementById('dev-footer-link').textContent = '🛠 Developer (active)';
+    document.getElementById('dev-footer-link').style.color = 'var(--orange)';
+    notify('🛠 Developer mode ON');
+  } else {
+    document.getElementById('dev-err').style.display = 'block';
+    document.getElementById('dev-pw').focus();
+  }
+};
+window.devLogout = function() {
+  devLoggedIn = false;
+  document.getElementById('dev-header-tools').style.display = 'none';
+  document.getElementById('dev-footer-link').textContent = '🛠 Developer';
+  document.getElementById('dev-footer-link').style.color = '';
+  simRace('pre'); // reset to pre-race state
+  notify('Developer mode off');
+};
+
+// Simulate race state at different milestones
+window.simRace = function(stage) {
+  const stages = {
+    pre:    { gf: { distMi:0,   elapsedSec:0,     status:'pre'      },  mom: { distMi:0,   elapsedSec:0,    status:'pre'     } },
+    early:  { gf: { distMi:3.0, elapsedSec:20*60,  status:'running'  },  mom: { distMi:2.7, elapsedSec:25*60, status:'running' } },
+    park:   { gf: { distMi:6.2, elapsedSec:43*60,  status:'running'  },  mom: { distMi:5.5, elapsedSec:55*60, status:'running' } },
+    ocean:  { gf: { distMi:9.3, elapsedSec:64*60,  status:'running'  },  mom: { distMi:8.0, elapsedSec:82*60, status:'running' } },
+    late:   { gf: { distMi:11.0,elapsedSec:75*60,  status:'running'  },  mom: { distMi:9.8, elapsedSec:101*60,status:'running' } },
+    finish: { gf: { distMi:13.1,elapsedSec:88*60+12,status:'finished' }, mom: { distMi:13.1,elapsedSec:128*60,status:'finished'} },
+  };
+  const s = stages[stage]; if(!s) return;
+  ['gf','mom'].forEach(id => {
+    const d = s[id]; if (!d) return;
+    Object.assign(STATE[id], d);
+    STATE[id].pct = (d.distMi / TOTAL_MI) * 100;
+    STATE[id].lastUpdate = Date.now();
+    if (d.distMi > 0 && d.elapsedSec > 0) {
+      STATE[id].paceHistory = [{ mi: d.distMi, elapsedSec: d.elapsedSec }];
+      computeETA(STATE[id], GOALS[id]);
+    } else {
+      STATE[id].etaSec = null; STATE[id].conf = 0; STATE[id].paceHistory = [];
+    }
+    renderRunner(id);
+  });
+  notify(`🛠 Simulating: ${stage}`);
+};
+
+// ═══════════════════════════════════════════════════════════
+// GENDER + AGE GROUP STATS
+// ═══════════════════════════════════════════════════════════
+
+// Women's median finish times by age group (RBC Brooklyn Half 2025 estimates)
+const WOMEN_AGE_GROUPS = [
+  { range:'18–24', median:7620, label:'2:07:00' },
+  { range:'25–29', median:7500, label:'2:05:00', highlight:true }, // Catherine's group
+  { range:'30–34', median:7680, label:'2:08:00' },
+  { range:'35–39', median:7800, label:'2:10:00' },
+  { range:'40–44', median:7980, label:'2:13:00' },
+  { range:'45–49', median:8100, label:'2:15:00' },
+  { range:'50–54', median:8400, label:'2:20:00' },
+  { range:'55–59', median:8820, label:'2:27:00' },
+  { range:'60+',   median:9600, label:'2:40:00' },
+];
+
+const MEN_AGE_GROUPS = [
+  { range:'18–24', median:7020, label:'1:57:00' },
+  { range:'25–29', median:6900, label:'1:55:00' },
+  { range:'30–34', median:7080, label:'1:58:00' },
+  { range:'35–39', median:7200, label:'2:00:00' },
+  { range:'40–44', median:7380, label:'2:03:00' },
+  { range:'45–49', median:7560, label:'2:06:00' },
+  { range:'50–54', median:7860, label:'2:11:00' },
+  { range:'55–59', median:8280, label:'2:18:00' },
+  { range:'60+',   median:9000, label:'2:30:00' },
+];
+
+// Women's field CDF for percentile (separate from overall)
+const WOMEN_FIELD_CDF = [
+  [5400,0.5],[5700,1.5],[6000,4],[6300,9],[6600,17],[6900,27],
+  [7200,37],[7500,48],[7800,58],[8100,67],[8400,74],[8700,80],
+  [9000,86],[9600,91],[10200,95],[10800,97],[11400,99],
+];
+
+function getWomenPercentile(sec) {
+  for (let i=0; i<WOMEN_FIELD_CDF.length-1; i++) {
+    if (sec <= WOMEN_FIELD_CDF[i][0]) return 100-WOMEN_FIELD_CDF[i][1];
+    if (sec <= WOMEN_FIELD_CDF[i+1][0]) {
+      const t=(sec-WOMEN_FIELD_CDF[i][0])/(WOMEN_FIELD_CDF[i+1][0]-WOMEN_FIELD_CDF[i][0]);
+      return Math.round(100-(WOMEN_FIELD_CDF[i][1]+(WOMEN_FIELD_CDF[i+1][1]-WOMEN_FIELD_CDF[i][1])*t));
+    }
+  }
+  return 1;
+}
+
+function loadPersonalInfo(id) {
+  try { const s=localStorage.getItem('blizzard_personal_'+id); if(s) return JSON.parse(s); } catch {}
+  const defaults = { gf: { gender:'F', dob:'1998-05-25' }, mom: { gender:'F', dob:'1960-01-01' } };
+  return defaults[id] || { gender:'F', dob:'1980-01-01' };
+}
+function savePersonalInfo(id, info) { localStorage.setItem('blizzard_personal_'+id, JSON.stringify(info)); }
+
+function getAge(dob) {
+  const d = new Date(dob), race = new Date('2026-05-16');
+  let age = race.getFullYear() - d.getFullYear();
+  if (race.getMonth() < d.getMonth() || (race.getMonth()===d.getMonth()&&race.getDate()<d.getDate())) age--;
+  return age;
+}
+
+function getAgeGroup(age) {
+  if (age < 25) return '18–24';
+  if (age < 30) return '25–29';
+  if (age < 35) return '30–34';
+  if (age < 40) return '35–39';
+  if (age < 45) return '40–44';
+  if (age < 50) return '45–49';
+  if (age < 55) return '50–54';
+  if (age < 60) return '55–59';
+  return '60+';
+}
+
+function renderAgeGroups() {
+  const el = document.getElementById('women-age-groups'); if(!el) return;
+  const gfInfo = loadPersonalInfo('gf');
+  const gfAge  = getAge(gfInfo.dob);
+  const gfGroup = getAgeGroup(gfAge);
+  el.innerHTML = WOMEN_AGE_GROUPS.map(g => `
+    <div class="age-group-row${g.range===gfGroup?' highlight':''}">
+      <span style="font-size:11px;color:var(--text-secondary)">${g.range}${g.range===gfGroup?` <span style="color:#007AFF;font-size:10px">← Catherine</span>`:''}</span>
+      <span style="font-family:var(--font-mono);font-size:12px">${g.label} median</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// FAMILY HQ SPOT ETAs
+// ═══════════════════════════════════════════════════════════
+function updateFamSpotETAs() {
+  const s = STATE.gf;
+  if (!s || s.distMi < 0.5 || !s.elapsedSec) return;
+  const pace = s.elapsedSec / s.distMi;
+  SPECTATOR_SPOTS.forEach((sp, i) => {
+    const el = document.getElementById('fam-spot-'+i); if(!el) return;
+    if (sp.mi <= s.distMi) { el.innerHTML = `<div class="spot-eta-time" style="color:var(--green)">✓ Passed</div>`; return; }
+    const profile = buildNonLinearProfile(GOALS.gf, pace, 100);
+    const atNow = profile.find(p=>p.mi>=s.distMi)?.sec||0;
+    const atSp  = profile.find(p=>p.mi>=sp.mi)?.sec||atNow;
+    const etaSec = Math.round(s.elapsedSec + (atSp-atNow));
+    const clock  = new Date(RACE_START.getTime() + etaSec*1000);
+    el.innerHTML = `<div class="spot-eta-time">${fmtHMS(etaSec)}</div><div class="spot-eta-clock">${clock.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</div>`;
+  });
+}
+
+// Patch renderRunner to also update fam spots
+const _origRenderRunner = window._origRenderRunner;
+
+// Update family countdown separately (different element IDs)
+function updateFamClock() {
+  const d = RACE_START - new Date();
+  if(d<=0){['d','h','m','s'].forEach(k=>{const e=document.getElementById('fam-cd-'+k);if(e)e.textContent='🏃';});return;}
+  const setFam=(k,v)=>{const e=document.getElementById('fam-cd-'+k);if(e)e.textContent=String(v).padStart(2,'0');};
+  setFam('d',Math.floor(d/86400000));setFam('h',Math.floor(d%86400000/3600000));
+  setFam('m',Math.floor(d%3600000/60000));setFam('s',Math.floor(d%60000/1000));
+}
+setInterval(updateFamClock,1000); updateFamClock();
+
+// ═══════════════════════════════════════════════════════════
+// RUNNER SETTINGS — personal info patch
+// ═══════════════════════════════════════════════════════════
+const _origOpenRunnerSettings = window.openRunnerSettings;
+window.openRunnerSettings = function(id) {
+  _origOpenRunnerSettings(id);
+  const info = loadPersonalInfo(id);
+  const gSel = document.getElementById('rs-gender');
+  if (gSel) gSel.value = info.gender || 'F';
+  const dob  = document.getElementById('rs-dob');
+  if (dob)  dob.value  = info.dob   || '';
+};
+const _origSaveRunnerSettings = window.saveRunnerSettings;
+window.saveRunnerSettings = function() {
+  const id = settingsRunnerId; if(!id) return;
+  const gender = document.getElementById('rs-gender')?.value;
+  const dob    = document.getElementById('rs-dob')?.value;
+  if (gender || dob) savePersonalInfo(id, { gender: gender||'F', dob: dob||'' });
+  _origSaveRunnerSettings();
+  renderAgeGroups();
+};
+
+// ═══════════════════════════════════════════════════════════
+// RENDER PATCH — update header runner status + fam spots
+// ═══════════════════════════════════════════════════════════
+const _patchedRenderRunner = renderRunner;
+// Patch in header status updates after each render
+const origRenderAll = renderAll;
+function patchedRenderAll() { origRenderAll(); updateHeaderStatus(); updateFamSpotETAs(); renderAgeGroups(); }
+
+function updateHeaderStatus() {
+  ['gf','mom'].forEach(id => {
+    const s = STATE[id]; if(!s) return;
+    const el = document.getElementById('hdr-'+id+'-status'); if(!el) return;
+    if (s.status==='running') el.textContent = s.distMi.toFixed(1)+'mi · '+fmtPace(s.elapsedSec,s.distMi)+'/mi';
+    else if (s.status==='finished') el.textContent = 'Finished! '+fmtHMS(s.elapsedSec);
+    else el.textContent = 'Pre-race';
+  });
+}
+
+// Patch the doRefresh to also update header
+const origDoRefresh = window.manualRefresh;
+document.addEventListener('DOMContentLoaded', () => {
+  renderAgeGroups();
+  // After initial render, update header
+  setTimeout(() => { updateHeaderStatus(); updateFamSpotETAs(); }, 500);
+});
