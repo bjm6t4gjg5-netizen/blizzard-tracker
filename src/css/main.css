@@ -742,3 +742,68 @@ main { flex: 1 0 auto; }
 .legend-item.legend-hidden:hover { opacity:0.65; }
 .legend-swatch { display:inline-block; flex-shrink:0; border-radius:2px; }
 .legend-label { flex:1; }
+
+/* ══ RESPONSIVE HEADER ══ */
+
+/* Tablet / narrow (≤ 900px): hide subtitle, shrink brand panel, smaller countdown */
+@media (max-width: 900px) {
+  .hdr-brand { min-width: 140px; padding: 0 12px; gap: 8px; }
+  .hdr-sub   { display: none; }
+  .hdr-title { font-size: 13px; }
+  .hdr-runner-svg { width: 22px; height: 25px; }
+  .hdr-cd    { padding: 0 10px; gap: 2px; }
+  .hdr-cd-num { font-size: 17px; }
+  .hdr-cd-lbl { font-size: 7px; }
+  .hdr-cd-sep { font-size: 13px; }
+  .hdr-runner-name { font-size: 11px; }
+  .hdr-runner-status { display: none; }
+  .hdr-runner-pill { padding: 4px 8px; gap: 4px; }
+}
+
+/* Mobile (≤ 640px): two-row header */
+@media (max-width: 640px) {
+  header {
+    height: auto !important;
+    flex-wrap: wrap;
+    padding: 0;
+  }
+  .hdr-brand {
+    min-width: 0; flex: 1;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+    height: 44px;
+    padding: 0 12px;
+  }
+  .hdr-cd {
+    padding: 0 10px;
+    border-bottom: 1px solid var(--border);
+    height: 44px;
+    align-items: center;
+  }
+  .hdr-divider { display: none; }
+  /* Runner pills + controls: full-width second row */
+  .hdr-runners {
+    flex: 1; padding: 0 8px; height: 36px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .hdr-controls {
+    padding: 0 8px; height: 36px;
+    border-bottom: 1px solid var(--border);
+  }
+  /* Dev sim buttons on mobile: hidden (devs use desktop) */
+  #dev-header-tools { display: none !important; }
+  /* Tab bar shifts down to account for taller header */
+  #tab-bar { top: 80px !important; }
+}
+
+/* Very small (≤ 480px): collapse countdown to 3 units */
+@media (max-width: 480px) {
+  .hdr-cd-unit:first-child { display: none; } /* hide days */
+  .hdr-cd-sep:first-of-type { display: none; }
+  .hdr-cd-num { font-size: 20px; }
+  .hdr-runners { gap: 6px; }
+  .hdr-runner-pill { padding: 3px 7px; }
+  .hdr-runner-dot { width: 6px; height: 6px; }
+  .hdr-runner-name { font-size: 11px; }
+}
