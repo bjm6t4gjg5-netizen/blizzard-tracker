@@ -674,3 +674,40 @@ main { flex: 1 0 auto; }
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; cursor: pointer; color: var(--blue); transition: all .15s; }
 .tour-info-btn:hover { background: var(--fill-blue); }
+
+/* ══ Tour v2 — non-blocking, spotlight ══ */
+.tour-card-wrap { /* positioned via inline style — just card styling here */ }
+.tour-card {
+  background: #fff; border-radius: 18px; padding: 22px 22px 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12);
+  border: 1px solid rgba(14,165,233,0.15);
+}
+.tour-overlay { display:none; } /* old overlay — disabled in v2 */
+
+.tour-spotlight-ring { pointer-events: none; }
+@keyframes tour-pulse {
+  0%,100% { box-shadow: 0 0 0 4000px rgba(0,0,0,0.35), 0 0 0 3px rgba(0,122,255,0.6); }
+  50%      { box-shadow: 0 0 0 4000px rgba(0,0,0,0.40), 0 0 0 6px rgba(0,122,255,0.3); }
+}
+
+.tour-info-btn {
+  position: fixed; top: 64px; right: 12px; z-index: 4000;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #fff; border: 1.5px solid rgba(14,165,233,0.4);
+  box-shadow: 0 2px 8px rgba(14,165,233,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  color: var(--blue); transition: all .15s;
+}
+.tour-info-btn:hover { background: var(--fill-blue); transform: scale(1.05); }
+
+/* Remove old tour-overlay blocking */
+
+/* Notif promo row */
+.notif-promo-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 12px 16px;
+  box-shadow: var(--shadow-card);
+}
+.notif-promo-text { flex: 1; }

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════════════════════
 // TABS — drag-and-drop
 // ═══════════════════════════════════════════════════════════
-const FIXED_TABS = ['family','gf','mom','map','weather','stats'];
+const FIXED_TABS = ['family','gf','mom','weather','stats'];
 // Clear stale tab order so family moves to front
 localStorage.removeItem('blizzard_tab_order');
 let tabOrder = [...FIXED_TABS];
@@ -265,8 +265,9 @@ window.saveRunnerSettings = function() {
 
   saveGoals(id, goals);
   document.getElementById('runner-settings-modal').classList.remove('open');
-  // Rebuild charts for this runner
   rebuildPaceChart(id);
+  renderMergedAgeGroups();
+  renderPctScenariosV5();
   notify('Settings saved ✓');
 };
 
@@ -926,7 +927,7 @@ window.saveRunnerSettings = function() {
   const dob    = document.getElementById('rs-dob')?.value;
   if (gender || dob) savePersonalInfo(id, { gender: gender||'F', dob: dob||'' });
   _origSaveRunnerSettings();
-  renderAgeGroups(); renderHelainerStats();
+  renderMergedAgeGroups();
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -935,7 +936,7 @@ window.saveRunnerSettings = function() {
 const _patchedRenderRunner = renderRunner;
 // Patch in header status updates after each render
 const origRenderAll = renderAll;
-function patchedRenderAll() { origRenderAll(); updateHeaderStatus(); updateFamSpotETAs(); renderAgeGroups(); renderHelainerStats(); }
+function patchedRenderAll() { origRenderAll(); updateHeaderStatus(); updateFamSpotETAs(); renderMergedAgeGroups(); }
 
 function updateHeaderStatus() {
   ['gf','mom'].forEach(id => {
@@ -950,123 +951,9 @@ function updateHeaderStatus() {
 // Patch the doRefresh to also update header
 const origDoRefresh = window.manualRefresh;
 document.addEventListener('DOMContentLoaded', () => {
-  renderAgeGroups(); renderHelainerStats();
+  renderMergedAgeGroups();
   // After initial render, update header
   setTimeout(() => { updateHeaderStatus(); updateFamSpotETAs(); }, 500);
-});
-
-// ═══════════════════════════════════════════════════════════
-// v5: TOUR / ONBOARDING
-// ═══════════════════════════════════════════════════════════
-const TOUR_STEPS = [
-  {
-    step: 1, title: "Welcome to Blizzard Tracker! 👋",
-    body: "This is your race day command center for Catherine and Helaine at the RBC Brooklyn Half 2026. Let me show you around in 30 seconds.",
-    highlight: "🏠 Family HQ is your home dashboard — live stats, map, and spectator spots all in one place.",
-    action: null,
-  },
-  {
-    step: 2, title: "The tab bar 🗂",
-    body: "Tap any tab to switch views. You can drag tabs to reorder them however you like. The ⊕ button adds a new runner.",
-    highlight: "👉 Try dragging the '⚡ Catherine' tab to a different position right now.",
-    action: () => showTab('gf'),
-  },
-  {
-    step: 3, title: "Live tracking ⚡",
-    body: "Catherine's page shows her live distance, pace, and predicted finish time. The pace chart shows her goal line vs scenarios.",
-    highlight: "🎯 The red dashed line = Sub-90 goal. Click legend items to show/hide scenarios.",
-    action: () => showTab('gf'),
-  },
-  {
-    step: 4, title: "The Simulator 🎮",
-    body: "Drag the simulator slider to preview any point in the race. Let's simulate mile 6 so you can see what race day looks like!",
-    highlight: "⬇️ Drag the slider below to see live predictions update.",
-    action: () => { showTab('gf'); window.simRace && simRace('park'); },
-  },
-  {
-    step: 5, title: "Runner Settings ⚙️",
-    body: "Each runner has a settings panel where you change their goal time, milestone paces, gender, and date of birth for accurate age-group stats.",
-    highlight: "👉 Click '⚙ Settings' in Catherine's hero section to try it.",
-    action: () => { showTab('gf'); },
-  },
-  {
-    step: 6, title: "Adding a runner ➕",
-    body: "Tap the ⊕ button in the tab bar to add any runner with an RTRT tracker ID — family, friends, pacers, anyone!",
-    highlight: "You'll need their bib number or RTRT ID from the official tracking link.",
-    action: () => openGlobalSettings(),
-  },
-  {
-    step: 7, title: "Race Day Notifications 🔔",
-    body: "Enable push notifications to get alerted at milestones — 25%, 50%, 75%, and the finish line. Set your preferences below.",
-    highlight: "Allow notifications when your browser asks — so you don't miss a thing on race day!",
-    action: () => { showTab('family'); },
-  },
-  {
-    step: 8, title: "You're all set! 🎉",
-    body: "Race day is May 16 at 7:00 AM ET. Keep this page open on your phone or add it to your home screen as an app for the best experience.",
-    highlight: "📱 iPhone: Safari → Share → 'Add to Home Screen'. iPad works too!",
-    action: () => { showTab('family'); window.simRace && simRace('pre'); },
-  },
-];
-
-let tourStep = 0;
-let tourActive = false;
-
-function startTour() {
-  tourStep = 0;
-  tourActive = true;
-  renderTourStep();
-}
-
-function renderTourStep() {
-  const existing = document.getElementById('tour-overlay');
-  if (existing) existing.remove();
-  if (!tourActive || tourStep >= TOUR_STEPS.length) { endTour(); return; }
-
-  const s = TOUR_STEPS[tourStep];
-  if (s.action) s.action();
-
-  const el = document.createElement('div');
-  el.className = 'tour-overlay'; el.id = 'tour-overlay';
-  el.innerHTML = `
-    <div class="tour-card">
-      <div class="tour-step-pill">Step ${s.step} of ${TOUR_STEPS.length}</div>
-      <div class="tour-title">${s.title}</div>
-      <div class="tour-body">${s.body}</div>
-      <div class="tour-highlight">${s.highlight}</div>
-      <div class="tour-footer">
-        <div class="tour-dots">${TOUR_STEPS.map((_,i)=>`<div class="tour-dot${i===tourStep?' active':''}"></div>`).join('')}</div>
-        ${tourStep > 0 ? `<button class="btn btn-ghost btn-sm" onclick="tourPrev()">← Back</button>` : ''}
-        ${tourStep < TOUR_STEPS.length - 1
-          ? `<button class="btn btn-sm" onclick="tourNext()">Next →</button>`
-          : `<button class="btn btn-sm btn-success" onclick="endTour()">🎉 Let's go!</button>`}
-        <button class="btn btn-ghost btn-sm" onclick="endTour()" style="color:var(--text-muted)">Skip</button>
-      </div>
-    </div>`;
-  document.body.appendChild(el);
-}
-
-window.tourNext = function() { tourStep++; renderTourStep(); };
-window.tourPrev = function() { tourStep = Math.max(0, tourStep-1); renderTourStep(); };
-window.endTour  = function() {
-  tourActive = false;
-  document.getElementById('tour-overlay')?.remove();
-  localStorage.setItem('blizzard_tour_done', '1');
-};
-
-// Auto-start tour on first visit
-document.addEventListener('DOMContentLoaded', () => {
-  if (!localStorage.getItem('blizzard_tour_done')) {
-    setTimeout(startTour, 1500);
-  }
-});
-
-// Tour info button always available
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.createElement('button');
-  btn.className = 'tour-info-btn'; btn.title = 'App guide / tour'; btn.textContent = '?';
-  btn.onclick = startTour;
-  document.body.appendChild(btn);
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -1215,7 +1102,7 @@ function renderPctScenariosV5() {
 // Call it on DOMContentLoaded and after settings save
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(renderPctScenariosV5, 200);
-  renderAgeGroups(); renderHelainerStats();
+  renderMergedAgeGroups();
 });
 
 // Also patch Helaine age groups
@@ -1240,9 +1127,12 @@ function renderHelainerStats() {
 const _origSimRace = window.simRace;
 window.simRace = function(stage) {
   _origSimRace(stage);
-  // Force header update immediately
-  setTimeout(updateHeaderStatus, 50);
-  setTimeout(updateFamSpotETAs, 100);
+  setTimeout(() => {
+    updateHeaderStatus();
+    updateFamSpotETAs();
+    updateFamMapMarkers();
+    if(window._famMap) window._famMap.invalidateSize();
+  }, 80);
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -1300,4 +1190,310 @@ window.showTab = function(id) {
 
 // Also init on first load since family is the default tab
 document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(initFamMap, 600); });
+
+
+// ═══════════════════════════════════════════════════════════
+// TOUR v2 — non-blocking spotlight, element highlighting,
+//           state reset on exit, proper skip UX
+// ═══════════════════════════════════════════════════════════
+
+// Snapshot of state before tour starts (so we can reset)
+let tourPreState = null;
+
+function snapshotState() {
+  return {
+    gf:  JSON.parse(JSON.stringify(STATE.gf)),
+    mom: JSON.parse(JSON.stringify(STATE.mom)),
+  };
+}
+function restoreState(snap) {
+  if (!snap) return;
+  Object.assign(STATE.gf,  snap.gf);
+  Object.assign(STATE.mom, snap.mom);
+  renderAll();
+  updateHeaderStatus();
+}
+
+// Each step: title, body, highlight text, targetEl selector (for spotlight), action fn
+const TOUR_STEPS = [
+  {
+    title: "Welcome to Blizzard Tracker! 👋",
+    body: "Your race day command center for Catherine & Helaine at the RBC Brooklyn Half 2026. Let me give you a quick 30-second tour.",
+    highlight: null,
+    tip: "💡 The tour won't block the page — feel free to click around!",
+    targetSel: null,
+    action: () => showTab('family'),
+    pos: 'center',
+  },
+  {
+    title: "Family HQ 🏠",
+    body: "This is your home dashboard. It shows the live map, both runner stats, spectator spots with ETAs, and the course elevation profile all in one place.",
+    highlight: '.celebrate-banner',
+    tip: "👈 The celebration banner at the top shows race details.",
+    targetSel: '.celebrate-banner',
+    action: () => showTab('family'),
+    pos: 'bottom',
+  },
+  {
+    title: "The tab bar 🗂",
+    body: "Switch between views using the tabs. You can drag-and-drop any tab to reorder them.",
+    highlight: '#tab-bar',
+    tip: "↕️ Drag tabs left or right to rearrange them however you like.",
+    targetSel: '#tab-bar',
+    action: () => {},
+    pos: 'bottom',
+  },
+  {
+    title: "Catherine's tracker ⚡",
+    body: "Each runner has their own page with live distance, pace, predicted finish, and arrival ETAs at every spectator spot.",
+    highlight: '#pane-gf .runner-hero-section',
+    tip: "👉 The photo strip expands on hover — the running-on-dunes hero photo is her background!",
+    targetSel: '#tab-gf',
+    action: () => showTab('gf'),
+    pos: 'bottom',
+  },
+  {
+    title: "The pace chart 📈",
+    body: "Shows the sub-90 goal line (red dashed) plus 5 race scenarios. Click any legend item to show or hide it. Scroll/pinch to zoom in.",
+    highlight: '#gf .card',
+    tip: "📌 Only the 🎯 target line is shown by default — click others to compare.",
+    targetSel: '#gf-pace-chart',
+    action: () => showTab('gf'),
+    pos: 'top',
+  },
+  {
+    title: "The Race Simulator 🎮",
+    body: "Drag the slider to preview what any point in the race looks like. Let me simulate mile 6 (Prospect Park) for you now so you can see all the data come to life!",
+    highlight: null,
+    tip: "🔒 During the live race, the slider locks forward-only so you can't simulate backward.",
+    targetSel: '#gf-sim-slider',
+    action: () => { showTab('gf'); window.simRace && simRace('park'); },
+    pos: 'top',
+  },
+  {
+    title: "Race Settings ⚙️",
+    body: "Click the ⚙ Settings button in each runner's hero section to change their goal time, milestone paces, gender, and date of birth (for age-group stats).",
+    highlight: '.runner-settings-btn',
+    tip: "📊 Changing gender/DOB updates the age-group percentile projections in the Stats tab.",
+    targetSel: '.runner-settings-btn',
+    action: () => showTab('gf'),
+    pos: 'bottom',
+  },
+  {
+    title: "Adding runners ➕",
+    body: "Tap the ⊕ button at the end of the tab bar to add any runner with an RTRT tracker ID — a friend, pacer, anyone.",
+    highlight: '.tab-add-btn',
+    tip: "You'll need their RTRT tracker ID from the official NYRR tracking link.",
+    targetSel: '.tab-add-btn',
+    action: () => {},
+    pos: 'bottom',
+  },
+  {
+    title: "Push Notifications 🔔",
+    body: "Enable race-day notifications so you don't miss a milestone. The 🔔 button is in the Family HQ tab.",
+    highlight: null,
+    tip: "👈 Let me take you there now.",
+    targetSel: '[onclick="openNotifModal()"]',
+    action: () => showTab('family'),
+    pos: 'top',
+  },
+  {
+    title: "You're all set! 🎉",
+    body: "Race day is May 16 at 7:00 AM ET. Add this page to your phone's home screen for the best experience.",
+    highlight: null,
+    tip: "📱 Safari → Share → 'Add to Home Screen'. Find the tour again anytime via the ? button (top-right).",
+    targetSel: null,
+    action: () => { showTab('family'); window.simRace && simRace('pre'); },
+    pos: 'center',
+  },
+];
+
+let tourStep = 0;
+let tourActive = false;
+let _spotlightEl = null;
+
+window.startTour = function(fromButton = false) {
+  tourPreState = snapshotState();
+  tourStep = 0; tourActive = true;
+  clearSpotlight();
+  renderTourStep();
+};
+
+function clearSpotlight() {
+  document.querySelectorAll('.tour-spotlight-ring').forEach(e => e.remove());
+  _spotlightEl = null;
+}
+
+function spotlightElement(sel) {
+  clearSpotlight();
+  if (!sel) return;
+  const el = document.querySelector(sel);
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const pad = 6;
+  const ring = document.createElement('div');
+  ring.className = 'tour-spotlight-ring';
+  ring.style.cssText = `position:fixed;z-index:4999;pointer-events:none;
+    top:${rect.top - pad}px;left:${rect.left - pad}px;
+    width:${rect.width + pad*2}px;height:${rect.height + pad*2}px;
+    border:2.5px solid #007AFF;border-radius:10px;
+    box-shadow:0 0 0 4000px rgba(0,0,0,0.35);
+    animation:tour-pulse 1.8s ease infinite;`;
+  document.body.appendChild(ring);
+  _spotlightEl = ring;
+  // Scroll element into view
+  el.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
+}
+
+function renderTourStep() {
+  document.querySelector('.tour-card-wrap')?.remove();
+  if (!tourActive || tourStep >= TOUR_STEPS.length) { endTour(); return; }
+
+  const s = TOUR_STEPS[tourStep];
+  if (s.action) s.action();
+  setTimeout(() => { if (s.targetSel) spotlightElement(s.targetSel); else clearSpotlight(); }, 350);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'tour-card-wrap';
+
+  // Position card: center, top, or bottom
+  const posStyle = s.pos === 'center'
+    ? 'top:50%;left:50%;transform:translate(-50%,-50%)'
+    : s.pos === 'top'
+      ? 'top:80px;left:50%;transform:translateX(-50%)'
+      : 'bottom:20px;left:50%;transform:translateX(-50%)';
+
+  wrap.style.cssText = `position:fixed;z-index:5000;${posStyle};width:min(420px,calc(100vw - 32px));pointer-events:auto;`;
+
+  wrap.innerHTML = `
+    <div class="tour-card" style="position:relative">
+      <button onclick="endTour()" title="Close tour" style="
+        position:absolute;top:12px;right:12px;
+        width:26px;height:26px;border-radius:50%;
+        background:rgba(0,0,0,0.08);border:none;cursor:pointer;
+        font-size:14px;color:var(--text-secondary);
+        display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+      <div class="tour-step-pill">Step ${tourStep+1} of ${TOUR_STEPS.length}</div>
+      <div class="tour-title">${s.title}</div>
+      <div class="tour-body">${s.body}</div>
+      ${s.tip ? `<div class="tour-highlight">${s.tip}</div>` : ''}
+      <div class="tour-footer">
+        <div class="tour-dots">${TOUR_STEPS.map((_,i)=>`<div class="tour-dot${i===tourStep?' active':''}"></div>`).join('')}</div>
+        ${tourStep > 0 ? `<button class="btn btn-ghost btn-sm" onclick="tourPrev()">← Back</button>` : ''}
+        ${tourStep < TOUR_STEPS.length - 1
+          ? `<button class="btn btn-sm" onclick="tourNext()">Next →</button>`
+          : `<button class="btn btn-sm btn-success" onclick="endTour(true)">🎉 Let's go!</button>`}
+        <button onclick="endTour(false, true)" style="
+          padding:0 10px;height:28px;border:none;background:none;
+          font-size:12px;color:var(--text-muted);cursor:pointer;
+          border-radius:6px;transition:background .15s"
+          onmouseover="this.style.background='rgba(0,0,0,0.06)'"
+          onmouseout="this.style.background='none'">Skip tour</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+}
+
+window.tourNext = function() { tourStep++; renderTourStep(); };
+window.tourPrev = function() { tourStep = Math.max(0,tourStep-1); renderTourStep(); };
+
+window.endTour = function(completed = false, skipped = false) {
+  tourActive = false;
+  document.querySelector('.tour-card-wrap')?.remove();
+  clearSpotlight();
+
+  if (!completed) {
+    // Reset any simulation state made during tour
+    restoreState(tourPreState);
+  }
+
+  localStorage.setItem('blizzard_tour_done', '1');
+
+  if (skipped) {
+    notify('Tour skipped — tap the ? button (top right) to restart anytime 👆');
+  } else if (!completed) {
+    notify('Tour closed — tap ? anytime to restart');
+  }
+};
+
+// Auto-start on first visit
+document.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem('blizzard_tour_done')) {
+    setTimeout(() => startTour(false), 1800);
+  }
+});
+
+// ? button in top-right corner
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.createElement('button');
+  btn.className = 'tour-info-btn'; btn.title = 'App guide & tour'; btn.textContent = '?';
+  btn.onclick = () => startTour(true);
+  document.body.appendChild(btn);
+});
+
+// ═══════════════════════════════════════════════════════════
+// AGE GROUP TABLE — merged when same gender
+// ═══════════════════════════════════════════════════════════
+function renderMergedAgeGroups() {
+  const gfInfo  = loadPersonalInfo('gf');
+  const momInfo = loadPersonalInfo('mom');
+  const gfAge   = getAge(gfInfo.dob),  gfGrp  = getAgeGroup(gfAge);
+  const momAge  = getAge(momInfo.dob), momGrp = getAgeGroup(momAge);
+  const samGender = gfInfo.gender === momInfo.gender;
+
+  const gfGender  = gfInfo.gender  || 'F';
+  const momGender = momInfo.gender || 'F';
+  const gfTable   = gfGender  === 'M' ? MEN_AGE_GROUPS  : WOMEN_AGE_GROUPS;
+  const momTable  = momGender === 'M' ? MEN_AGE_GROUPS  : WOMEN_AGE_GROUPS;
+
+  const genderLabel = g => g === 'M' ? 'Men' : 'Women';
+
+  if (samGender) {
+    // One table for both
+    const el = document.getElementById('women-age-groups'); if(!el) return;
+    el.innerHTML = gfTable.map(g => {
+      const isCat   = g.range === gfGrp;
+      const isHel   = g.range === momGrp;
+      const isBoth  = isCat && isHel;
+      let badge = '';
+      if (isBoth) badge = ` <span style="color:#007AFF;font-size:10px">← Catherine & Helaine</span>`;
+      else if (isCat) badge = ` <span style="color:#007AFF;font-size:10px">← Catherine</span>`;
+      else if (isHel) badge = ` <span style="color:#5856D6;font-size:10px">← Helaine</span>`;
+      return `<div class="age-group-row${(isCat||isHel)?' highlight':''}">
+        <span style="font-size:11px;color:var(--text-secondary)">${g.range}${badge}</span>
+        <span style="font-family:var(--font-mono);font-size:12px">${g.label} median (${genderLabel(gfGender)})</span>
+      </div>`;
+    }).join('');
+
+    // Hide Helaine's separate section
+    const hEl = document.getElementById('helaine-age-groups');
+    if (hEl) hEl.closest('.age-groups-helaine-wrap')?.style?.setProperty('display','none');
+    const hSection = document.getElementById('helaine-age-section');
+    if (hSection) hSection.style.display = 'none';
+  } else {
+    // Separate tables
+    const gfEl = document.getElementById('women-age-groups'); if(gfEl) {
+      gfEl.innerHTML = gfTable.map(g => `
+        <div class="age-group-row${g.range===gfGrp?' highlight':''}">
+          <span style="font-size:11px;color:var(--text-secondary)">${g.range}${g.range===gfGrp?` <span style="color:#007AFF;font-size:10px">← Catherine</span>`:''}</span>
+          <span style="font-family:var(--font-mono);font-size:12px">${g.label} median</span>
+        </div>`).join('');
+    }
+    const hEl = document.getElementById('helaine-age-groups'); if(hEl) {
+      hEl.innerHTML = momTable.map(g => `
+        <div class="age-group-row${g.range===momGrp?' highlight':''}">
+          <span style="font-size:11px;color:var(--text-secondary)">${g.range}${g.range===momGrp?` <span style="color:#5856D6;font-size:10px">← Helaine</span>`:''}</span>
+          <span style="font-family:var(--font-mono);font-size:12px">${g.label} median</span>
+        </div>`).join('');
+      const sect = document.getElementById('helaine-age-section');
+      if (sect) sect.style.display = '';
+    }
+  }
+}
+
+// Replace old renderAgeGroups calls
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(renderMergedAgeGroups, 300);
+  setTimeout(renderPctScenariosV5, 400);
+});
 

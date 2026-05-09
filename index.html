@@ -248,9 +248,13 @@
     </div>
   </div>
 
-  <!-- Notification button -->
-  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-    <button class="btn btn-ghost btn-sm" onclick="openNotifModal()" style="gap:6px">🔔 Race Notifications</button>
+  <!-- Notification button — prominent -->
+  <div class="notif-promo-row gap-md">
+    <div class="notif-promo-text">
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary)">🔔 Race Day Notifications</div>
+      <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">Get alerts at milestones — 25%, halfway, finish & more</div>
+    </div>
+    <button class="btn btn-sm" onclick="openNotifModal()" style="flex-shrink:0">Set up</button>
   </div>
 
   <!-- Live map on Family HQ -->
@@ -264,6 +268,16 @@
     </div>
     <div id="fam-map"></div>
   </div>
+  <!-- Elevation profile on Family HQ -->
+  <div class="card gap-md">
+    <div class="card-header">
+      <div class="card-title">Elevation profile · 246ft total gain · park loop miles 3–7</div>
+      <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['elev']?.resetZoom()">Reset zoom</button>
+    </div>
+    <div class="chart-wrap" style="height:130px"><canvas id="elev-chart"></canvas></div>
+  </div>
+
+
 
   <!-- Spectator spots with ETAs -->
   <div class="spot-list gap-md">
@@ -490,18 +504,6 @@
   <div id="upd-mom" style="font-size:10px;color:var(--text-muted);text-align:right;margin-top:6px;font-family:var(--font-mono)">—</div>
 </div>
 
-<!-- ══ MAP ══ -->
-<div class="pane" id="pane-map">
-  <div class="card gap-md">
-    <div class="card-header"><div class="card-title">2026 Official Course · Brooklyn Museum → Coney Island</div></div>
-    <div id="map"></div>
-  </div>
-  <div class="card">
-    <div class="card-header"><div class="card-title">Elevation profile · 246ft gain</div><button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['elev']?.resetZoom()">Reset</button></div>
-    <div class="chart-wrap" style="height:150px"><canvas id="elev-chart"></canvas></div>
-  </div>
-</div>
-
 <!-- ══ WEATHER ══ -->
 <div class="pane" id="pane-weather">
   <div class="section-title">Race Day Weather <span class="info-btn" data-tip="weather">ⓘ</span></div>
@@ -544,7 +546,7 @@
         <div class="gender-row"><span style="color:#007AFF">♀ Women</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:52%;background:rgba(0,122,255,.5)"></div></div><span>52%</span></div>
         <div class="gender-row"><span style="color:#5856D6">♂ Men</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:46%;background:rgba(88,86,214,.5)"></div></div><span>46%</span></div>
         <div class="gender-row"><span style="color:#34C759">⚥ NB</span><div class="gender-bar-wrap"><div class="gender-bar" style="width:2%;background:rgba(52,199,89,.5)"></div></div><span>2%</span></div>
-        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--separator)">
+        <div id="helaine-age-section" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--separator)">
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-tertiary);margin-bottom:8px">⚡ Helaine · Medians by Age Group</div>
         <div id="helaine-age-groups"></div>
       </div>
