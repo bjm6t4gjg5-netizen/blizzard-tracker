@@ -652,8 +652,15 @@ window.devSaveRunner = function() {
   }
 
   document.getElementById('dev-runner-modal').classList.remove('open');
-  refreshRunnerCards(window._devREG||[], window._devGOALS||{});
-  window.notify?.('Runner saved ✓');
+  // Rebuild tabs and panes so new runner appears
+  if (typeof window.buildTabs === 'function') window.buildTabs();
+  if (typeof window.buildPanes === 'function') window.buildPanes();
+  // Rebuild dev selector
+  setTimeout(function() {
+    refreshRunnerCards(window._devREG||[], window._devGOALS||{});
+    refreshDevRunnerSelector();
+    window.notify?.('Runner saved ✓');
+  }, 150);
 };
 window.closeDevRunnerModal = () => document.getElementById('dev-runner-modal')?.classList.remove('open');
 
@@ -739,4 +746,15 @@ function downloadText(filename, text) {
   const a = document.createElement('a');
   a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
   a.download = filename; a.click();
+}
+
+function refreshDevRunnerSelector() {
+  const REG = window._devREG || [];
+  ['dev-runner-sel','dev-preview-runner'].forEach(function(selId) {
+    const sel = document.getElementById(selId); if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = REG.map(function(r) {
+      return '<option value="' + r.id + '"' + (r.id===cur?' selected':'') + '>' + r.emoji + ' ' + r.name + '</option>';
+    }).join('');
+  });
 }

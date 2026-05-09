@@ -731,3 +731,14 @@ main { flex: 1 0 auto; }
 .race-history-name { flex:1; font-weight:500; color:var(--text-primary); }
 .race-history-time { font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--accent); }
 .pr-badge { display:inline-block; font-size:9px; background:rgba(255,149,0,.15); color:var(--orange); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:700; }
+
+/* ══ Pace chart legend — hidden state visible ══ */
+.legend-item { display:flex; align-items:center; gap:7px; padding:4px 8px 4px 6px;
+  border-radius:7px; cursor:pointer; font-size:11px; color:var(--text-primary);
+  transition:all .15s; border:1px solid transparent; user-select:none; }
+.legend-item:hover { background:var(--fill-blue); border-color:var(--border); }
+.legend-item.legend-hidden { opacity:0.38; }
+.legend-item.legend-hidden .legend-label { text-decoration:line-through; color:var(--text-muted); }
+.legend-item.legend-hidden:hover { opacity:0.65; }
+.legend-swatch { display:inline-block; flex-shrink:0; border-radius:2px; }
+.legend-label { flex:1; }

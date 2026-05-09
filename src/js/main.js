@@ -47,8 +47,14 @@ REG.forEach(r => { STATE[r.id] = makeRunnerState(r); GOALS[r.id] = loadGoals(r.i
 
 let fullMap=null, mapInited=false;
 // Expose globals for dev-tab.js
-window._devREG   = REG;
-window._devGOALS = GOALS;
+window._devREG      = REG;
+window._devGOALS    = GOALS;
+window.saveRegistry = saveRegistry;
+window.buildPaceChart = buildPaceChart;
+window.renderRunnerStats = renderRunnerStats;
+window.showTab = showTab;
+window.buildTabs = buildTabs;
+window.buildPanes = buildPanes;
 const miniMaps={}, markers={}, miniMarkers={};
 let wxLoaded=false, wxData=null;
 const charts={};
@@ -521,12 +527,28 @@ function buildPaceChart(id) {
 
 function rebuildPaceChart(id) { buildPaceChart(id); }
 
-function buildChartLegend(legendId,chartKey,datasets){
-  const el=document.getElementById(legendId); if(!el) return;
-  el.innerHTML=datasets.map((ds,i)=>`<div class="legend-item" data-chart="${chartKey}" data-index="${i}">
-    <span class="legend-swatch" style="${ds.borderDash?.length?'border-top:2px dashed '+ds.borderColor+';background:transparent;height:0;margin-top:8px':'background:'+ds.borderColor}"></span>
-    <span>${ds.label}</span></div>`).join('');
-  el.querySelectorAll('.legend-item').forEach(item=>{ item.addEventListener('click',()=>{ const ch=charts[item.dataset.chart],idx=+item.dataset.index,meta=ch.getDatasetMeta(idx); meta.hidden=!meta.hidden; ch.update(); item.classList.toggle('hidden',meta.hidden); }); });
+function buildChartLegend(legendId, chartKey, datasets) {
+  const el = document.getElementById(legendId); if (!el) return;
+  el.innerHTML = datasets.map((ds, i) => {
+    const hidden = (ds.hidden !== false); // true if hidden by default
+    const swatch = ds.borderDash?.length
+      ? `border-top:2.5px dashed ${ds.borderColor};background:transparent;height:0;width:22px;margin-top:9px`
+      : `background:${ds.borderColor};height:3px;width:22px;margin-top:9px;border-radius:2px`;
+    return `<div class="legend-item${hidden ? ' legend-hidden' : ''}" data-chart="${chartKey}" data-index="${i}">
+      <span class="legend-swatch" style="${swatch}"></span>
+      <span class="legend-label">${ds.label}</span>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.legend-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const chart = charts[item.dataset.chart]; if (!chart) return;
+      const idx = +item.dataset.index;
+      const meta = chart.getDatasetMeta(idx);
+      meta.hidden = !meta.hidden;
+      item.classList.toggle('legend-hidden', meta.hidden);
+      chart.update();
+    });
+  });
 }
 
 function buildBadges(elId,goals){
@@ -842,6 +864,13 @@ window.simRace = function(stage) {
     renderRunner(id);
   });
   notify('Simulating: ' + stage);
+  // Update family HQ map and header
+  setTimeout(function() {
+    updateHeaderStatus();
+    updateFamSpotETAs();
+    if (typeof updateFamMapMarkers === 'function') updateFamMapMarkers();
+    if (window._famMap) window._famMap.invalidateSize();
+  }, 100);
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -1173,18 +1202,7 @@ function renderHelainerStats() {
 // ═══════════════════════════════════════════════════════════
 // Override simRace to also update header
 // simRace handles all runners inline now — just update fam map after
-window.addEventListener('DOMContentLoaded', () => {
-  const _origSimRaceForFam = window.simRace;
-  window.simRace = function(stage) {
-    _origSimRaceForFam(stage);
-    setTimeout(function() {
-      updateHeaderStatus();
-      updateFamSpotETAs();
-      updateFamMapMarkers();
-      if(window._famMap) window._famMap.invalidateSize();
-    }, 80);
-  };
-});;
+;;
 
 // ═══════════════════════════════════════════════════════════
 // FAMILY MAP (embedded Leaflet on Family HQ)
@@ -1313,12 +1331,12 @@ const TOUR_STEPS = [
     pos: 'top',
   },
   {
-    title: "The Race Simulator 🎮",
-    body: "Drag the slider to preview what any point in the race looks like. Let me simulate mile 6 (Prospect Park) for you now so you can see all the data come to life!",
+    title: "Past Races & Career Stats 🏅",
+    body: "Scroll down on Catherine's or Helaine's page to see their full career stats — total miles, marathons run, and personal bests with the race name and date.",
     highlight: null,
-    tip: "🔒 During the live race, the slider locks forward-only so you can't simulate backward.",
-    targetSel: '#gf-pace-chart',
-    action: () => { showTab('gf'); window.simRace && simRace('park'); },
+    tip: "💾 In Developer mode you can add past races via CSV upload or manual entry.",
+    targetSel: '#stats-section-gf',
+    action: () => showTab('gf'),
     pos: 'top',
   },
   {
