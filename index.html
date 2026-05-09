@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Blizzard Tracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e0f2fe">
+<meta name="description" content="Team Blizzard · RBC Brooklyn Half 2026 Race Tracker">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <title>⚡ Blizzard Tracker — RBC Brooklyn Half 2026</title>
-<meta name="theme-color" content="#ffffff">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -13,36 +19,34 @@
 
 <!-- Chart.js + zoom plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script>
-// Register zoom plugin
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.Chart && window.ChartZoom) Chart.register(window.ChartZoom);
-});
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Chart && window.ChartZoom) Chart.register(window.ChartZoom);
+  });
 </script>
 </head>
 <body>
 
-<!-- NOTIFICATION TOAST -->
+<!-- TOAST -->
 <div id="notif"><span>⚡</span><span id="notif-text">—</span></div>
 
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
   <div class="modal-sheet" style="position:relative">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeSettings()">✕</button>
+    <button class="modal-close-btn" onclick="closeSettings()">✕</button>
     <div class="modal-title">Manage Runners</div>
-    <div id="rli-list" class="runner-list" style="margin-bottom:16px"></div>
-    <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Add Runner</div>
+    <div id="rli-list" class="runner-list" style="margin-bottom:14px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Add Runner</div>
     <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="new-name" placeholder="e.g. Alex Blizzard"></div>
     <div class="form-group"><label class="form-label">RTRT Tracker ID</label><input class="form-input" id="new-tid" placeholder="e.g. RMGBEVSK" style="text-transform:uppercase"></div>
-    <div style="display:flex;gap:10px">
+    <div style="display:flex;gap:8px">
       <div class="form-group" style="flex:1"><label class="form-label">Emoji</label><input class="form-input" id="new-emoji" placeholder="🏃" maxlength="2"></div>
       <div class="form-group" style="flex:1"><label class="form-label">Color</label><input class="form-input" id="new-color" type="color" value="#007AFF" style="height:40px;padding:4px"></div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:12px">
+    <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn" style="flex:1" onclick="addRunner()">+ Add Runner</button>
       <button class="btn btn-ghost" onclick="closeSettings()">Done</button>
     </div>
@@ -61,36 +65,29 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="spin-ring" id="spinRing"></div>
       <span id="lastUpd">—</span>
     </div>
-    <button class="btn btn-sm btn-ghost" onclick="manualRefresh()" id="refreshBtn">↻ Refresh</button>
+    <button class="btn btn-sm btn-ghost" onclick="manualRefresh()" id="refreshBtn">↻</button>
   </div>
 </header>
 
-<!-- TAB BAR (dynamic) -->
+<!-- TAB BAR -->
 <nav id="tab-bar"></nav>
 
 <main>
 
-<!-- ══════════════════════════════════════
-     ⚡ CATHERINE
-══════════════════════════════════════ -->
+<!-- ══ CATHERINE ══ -->
 <div class="pane active" id="pane-gf">
   <div class="grid-2" style="align-items:start">
-
-    <!-- LEFT: Runner card -->
     <div>
-      <div class="runner-header-card gap-md">
+      <div class="runner-header-card">
         <div class="runner-top-bar">
-          <div class="avatar" style="background:rgba(0,122,255,0.1);color:#007AFF;border:1.5px solid rgba(0,122,255,0.25)">CB</div>
-          <div>
-            <div class="runner-name">Catherine Blizzard</div>
-            <div class="runner-sub">Tracker ID · RMGBEVSK</div>
-          </div>
+          <div class="avatar" style="background:rgba(0,122,255,.12);color:#007AFF;border:1.5px solid rgba(0,122,255,.3)">CB</div>
+          <div><div class="runner-name">Catherine Blizzard</div><div class="runner-sub">Tracker · RMGBEVSK</div></div>
           <div id="gf-pill" class="status-badge status-pre"><span class="status-dot"></span>Pre-race</div>
         </div>
         <div class="stats-row">
           <div class="stat-cell"><div class="stat-label">Distance</div><div class="stat-num" id="gf-dist" style="color:#007AFF">—</div><div class="stat-unit">of 13.1 mi</div></div>
           <div class="stat-cell"><div class="stat-label">Elapsed</div><div class="stat-num" id="gf-elapsed" style="color:#007AFF">—</div><div class="stat-unit">HH:MM:SS</div></div>
-          <div class="stat-cell"><div class="stat-label">Avg Pace</div><div class="stat-num" id="gf-pace" style="color:#007AFF">—</div><div class="stat-unit">min/mile</div></div>
+          <div class="stat-cell"><div class="stat-label">Avg Pace</div><div class="stat-num" id="gf-pace" style="color:#007AFF">—</div><div class="stat-unit">min/mi</div></div>
         </div>
         <div class="progress-section">
           <div class="progress-labels"><span>Brooklyn Museum</span><span id="gf-pct-lbl">0%</span></div>
@@ -100,19 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="splits-section">
           <div class="splits-label">Checkpoint Splits</div>
           <table class="splits-table">
-            <thead><tr><th>Point</th><th>Clock Time</th><th>Split Pace</th></tr></thead>
-            <tbody id="gf-splits"><tr><td class="split-empty" colspan="3">Race starts May 16 — splits appear here live</td></tr></tbody>
+            <colgroup><col class="col-cp"><col class="col-time"><col class="col-pace"></colgroup>
+            <thead><tr><th>Checkpoint</th><th>Clock Time</th><th>Pace</th></tr></thead>
+            <tbody id="gf-splits"><tr><td class="split-empty" colspan="3">Race starts May 16 — populates live</td></tr></tbody>
           </table>
         </div>
       </div>
+      <!-- Mini map -->
+      <div class="mini-map-wrap gap-md">
+        <div class="card-header"><div class="card-title">📍 Live Position</div></div>
+        <div id="mini-map-gf" class="mini-map"></div>
+      </div>
     </div>
-
-    <!-- RIGHT: ETA + pace chart -->
     <div>
-      <!-- On-track indicator (hidden until race) -->
       <div id="gf-on-track" class="on-track-banner on-track-neutral gap-md" style="display:none"></div>
-
-      <!-- ETA -->
       <div class="eta-card gap-md">
         <div class="eta-inner">
           <div class="eta-icon">⚡</div>
@@ -121,65 +119,61 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="eta-time" id="gf-eta" style="color:#007AFF">—:—:—</div>
             <div class="eta-sub" id="gf-eta-sub">Waiting for live data…</div>
           </div>
-          <div class="eta-right">
-            <div class="eta-conf" id="gf-conf" style="color:#007AFF">—</div>
-            <div class="eta-conf-label">% confidence</div>
-          </div>
+          <div class="eta-right"><div class="eta-conf" id="gf-conf" style="color:#007AFF">—</div><div class="eta-conf-label">% confidence</div></div>
         </div>
       </div>
-
-      <!-- ETA at spectator spots -->
       <div class="card gap-md">
-        <div class="card-header"><div class="card-title">Arrival estimates — spectator spots</div></div>
-        <div id="gf-eta-spots" class="eta-spots-row">
-          <div style="padding:14px 16px;font-size:13px;color:var(--text-tertiary)">Available once race starts</div>
-        </div>
+        <div class="card-header"><div class="card-title">📍 Arrival at spectator spots</div></div>
+        <div id="gf-eta-spots" class="eta-spots-row"><div style="padding:12px 14px;font-size:12px;color:var(--text-tertiary)">Available once race starts</div></div>
       </div>
-
-      <!-- Pace scenarios + chart -->
-      <div class="section-title">Pace scenarios</div>
+      <div class="section-title" style="margin-top:4px">Scenarios</div>
       <div class="sc-grid gap-md" id="gf-sc-grid"></div>
-
-      <!-- Cheer button -->
       <button class="cheer-btn gap-md" id="cheer-btn-gf" onclick="sendCheer('gf')">
         <span>📣</span> Send Cheer to Catherine
       </button>
-
-      <div class="card">
+      <div class="card gap-md">
         <div class="card-header">
-          <div class="card-title">Mile-by-mile projection · sub-90 goal vs scenarios</div>
+          <div class="card-title">Mile-by-mile projection · vs sub-90 goal</div>
           <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['gf-pace']?.resetZoom()">Reset zoom</button>
         </div>
         <div class="chart-wrap">
           <div id="gf-pace-legend" class="chart-legend"></div>
-          <div class="chart-canvas-wrap" style="height:280px"><canvas id="gf-pace-chart"></canvas></div>
+          <div style="position:relative;height:220px"><canvas id="gf-pace-chart"></canvas></div>
         </div>
         <div id="gf-sc-badges" class="badge-row"></div>
       </div>
+      <!-- Simulator -->
+      <div class="sim-section gap-md">
+        <div class="sim-title">🎮 Race Simulator <span style="font-size:10px;font-weight:400;color:var(--text-muted)">Drag to simulate · locks to live position during race</span></div>
+        <div class="sim-controls">
+          <button class="btn btn-sm" id="gf-sim-play">▶ Play</button>
+          <button class="btn btn-sm btn-ghost" id="gf-sim-reset">↺</button>
+          <input type="range" id="gf-sim-slider" class="sim-slider" min="0" max="100" step="0.1" value="0" style="background:linear-gradient(to right,#007AFF 0%,rgba(14,165,233,.15) 0%)">
+          <div class="sim-stat"><div class="sim-stat-val" id="gf-sim-pct" style="color:#007AFF">0%</div><div class="sim-stat-lbl">Progress</div></div>
+          <div class="sim-stat"><div class="sim-stat-val" id="gf-sim-mi" style="color:#007AFF">0.0 mi</div><div class="sim-stat-lbl">Distance</div></div>
+        </div>
+        <div id="gf-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate the race</div>
+        <div id="gf-sim-rows" style="display:flex;flex-direction:column"></div>
+      </div>
     </div>
   </div>
-  <div id="upd-gf" style="font-size:11px;color:var(--text-quaternary);text-align:right;margin-top:8px;font-family:var(--font-mono)">—</div>
+  <div id="upd-gf" style="font-size:10px;color:var(--text-muted);text-align:right;margin-top:6px;font-family:var(--font-mono)">—</div>
 </div>
 
-<!-- ══════════════════════════════════════
-     💜 HELAINE
-══════════════════════════════════════ -->
+<!-- ══ HELAINE ══ -->
 <div class="pane" id="pane-mom">
   <div class="grid-2" style="align-items:start">
     <div>
-      <div class="runner-header-card gap-md">
+      <div class="runner-header-card">
         <div class="runner-top-bar">
-          <div class="avatar" style="background:rgba(88,86,214,0.1);color:#5856D6;border:1.5px solid rgba(88,86,214,0.25)">HB</div>
-          <div>
-            <div class="runner-name">Helaine Blizzard</div>
-            <div class="runner-sub">Tracker ID · RRM2PLD3</div>
-          </div>
+          <div class="avatar" style="background:rgba(88,86,214,.12);color:#5856D6;border:1.5px solid rgba(88,86,214,.3)">HB</div>
+          <div><div class="runner-name">Helaine Blizzard</div><div class="runner-sub">Tracker · RRM2PLD3</div></div>
           <div id="mom-pill" class="status-badge status-pre"><span class="status-dot"></span>Pre-race</div>
         </div>
         <div class="stats-row">
           <div class="stat-cell"><div class="stat-label">Distance</div><div class="stat-num" id="mom-dist" style="color:#5856D6">—</div><div class="stat-unit">of 13.1 mi</div></div>
           <div class="stat-cell"><div class="stat-label">Elapsed</div><div class="stat-num" id="mom-elapsed" style="color:#5856D6">—</div><div class="stat-unit">HH:MM:SS</div></div>
-          <div class="stat-cell"><div class="stat-label">Avg Pace</div><div class="stat-num" id="mom-pace" style="color:#5856D6">—</div><div class="stat-unit">min/mile</div></div>
+          <div class="stat-cell"><div class="stat-label">Avg Pace</div><div class="stat-num" id="mom-pace" style="color:#5856D6">—</div><div class="stat-unit">min/mi</div></div>
         </div>
         <div class="progress-section">
           <div class="progress-labels"><span>Brooklyn Museum</span><span id="mom-pct-lbl">0%</span></div>
@@ -189,13 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="splits-section">
           <div class="splits-label">Checkpoint Splits</div>
           <table class="splits-table">
-            <thead><tr><th>Point</th><th>Clock Time</th><th>Split Pace</th></tr></thead>
-            <tbody id="mom-splits"><tr><td class="split-empty" colspan="3">Race starts May 16 — splits appear here live</td></tr></tbody>
+            <colgroup><col class="col-cp"><col class="col-time"><col class="col-pace"></colgroup>
+            <thead><tr><th>Checkpoint</th><th>Clock Time</th><th>Pace</th></tr></thead>
+            <tbody id="mom-splits"><tr><td class="split-empty" colspan="3">Race starts May 16 — populates live</td></tr></tbody>
           </table>
         </div>
       </div>
+      <div class="mini-map-wrap gap-md">
+        <div class="card-header"><div class="card-title">📍 Live Position</div></div>
+        <div id="mini-map-mom" class="mini-map"></div>
+      </div>
     </div>
     <div>
+      <div id="mom-on-track" class="on-track-banner on-track-neutral gap-md" style="display:none"></div>
       <div class="eta-card gap-md">
         <div class="eta-inner">
           <div class="eta-icon">💜</div>
@@ -204,45 +204,50 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="eta-time" id="mom-eta" style="color:#5856D6">—:—:—</div>
             <div class="eta-sub" id="mom-eta-sub">Waiting for live data…</div>
           </div>
-          <div class="eta-right">
-            <div class="eta-conf" id="mom-conf" style="color:#5856D6">—</div>
-            <div class="eta-conf-label">% confidence</div>
-          </div>
+          <div class="eta-right"><div class="eta-conf" id="mom-conf" style="color:#5856D6">—</div><div class="eta-conf-label">% confidence</div></div>
         </div>
       </div>
       <div class="card gap-md">
-        <div class="card-header"><div class="card-title">Arrival estimates — spectator spots</div></div>
-        <div id="mom-eta-spots" class="eta-spots-row">
-          <div style="padding:14px 16px;font-size:13px;color:var(--text-tertiary)">Available once race starts</div>
-        </div>
+        <div class="card-header"><div class="card-title">📍 Arrival at spectator spots</div></div>
+        <div id="mom-eta-spots" class="eta-spots-row"><div style="padding:12px 14px;font-size:12px;color:var(--text-tertiary)">Available once race starts</div></div>
       </div>
-      <div class="section-title">Pace scenarios</div>
+      <div class="section-title" style="margin-top:4px">Scenarios</div>
       <div class="sc-grid gap-md" id="mom-sc-grid"></div>
       <button class="cheer-btn gap-md" id="cheer-btn-mom" onclick="sendCheer('mom')" style="background:linear-gradient(135deg,#5856D6,#9B59B6)">
         <span>📣</span> Send Cheer to Helaine
       </button>
-      <div class="card">
+      <div class="card gap-md">
         <div class="card-header">
           <div class="card-title">Mile-by-mile projection · scenarios</div>
           <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['mom-pace']?.resetZoom()">Reset zoom</button>
         </div>
         <div class="chart-wrap">
           <div id="mom-pace-legend" class="chart-legend"></div>
-          <div class="chart-canvas-wrap" style="height:280px"><canvas id="mom-pace-chart"></canvas></div>
+          <div style="position:relative;height:220px"><canvas id="mom-pace-chart"></canvas></div>
         </div>
         <div id="mom-sc-badges" class="badge-row"></div>
       </div>
+      <div class="sim-section gap-md">
+        <div class="sim-title">🎮 Race Simulator <span style="font-size:10px;font-weight:400;color:var(--text-muted)">Drag to simulate · locks to live position during race</span></div>
+        <div class="sim-controls">
+          <button class="btn btn-sm" id="mom-sim-play">▶ Play</button>
+          <button class="btn btn-sm btn-ghost" id="mom-sim-reset">↺</button>
+          <input type="range" id="mom-sim-slider" class="sim-slider" min="0" max="100" step="0.1" value="0" style="background:linear-gradient(to right,#5856D6 0%,rgba(88,86,214,.15) 0%)">
+          <div class="sim-stat"><div class="sim-stat-val" id="mom-sim-pct" style="color:#5856D6">0%</div><div class="sim-stat-lbl">Progress</div></div>
+          <div class="sim-stat"><div class="sim-stat-val" id="mom-sim-mi" style="color:#5856D6">0.0 mi</div><div class="sim-stat-lbl">Distance</div></div>
+        </div>
+        <div id="mom-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate the race</div>
+        <div id="mom-sim-rows" style="display:flex;flex-direction:column"></div>
+      </div>
     </div>
   </div>
-  <div id="upd-mom" style="font-size:11px;color:var(--text-quaternary);text-align:right;margin-top:8px;font-family:var(--font-mono)">—</div>
+  <div id="upd-mom" style="font-size:10px;color:var(--text-muted);text-align:right;margin-top:6px;font-family:var(--font-mono)">—</div>
 </div>
 
-<!-- ══════════════════════════════════════
-     🏠 FAMILY HQ
-══════════════════════════════════════ -->
+<!-- ══ FAMILY HQ ══ -->
 <div class="pane" id="pane-family">
   <div class="countdown-wrap gap-md">
-    <div class="countdown-label">Time to race start · May 16, 2026 · 7:00 AM ET</div>
+    <div class="countdown-label">Time to race start · Saturday May 16, 2026 · 7:00 AM ET</div>
     <div class="countdown-row">
       <div class="cd-unit"><div class="cd-num" id="cd-d">—</div><div class="cd-lbl">Days</div></div>
       <div class="cd-sep">:</div>
@@ -253,14 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="cd-unit"><div class="cd-num" id="cd-s">—</div><div class="cd-lbl">Secs</div></div>
     </div>
   </div>
-
   <div class="fam-grid gap-md">
     <div class="mini-card" style="border-top:3px solid #007AFF">
       <div class="mini-runner-name" style="color:#007AFF">⚡ Catherine</div>
       <div class="mini-row"><span class="mini-key">Status</span><span id="fam-gf-st" class="mini-val" style="color:#007AFF">Pre-race</span></div>
       <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-gf-d" class="mini-val">—</span></div>
       <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-gf-e" class="mini-val">—</span></div>
-      <div class="mini-row"><span class="mini-key">Avg Pace</span><span id="fam-gf-p" class="mini-val">—</span></div>
+      <div class="mini-row"><span class="mini-key">Pace</span><span id="fam-gf-p" class="mini-val">—</span></div>
       <div class="mini-row" style="border:none"><span class="mini-key">Pred. Finish</span><span id="fam-gf-eta" class="mini-val" style="color:#007AFF">—</span></div>
     </div>
     <div class="vs-center"><div class="vs-text">VS</div></div>
@@ -269,152 +273,128 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="mini-row"><span class="mini-key">Status</span><span id="fam-mom-st" class="mini-val" style="color:#5856D6">Pre-race</span></div>
       <div class="mini-row"><span class="mini-key">Distance</span><span id="fam-mom-d" class="mini-val">—</span></div>
       <div class="mini-row"><span class="mini-key">Elapsed</span><span id="fam-mom-e" class="mini-val">—</span></div>
-      <div class="mini-row"><span class="mini-key">Avg Pace</span><span id="fam-mom-p" class="mini-val">—</span></div>
+      <div class="mini-row"><span class="mini-key">Pace</span><span id="fam-mom-p" class="mini-val">—</span></div>
       <div class="mini-row" style="border:none"><span class="mini-key">Pred. Finish</span><span id="fam-mom-eta" class="mini-val" style="color:#5856D6">—</span></div>
     </div>
   </div>
-
   <div class="lead-banner gap-md">
     <div class="lead-title">2026 RBC Brooklyn Half · Brooklyn, NY</div>
-    <div class="lead-sub">Brooklyn Museum → Prospect Park loop → Coney Island · 13.1 miles</div>
+    <div class="lead-sub">Brooklyn Museum → Prospect Park loop → Ocean Pkwy → Coney Island · 13.1 miles</div>
   </div>
-
-  <div class="spot-list gap-md">
-    <div class="spot-header"><div class="card-title">Best spectator spots</div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~1.5 mi</div><div><div class="spot-name">Grand Army Plaza</div><div class="spot-detail">Iconic arch · 2/3 train to Grand Army Plaza</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~3 mi</div><div><div class="spot-name">Parkside Ave park entrance</div><div class="spot-detail">Runners entering Prospect Park · Q/B to Parkside Ave</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~7 mi</div><div><div class="spot-name">Park exit / East 3rd St</div><div class="spot-detail">Exiting park NE, starting long straight · Q/B to Cortelyou</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~9 mi</div><div><div class="spot-name">McDonald Ave / Dahill Rd</div><div class="spot-detail">Mid-race energy zone · F train to Fort Hamilton</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-blue">~11 mi</div><div><div class="spot-name">Ave S area</div><div class="spot-detail">Final miles — crucial boost needed · N/D to Kings Hwy</div></div></div>
-    <div class="spot-row"><div class="spot-badge badge-orange">FINISH</div><div><div class="spot-name">Maimonides Park (Finish area)</div><div class="spot-detail">After-party at finish 🎉 N/D/F/Q to various stops nearby</div></div></div>
+  <div class="spot-list">
+    <div class="card-header"><div class="card-title">Best spectator spots</div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~1.5mi</div><div><div class="spot-name">Grand Army Plaza</div><div class="spot-detail">2/3 train to Grand Army Plaza</div></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~3.1mi</div><div><div class="spot-name">Parkside Ave — park entry</div><div class="spot-detail">Q/B to Parkside Ave</div></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~6.5mi</div><div><div class="spot-name">Prospect Park SW exit</div><div class="spot-detail">F to 15th St–Prospect Park</div></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~9.3mi</div><div><div class="spot-name">Ocean Pkwy / Church Ave</div><div class="spot-detail">Q/B to Church Ave</div></div></div>
+    <div class="spot-row"><div class="spot-badge badge-blue">~11.2mi</div><div><div class="spot-name">Ocean Pkwy / Neptune Ave</div><div class="spot-detail">D/N to Bay Pkwy</div></div></div>
+    <div class="spot-row"><div class="spot-badge badge-orange">FINISH</div><div><div class="spot-name">Coney Island Boardwalk</div><div class="spot-detail">D/N/F/Q to Coney Island–Stillwell Ave</div></div></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     🗺 LIVE MAP
-══════════════════════════════════════ -->
+<!-- ══ LIVE MAP ══ -->
 <div class="pane" id="pane-map">
   <div class="card gap-md">
     <div class="card-header">
-      <div class="card-title">Official 2026 Course — precise GPS route</div>
-      <div style="margin-left:auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary)">
-          <span style="width:18px;height:3px;background:#007AFF;display:inline-block;border-radius:2px"></span>Course
-        </span>
-        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary)">
-          <span style="width:11px;height:11px;border-radius:50%;background:rgba(0,122,255,0.2);border:2px solid #007AFF;display:inline-block"></span>Catherine
-        </span>
-        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary)">
-          <span style="width:11px;height:11px;border-radius:50%;background:rgba(88,86,214,0.2);border:2px solid #5856D6;display:inline-block"></span>Helaine
-        </span>
-        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary)">
-          <span style="width:11px;height:11px;border-radius:50%;background:#FF9500;border:2px solid #FF9500;display:inline-block"></span>Spectator spot
-        </span>
+      <div class="card-title">2026 Official Course — Brooklyn Museum → Coney Island</div>
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-tertiary)"><span style="width:16px;height:2.5px;background:#007AFF;display:inline-block;border-radius:2px"></span>Course</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-tertiary)"><span style="width:10px;height:10px;border-radius:50%;background:rgba(0,122,255,.2);border:2px solid #007AFF;display:inline-block"></span>Catherine</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-tertiary)"><span style="width:10px;height:10px;border-radius:50%;background:rgba(88,86,214,.2);border:2px solid #5856D6;display:inline-block"></span>Helaine</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-tertiary)"><span style="width:8px;height:8px;border-radius:50%;background:#FF9500;display:inline-block"></span>Key point</span>
       </div>
     </div>
     <div id="map"></div>
   </div>
   <div class="card">
     <div class="card-header">
-      <div class="card-title">Elevation profile · 246 ft total gain · 1.9% pace penalty vs flat</div>
+      <div class="card-title">Elevation profile · 246ft total gain · 1.9% slower than flat</div>
       <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['elev']?.resetZoom()">Reset zoom</button>
     </div>
-    <div class="chart-wrap" style="height:160px"><canvas id="elev-chart"></canvas></div>
+    <div class="chart-wrap" style="height:150px"><canvas id="elev-chart"></canvas></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     🌤 WEATHER
-══════════════════════════════════════ -->
+<!-- ══ WEATHER ══ -->
 <div class="pane" id="pane-weather">
   <div class="section-title">Race Day Weather</div>
   <div class="section-sub">Prospect Park start area · May 16, 2026</div>
   <div class="card gap-md">
     <div class="wx-hero">
       <div id="wx-icon" class="wx-icon-big">—</div>
-      <div style="flex:1">
-        <div id="wx-desc" style="font-size:17px;font-weight:600;letter-spacing:-0.43px">Loading…</div>
-        <div id="wx-loc" class="wx-meta" style="margin-top:3px">Brooklyn, NY</div>
-      </div>
-      <div>
-        <div id="wx-temp" class="wx-temp-big">—</div>
-        <div id="wx-feels" style="font-size:13px;color:var(--text-tertiary)">Feels like —</div>
-      </div>
+      <div style="flex:1"><div id="wx-desc" style="font-size:16px;font-weight:600;letter-spacing:-0.4px;color:var(--text-primary)">Loading…</div><div id="wx-loc" class="wx-meta" style="margin-top:3px">Brooklyn, NY</div></div>
+      <div><div id="wx-temp" class="wx-temp-big">—</div><div id="wx-feels" style="font-size:12px;color:var(--text-tertiary)">Feels like —</div></div>
     </div>
     <div class="wx-grid">
       <div class="wx-cell"><div class="wx-cell-label">Wind</div><div class="wx-cell-val" id="wx-wind">—</div><div class="wx-cell-sub" id="wx-wdir">—</div></div>
       <div class="wx-cell"><div class="wx-cell-label">Humidity</div><div class="wx-cell-val" id="wx-hum">—</div><div class="wx-cell-sub">relative</div></div>
-      <div class="wx-cell"><div class="wx-cell-label">Dew Point</div><div class="wx-cell-val" id="wx-dew">—</div><div class="wx-cell-sub">comfort index</div></div>
-      <div class="wx-cell"><div class="wx-cell-label">Rain %</div><div class="wx-cell-val" id="wx-rain">—</div><div class="wx-cell-sub" id="wx-cloud">— % cloud</div></div>
+      <div class="wx-cell"><div class="wx-cell-label">Dew Point</div><div class="wx-cell-val" id="wx-dew">—</div><div class="wx-cell-sub">comfort</div></div>
+      <div class="wx-cell"><div class="wx-cell-label">Rain %</div><div class="wx-cell-val" id="wx-rain">—</div><div class="wx-cell-sub" id="wx-cloud">—% cloud</div></div>
     </div>
-    <div id="wx-impact" class="wx-impact wx-warn">Fetching forecast…</div>
-    <div id="wx-goal-adj" style="font-size:12px;color:var(--text-tertiary);padding:0 16px 12px;font-family:var(--font-mono)"></div>
+    <div id="wx-impact" class="wx-impact wx-warn">Fetching…</div>
+    <div id="wx-goal-adj" style="font-size:11px;color:var(--text-tertiary);padding:0 14px 12px;font-family:var(--font-mono)"></div>
   </div>
   <div class="card gap-md">
     <div class="card-header"><div class="card-title">Hourly forecast — race morning</div></div>
-    <div class="chart-wrap" style="height:190px"><canvas id="wx-hourly"></canvas></div>
+    <div class="chart-wrap" style="height:180px"><canvas id="wx-hourly"></canvas></div>
   </div>
   <div class="card">
     <div class="card-header"><div class="card-title">Weather → Pace impact guide</div></div>
     <div class="card-body">
-      <table style="width:100%;font-family:var(--font-mono);font-size:12px;border-collapse:collapse">
-        <tr><td style="padding:6px 0;color:var(--green);width:80px;font-weight:500">45–55°F</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">🏆 Ideal — expect fast times, ~1–2% quicker than typical</td></tr>
-        <tr><td style="padding:6px 0;color:var(--green)">55–62°F</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">✅ Good — minimal pace impact</td></tr>
-        <tr><td style="padding:6px 0;color:var(--orange)">62–68°F</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">⚠️ Slightly warm — ~1–3% slower, hydrate early</td></tr>
-        <tr><td style="padding:6px 0;color:var(--orange)">68–75°F</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">⚠️ Warm — ~3–5% slower, start conservative</td></tr>
-        <tr><td style="padding:6px 0;color:var(--red)">75°F+</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">🔴 Hot — significant impact, finishing &gt; time</td></tr>
-        <tr><td style="padding:6px 0;color:var(--text-tertiary)">Wind &lt;10</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">✅ Negligible wind effect</td></tr>
-        <tr><td style="padding:6px 0;color:var(--orange)">10–20 mph</td><td style="padding:6px 0;border-bottom:0.5px solid var(--separator)">⚠️ Noticeable on the long open stretch</td></tr>
-        <tr><td style="padding:6px 0;color:var(--red)">20+ mph</td><td style="padding:6px 0">🔴 Significant headwind — Ocean Pkwy is fully exposed</td></tr>
+      <table style="width:100%;font-family:var(--font-mono);font-size:11px;border-collapse:collapse">
+        <tr><td style="padding:5px 0;color:var(--green);width:76px">45–55°F</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">🏆 Ideal — expect fast times</td></tr>
+        <tr><td style="padding:5px 0;color:var(--green)">55–62°F</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">✅ Good — minimal impact</td></tr>
+        <tr><td style="padding:5px 0;color:var(--orange)">62–68°F</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">⚠️ Slightly warm — ~1–3% slower</td></tr>
+        <tr><td style="padding:5px 0;color:var(--orange)">68–75°F</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">⚠️ Warm — ~3–5% slower</td></tr>
+        <tr><td style="padding:5px 0;color:var(--red)">75°F+</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">🔴 Hot — finish over time</td></tr>
+        <tr><td style="padding:5px 0;color:var(--text-muted)">Wind &lt;10</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">✅ Negligible</td></tr>
+        <tr><td style="padding:5px 0;color:var(--orange)">10–20mph</td><td style="padding:5px 0;border-bottom:1px solid var(--separator)">⚠️ Noticeable on Ocean Pkwy</td></tr>
+        <tr><td style="padding:5px 0;color:var(--red)">20+mph</td><td>🔴 Significant headwind on exposed stretch</td></tr>
       </table>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     📊 STATS
-══════════════════════════════════════ -->
+<!-- ══ STATS ══ -->
 <div class="pane" id="pane-stats">
   <div class="section-title">Historical Race Stats</div>
-  <div class="section-sub">RBC Brooklyn Half · 2025 data · ~28,500 finishers</div>
+  <div class="section-sub">RBC Brooklyn Half 2025 · ~28,500 finishers</div>
   <div class="hist-grid gap-md">
     <div class="hist-card"><div class="hist-val" style="color:#007AFF">28,500</div><div class="hist-lbl">2025 Finishers</div></div>
-    <div class="hist-card"><div class="hist-val" style="color:var(--text-primary)">2:14:00</div><div class="hist-lbl">Overall Median</div></div>
-    <div class="hist-card"><div class="hist-val" style="color:#34C759">1:15:37</div><div class="hist-lbl">Women's Winner 2025</div></div>
+    <div class="hist-card"><div class="hist-val">2:14:00</div><div class="hist-lbl">Overall Median</div></div>
+    <div class="hist-card"><div class="hist-val" style="color:#34C759">1:15:37</div><div class="hist-lbl">Women's Winner</div></div>
     <div class="hist-card"><div class="hist-val" style="color:#007AFF">2:20:00</div><div class="hist-lbl">Women's Median</div></div>
     <div class="hist-card"><div class="hist-val" style="color:#FF9500">+1.9%</div><div class="hist-lbl">Elevation Penalty</div></div>
-    <div class="hist-card"><div class="hist-val" style="color:var(--text-primary)">~62°F</div><div class="hist-lbl">Typical Race Temp</div></div>
+    <div class="hist-card"><div class="hist-val">~62°F</div><div class="hist-lbl">Typical Race Temp</div></div>
   </div>
   <div class="card gap-md">
     <div class="card-header">
       <div class="card-title">Finish time distribution — 2025 field</div>
       <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['dist']?.resetZoom()">Reset zoom</button>
     </div>
-    <div class="chart-wrap" style="height:180px"><canvas id="dist-chart"></canvas></div>
+    <div class="chart-wrap" style="height:170px"><canvas id="dist-chart"></canvas></div>
   </div>
-
   <div class="section-title">Expected Percentile Finish</div>
   <div class="grid-2 gap-md">
-    <div class="pct-card">
-      <div class="card-header" style="background:rgba(0,122,255,0.06)"><div class="card-title">⚡ Catherine · Sub-90 target</div></div>
+    <div class="card">
+      <div class="card-header" style="background:rgba(0,122,255,.06)"><div class="card-title">⚡ Catherine · Sub-90 target</div></div>
       <div class="card-body">
         <div class="pct-big" id="gf-pct-big" style="color:#007AFF">Top 1%</div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;font-family:var(--font-mono)">1:30:00 finish · ~28,500 finishers</div>
-        <div style="height:1px;background:var(--separator);margin:12px 0"></div>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;font-family:var(--font-mono)">1:30:00 finish · ~28,500 finishers</div>
+        <div style="height:1px;background:var(--separator);margin:10px 0"></div>
         <div id="gf-pct-rows"></div>
       </div>
     </div>
-    <div class="pct-card">
-      <div class="card-header" style="background:rgba(88,86,214,0.06)"><div class="card-title">💜 Helaine · Scenarios</div></div>
+    <div class="card">
+      <div class="card-header" style="background:rgba(88,86,214,.06)"><div class="card-title">💜 Helaine · Scenarios</div></div>
       <div class="card-body">
-        <div class="pct-big" id="mom-pct-big" style="color:#5856D6">Top 15%</div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;font-family:var(--font-mono)">Best day projection</div>
-        <div style="height:1px;background:var(--separator);margin:12px 0"></div>
+        <div class="pct-big" id="mom-pct-big" style="color:#5856D6">—</div>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;font-family:var(--font-mono)">Best day scenario</div>
+        <div style="height:1px;background:var(--separator);margin:10px 0"></div>
         <div id="mom-pct-rows"></div>
       </div>
     </div>
   </div>
-
   <div class="card" style="margin-top:14px">
     <div class="card-header"><div class="card-title">Percentile lookup</div></div>
     <div class="lookup-row">
@@ -426,68 +406,9 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     🎮 SIMULATOR
-══════════════════════════════════════ -->
-<div class="pane" id="pane-sim">
-  <div class="section-title">Race Simulator</div>
-  <div class="section-sub">Drag the slider to simulate any point in the race. Once the race starts, the simulator locks to the live position — you can only look ahead.</div>
-
-  <div class="sim-wrap gap-md">
-    <div class="sim-label">Race progress</div>
-    <div class="sim-controls">
-      <button class="btn btn-sm" id="sim-play">▶ Play</button>
-      <button class="btn btn-sm btn-ghost" id="sim-reset">↺ Reset</button>
-      <input type="range" id="sim-slider" class="sim-slider" min="0" max="100" step="0.1" value="0"
-        style="background:linear-gradient(to right, #007AFF 0%, #E5E5EA 0%)">
-      <div class="sim-stat"><div class="sim-stat-val" id="sim-pct" style="color:#007AFF">0%</div><div class="sim-stat-lbl">Race %</div></div>
-      <div class="sim-stat"><div class="sim-stat-val" id="sim-dist" style="color:#007AFF">0.00 mi</div><div class="sim-stat-lbl">Distance</div></div>
-    </div>
-    <div id="sim-on-track" class="on-track-banner on-track-neutral">Start the simulation to see pace analysis</div>
-  </div>
-
-  <div class="card gap-md">
-    <div class="card-header"><div class="card-title">Scenario projections at current sim position</div></div>
-    <div id="sim-scenarios" class="card-body"></div>
-  </div>
-
-  <div class="card gap-md">
-    <div class="card-header">
-      <div class="card-title">Catherine · Projected finish vs 90-min line</div>
-      <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="charts['sim-pace']?.resetZoom()">Reset zoom</button>
-    </div>
-    <div class="chart-wrap" style="height:240px"><canvas id="sim-pace-chart"></canvas></div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><div class="card-title">How to use the simulator</div></div>
-    <div class="card-body">
-      <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.6">
-        <div>🎯 <strong>Before the race:</strong> Drag the slider to preview what various points in the race look like — see projected finish times, on-track status, and expected arrival at each spectator spot.</div>
-        <div>🏃 <strong>During the race:</strong> The slider locks to live position. Drag forward to explore projections from the current position. You can't scrub backward — live data is king.</div>
-        <div>▶ <strong>Play mode:</strong> Hit play to watch an automatic simulation of the race unfold in real time (3x speed).</div>
-        <div>📍 <strong>Map sync:</strong> The simulator marker on the Live Map tab updates as you drag.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 </main>
 
 <script type="module" src="/src/js/main.js"></script>
-
-<script>
-// Update slider gradient on input
-document.addEventListener('DOMContentLoaded', () => {
-  const slider = document.getElementById('sim-slider');
-  if (slider) {
-    const update = () => {
-      const pct = slider.value;
-      slider.style.background = `linear-gradient(to right, #007AFF ${pct}%, #E5E5EA ${pct}%)`;
-    };
-    slider.addEventListener('input', update);
-  }
-});
-</script>
+<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
 </body>
 </html>

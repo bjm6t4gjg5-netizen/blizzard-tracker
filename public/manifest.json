@@ -1,0 +1,20 @@
+{
+  "name": "Blizzard Tracker",
+  "short_name": "Blizzard",
+  "description": "Team Blizzard RBC Brooklyn Half 2026 Race Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e0f2fe",
+  "theme_color": "#e0f2fe",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-72.png",  "sizes": "72x72",   "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Catherine", "url": "/?tab=gf",     "description": "Catherine's tracker" },
+    { "name": "Helaine",   "url": "/?tab=mom",    "description": "Helaine's tracker"   },
+    { "name": "Live Map",  "url": "/?tab=map",    "description": "Live course map"      }
+  ]
+}
