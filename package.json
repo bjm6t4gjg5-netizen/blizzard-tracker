@@ -1,0 +1,14 @@
+{
+  "name": "blizzard-tracker",
+  "version": "1.0.0",
+  "description": "Team Blizzard RBC Brooklyn Half 2026 Race Tracker",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
