@@ -14,6 +14,12 @@ import { fetchWeather, getRaceDayHours, getCurrentHourIndex, extractHourData, ge
 
 const L = window.L;
 const Chart = window.Chart;
+// Register Chart.js zoom plugin immediately (before DOMContentLoaded race)
+if (Chart && window.ChartZoom) Chart.register(window.ChartZoom);
+// Also register on load in case CDN is slow
+window.addEventListener('load', () => {
+  if (Chart && window.ChartZoom) Chart.register(window.ChartZoom);
+});
 
 // ── App state ─────────────────────────────────────────────
 let REG   = loadRegistry();
@@ -42,6 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateRefreshLabel, 5000);
   updateClock();
   requestNotificationPermission();
+  setTimeout(() => {
+    renderMergedAgeGroups();
+    renderPctScenariosV5();
+    updateHeaderStatus();
+    updateFamSpotETAs();
+  }, 200);
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -432,6 +444,7 @@ function buildPaceChart(id) {
   const ctx=document.getElementById(id+'-pace-chart'); if(!ctx) return;
   if(charts[id+'-pace']){charts[id+'-pace'].destroy();delete charts[id+'-pace'];}
   const goals=GOALS[id];
+  if (!goals || !goals.scenarios) { console.warn('buildPaceChart: no goals for', id); return; }
   const datasets = goals.scenarios.map(s => ({
     label: s.emoji + ' ' + s.label + ' (' + fmtHMS(Math.round((s.flatPace ? buildNonLinearProfile(goals, s.flatPace, 100) : buildGoalProfile(goals, 100)).at(-1)?.sec || 0)) + ')',
     data: (s.flatPace ? buildNonLinearProfile(goals, s.flatPace, 100) : buildGoalProfile(goals, 100)).map(p => ({ x: p.mi, y: +(p.sec / 60).toFixed(2) })),
@@ -871,11 +884,7 @@ function updateHeaderStatus() {
 
 // Patch the doRefresh to also update header
 const origDoRefresh = window.manualRefresh;
-document.addEventListener('DOMContentLoaded', () => {
-  renderMergedAgeGroups();
-  // After initial render, update header
-  setTimeout(() => { updateHeaderStatus(); updateFamSpotETAs(); }, 500);
-});
+// consolidated into main DOMContentLoaded
 
 // ═══════════════════════════════════════════════════════════
 // NOTIFICATION PREFERENCES
@@ -1026,7 +1035,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMergedAgeGroups();
 });
 
-// Also patch Helaine age groups
 function renderHelainerStats() {
   const el = document.getElementById('helaine-age-groups'); if (!el) return;
   const info = loadPersonalInfo('mom');
@@ -1253,6 +1261,7 @@ let tourActive = false;
 let _spotlightEl = null;
 
 window.startTour = function(fromButton = false) {
+  // Always allow tour to run (ignore cookie when manually triggered)
   tourPreState = snapshotState();
   tourStep = 0; tourActive = true;
   clearSpotlight();
@@ -1358,8 +1367,9 @@ window.endTour = function(completed = false, skipped = false) {
 
 // Auto-start on first visit
 document.addEventListener('DOMContentLoaded', () => {
+  // Auto-start tour: check cookie, but always allow ? button to restart
   if (!localStorage.getItem('blizzard_tour_done')) {
-    setTimeout(() => startTour(false), 1800);
+    setTimeout(() => startTour(false), 2000);
   }
 });
 
@@ -1432,8 +1442,5 @@ function renderMergedAgeGroups() {
 }
 
 // Replace old renderAgeGroups calls
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(renderMergedAgeGroups, 300);
-  setTimeout(renderPctScenariosV5, 400);
-});
+// consolidated into main DOMContentLoaded
 
