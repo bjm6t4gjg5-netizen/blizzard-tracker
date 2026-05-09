@@ -17,10 +17,26 @@ import { mountDevTab, unmountDevTab } from './dev-tab.js';
 const L = window.L;
 const Chart = window.Chart;
 // Register Chart.js zoom plugin immediately (before DOMContentLoaded race)
-if (Chart && window.ChartZoom) Chart.register(window.ChartZoom);
-// Also register on load in case CDN is slow
-window.addEventListener('load', () => {
-  if (Chart && window.ChartZoom) Chart.register(window.ChartZoom);
+// Register Chart.js plugins safely
+function registerChartPlugins() {
+  if (window.Chart && window.ChartZoom) {
+    try { window.Chart.register(window.ChartZoom); } catch(e) {}
+  }
+}
+registerChartPlugins();
+
+// Retry chart init after all CDN scripts are definitely loaded
+window.addEventListener('load', function() {
+  registerChartPlugins();
+  setTimeout(function() {
+    REG.forEach(function(r) {
+      if (!charts[r.id + '-pace']) { try { buildPaceChart(r.id); } catch(e){ console.warn('pace chart retry failed', r.id, e.message); } }
+    });
+    if (!charts['dist'])  { try { initDistChart(); } catch(e){ console.warn('dist chart retry', e.message); } }
+    if (!charts['elev'])  { try { initElevChart(); } catch(e){ console.warn('elev chart retry', e.message); } }
+    updateClock();
+    updateFamClock();
+  }, 300);
 });
 
 // ── App state ─────────────────────────────────────────────
@@ -38,20 +54,22 @@ let wxLoaded=false, wxData=null;
 const charts={};
 let lastRefresh=null;
 const simState={};
-const simIntervals={};
 
 // ── Init ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Clocks first — never blocked by chart errors
+  updateClock();
+  updateFamClock();
+  setInterval(updateClock, 1000);
+  setInterval(updateFamClock, 1000);
+  setInterval(updateRefreshLabel, 5000);
   buildTabs();
   buildPanes();
   renderAll();
-  initAllCharts();
+  try { initAllCharts(); } catch(e) { console.error('Chart init error (will retry on load):', e.message); }
   renderPctScenariosV5();
-    startAutoRefresh();
+  startAutoRefresh();
   doRefresh();
-  setInterval(updateClock, 1000);
-  setInterval(updateRefreshLabel, 5000);
-  updateClock();
   requestNotificationPermission();
   setTimeout(() => {
     renderMergedAgeGroups();
@@ -117,8 +135,25 @@ function buildPanes() {
 function makeDynPane(r) {
   const el=document.createElement('div'); el.className='pane'; el.id='pane-'+r.id;
   const init=r.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  el.innerHTML=`<div id="runner-hero-${r.id}" class="runner-hero-section"><div class="runner-hero-name" style="color:${r.color}">${r.emoji} ${r.name}</div></div>`+runnerBodyHTML(r.id,r.name,init,r.trackId,r.emoji,r.color);
-  STATE[r.id]=makeRunnerState(r); GOALS[r.id]=loadGoals(r.id); return el;
+  const heroStyle = `background:linear-gradient(135deg,${r.color}dd,${r.color}88)`;
+  el.innerHTML = `
+    <div class="runner-hero-section gap-md" style="${heroStyle}">
+      <div class="runner-hero-content">
+        <div>
+          <div class="runner-hero-name">${r.emoji} ${r.name}</div>
+          <div class="runner-hero-subtitle">RBC Brooklyn Half 2026 · ${r.trackId}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:flex-start">
+          <button class="runner-settings-btn" onclick="openRunnerSettings('${r.id}')">⚙ Settings</button>
+        </div>
+      </div>
+    </div>
+    ${runnerBodyHTML(r.id, r.name, init, r.trackId, r.emoji, r.color)}
+    <div class="runner-stats-section" id="stats-section-${r.id}"></div>
+    <div id="upd-${r.id}" style="font-size:10px;color:var(--text-muted);text-align:right;margin-top:6px;font-family:var(--font-mono)">—</div>`;
+  STATE[r.id] = makeRunnerState(r);
+  GOALS[r.id] = loadGoals(r.id);
+  return el;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -195,26 +230,12 @@ function runnerBodyHTML(id,name,initials,trackId,emoji,color) {
     <button class="cheer-btn gap-md" id="cheer-btn-${id}" onclick="sendCheer('${id}')">
       <span>📣</span> Send Cheer to ${name.split(' ')[0]}
     </button>
-    ${simHTML(id,color)}
+    
   </div>
 </div>
 <div id="upd-${id}" style="font-size:10px;color:var(--text-muted);text-align:right;margin-top:6px;font-family:var(--font-mono)">—</div>`;
 }
 
-function simHTML(id, color) {
-  return `<div class="sim-section gap-md">
-  <div class="sim-title">🎮 Race Simulator <span class="info-btn" data-tip="simulator">ⓘ</span> <span style="font-size:10px;font-weight:400;color:var(--text-muted)">Drag · locks to live during race</span></div>
-  <div class="sim-controls">
-    <button class="btn btn-sm" id="${id}-sim-play">▶ Play</button>
-    <button class="btn btn-sm btn-ghost" id="${id}-sim-reset">↺</button>
-    <input type="range" id="${id}-sim-slider" class="sim-slider" min="0" max="100" step="0.1" value="0" style="background:linear-gradient(to right,${color} 0%,rgba(14,165,233,.15) 0%)">
-    <div class="sim-stat"><div class="sim-stat-val" id="${id}-sim-pct" style="color:${color}">0%</div><div class="sim-stat-lbl">Progress</div></div>
-    <div class="sim-stat"><div class="sim-stat-val" id="${id}-sim-mi" style="color:${color}">0.0 mi</div><div class="sim-stat-lbl">Distance</div></div>
-  </div>
-  <div id="${id}-sim-track" class="on-track-banner on-track-neutral" style="font-size:12px;padding:8px 12px;margin-bottom:8px">Drag the slider to simulate</div>
-  <div id="${id}-sim-rows" style="display:flex;flex-direction:column"></div>
-</div>`;
-}
 
 // ═══════════════════════════════════════════════════════════
 // RUNNER SETTINGS MODAL
@@ -303,17 +324,29 @@ function renderRLI(){
   </div>`).join('');
 }
 window.addRunner=function(){
-  const name=document.getElementById('new-name')?.value?.trim();
-  const tid=document.getElementById('new-tid')?.value?.trim()?.toUpperCase();
-  const emoji=document.getElementById('new-emoji')?.value?.trim()||'🏃';
-  const color=document.getElementById('new-color')?.value||'#007AFF';
+  var name=document.getElementById('new-name')?.value?.trim();
+  var tid=document.getElementById('new-tid')?.value?.trim()?.toUpperCase();
+  var emoji=document.getElementById('new-emoji')?.value?.trim()||'🏃';
+  var color=document.getElementById('new-color')?.value||'#007AFF';
   if(!name||!tid){notify('Name and tracker ID required');return;}
-  const id='r_'+Date.now();
-  REG.push({id,name,trackId:tid,emoji,color,fixed:false});
-  saveRegistry(REG); STATE[id]=makeRunnerState(REG.at(-1)); GOALS[id]=loadGoals(id);
-  buildTabs();buildPanes();initSimulators();renderRLI();
-  ['new-name','new-tid','new-emoji'].forEach(fid=>{const f=document.getElementById(fid);if(f)f.value='';});
-  notify(name+' added!');
+  var id='r_'+Date.now();
+  var newRunner={id:id,name:name,trackId:tid,emoji:emoji,color:color,fixed:false};
+  REG.push(newRunner);
+  saveRegistry(REG);
+  STATE[id]=makeRunnerState(newRunner);
+  GOALS[id]=loadGoals(id);
+  window._devREG=REG; window._devGOALS=GOALS;
+  buildTabs();
+  buildPanes();
+  // Small delay to allow DOM to render before init
+  setTimeout(function(){
+    try { buildPaceChart(id); } catch(e){ console.warn('chart err',e); }
+    renderRunnerStats(id);
+    closeSettings();
+    showTab(id);
+    notify(name+' added! 🎉');
+  }, 150);
+  ['new-name','new-tid','new-emoji'].forEach(function(fid){var f=document.getElementById(fid);if(f)f.value='';});
 };
 window.removeRunner=function(id){
   REG=REG.filter(r=>r.id!==id); saveRegistry(REG); delete STATE[id];
@@ -424,21 +457,34 @@ function updateLeadBanner(){
 // ═══════════════════════════════════════════════════════════
 const CHART_OPTS = {
   responsive:true, maintainAspectRatio:false, parsing:false,
+  animation: { duration: 300 },
   plugins:{
     legend:{display:false},
-    zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'},pan:{enabled:true,mode:'x'}},
+    zoom: window.ChartZoom ? {zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'},pan:{enabled:true,mode:'x'}} : undefined,
     tooltip:{mode:'index',intersect:false,
       backgroundColor:'rgba(255,255,255,0.97)',titleColor:'#0c2340',bodyColor:'#1e4976',
       borderColor:'rgba(14,165,233,0.2)',borderWidth:1,
       titleFont:{family:'-apple-system,BlinkMacSystemFont',weight:'600',size:12},
       bodyFont:{family:'SF Mono,Fira Code,Menlo',size:11},padding:10,cornerRadius:10,
-      callbacks:{label:c=>{const v=c.parsed.y,h=Math.floor(v/60),m=Math.floor(v%60),s=Math.floor((v%1)*60);return`${c.dataset.label}: ${h>0?h+':':''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}}
+      callbacks:{
+        title:items=>'Mile '+items[0].parsed.x.toFixed(1),
+        label:item=>' '+item.dataset.label+': '+fmtHMS(Math.round(item.parsed.y*60)),
+      }
     },
   },
   scales:{
-    x:{type:'linear',min:0,max:13.1,ticks:{color:'#5a8db5',font:{size:10},callback:v=>v===13.1?'Finish':Number.isInteger(v)?v+'mi':''},grid:{color:'rgba(14,165,233,0.08)'},border:{display:false}},
-    y:{ticks:{color:'#5a8db5',font:{size:10},callback:v=>{const h=Math.floor(v/60),m=Math.floor(v%60);return h>0?`${h}:${String(m).padStart(2,'0')}`:`${m}m`;}},grid:{color:'rgba(14,165,233,0.08)'},border:{display:false},title:{display:true,text:'Elapsed',color:'#5a8db5',font:{size:10}}},
-  },
+    x:{type:'linear',min:0,max:13.1,
+      title:{display:true,text:'Miles',font:{size:11},color:'var(--text-tertiary)'},
+      grid:{color:'rgba(14,165,233,0.08)'},
+      ticks:{color:'var(--text-tertiary)',font:{size:10},maxTicksLimit:8,callback:v=>v+'mi'}
+    },
+    y:{title:{display:true,text:'Min/Mile',font:{size:11},color:'var(--text-tertiary)'},
+      grid:{color:'rgba(14,165,233,0.08)'},
+      ticks:{color:'var(--text-tertiary)',font:{size:10},
+        callback:v=>{const m=Math.floor(v),s=Math.round((v-m)*60);return m+':'+(s<10?'0':'')+s;}
+      }
+    }
+  }
 };
 
 function initAllCharts() {
@@ -772,29 +818,30 @@ window.devLogout = function() {
 
 // Simulate race state at different milestones
 window.simRace = function(stage) {
-  const stages = {
-    pre:    { gf: { distMi:0,   elapsedSec:0,     status:'pre'      },  mom: { distMi:0,   elapsedSec:0,    status:'pre'     } },
-    early:  { gf: { distMi:3.0, elapsedSec:20*60,  status:'running'  },  mom: { distMi:2.7, elapsedSec:25*60, status:'running' } },
-    park:   { gf: { distMi:6.2, elapsedSec:43*60,  status:'running'  },  mom: { distMi:5.5, elapsedSec:55*60, status:'running' } },
-    ocean:  { gf: { distMi:9.3, elapsedSec:64*60,  status:'running'  },  mom: { distMi:8.0, elapsedSec:82*60, status:'running' } },
-    late:   { gf: { distMi:11.0,elapsedSec:75*60,  status:'running'  },  mom: { distMi:9.8, elapsedSec:101*60,status:'running' } },
-    finish: { gf: { distMi:13.1,elapsedSec:88*60+12,status:'finished' }, mom: { distMi:13.1,elapsedSec:128*60,status:'finished'} },
-  };
-  const s = stages[stage]; if(!s) return;
-  ['gf','mom'].forEach(id => {
-    const d = s[id]; if (!d) return;
-    Object.assign(STATE[id], d);
+  var GF  = { pre:{distMi:0,elapsedSec:0,status:'pre'}, early:{distMi:3.0,elapsedSec:1200,status:'running'}, park:{distMi:6.2,elapsedSec:2580,status:'running'}, ocean:{distMi:9.3,elapsedSec:3840,status:'running'}, late:{distMi:11.0,elapsedSec:4500,status:'running'}, finish:{distMi:13.1,elapsedSec:5292,status:'finished'} };
+  var MOM = { pre:{distMi:0,elapsedSec:0,status:'pre'}, early:{distMi:2.7,elapsedSec:1500,status:'running'}, park:{distMi:5.5,elapsedSec:3300,status:'running'}, ocean:{distMi:8.0,elapsedSec:4920,status:'running'}, late:{distMi:9.8,elapsedSec:6060,status:'running'}, finish:{distMi:13.1,elapsedSec:7680,status:'finished'} };
+  REG.forEach(function(r) {
+    var id = r.id;
+    var d = (id === 'gf') ? GF[stage] : MOM[stage];
+    if (!d || !STATE[id]) return;
+    STATE[id].distMi = d.distMi;
+    STATE[id].elapsedSec = d.elapsedSec;
+    STATE[id].status = d.status;
     STATE[id].pct = (d.distMi / TOTAL_MI) * 100;
     STATE[id].lastUpdate = Date.now();
     if (d.distMi > 0 && d.elapsedSec > 0) {
-      STATE[id].paceHistory = [{ mi: d.distMi, elapsedSec: d.elapsedSec }];
-      computeETA(STATE[id], GOALS[id]);
+      var goals = GOALS[id] || GOALS.gf;
+      var pace  = d.elapsedSec / Math.max(d.distMi, 0.01);
+      var prof  = buildNonLinearProfile(goals, pace, 100);
+      STATE[id].paceHistory = prof.filter(function(p){return p.mi>0&&p.mi<=d.distMi;}).map(function(p){return {mi:p.mi,elapsedSec:Math.round(p.sec)};});
+      STATE[id].paceHistory.push({mi:d.distMi, elapsedSec:d.elapsedSec});
+      computeETA(STATE[id], goals);
     } else {
       STATE[id].etaSec = null; STATE[id].conf = 0; STATE[id].paceHistory = [];
     }
     renderRunner(id);
   });
-  notify(`🛠 Simulating: ${stage}`);
+  notify('Simulating: ' + stage);
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -1125,35 +1172,19 @@ function renderHelainerStats() {
 // DEV MODE HEADER STATUS FIX
 // ═══════════════════════════════════════════════════════════
 // Override simRace to also update header
-const _origSimRace = window.simRace;
-window.simRace = function(stage) {
-  _origSimRace(stage);
-  setTimeout(() => {
-    // Update all UI from new state
-    REG.forEach(r => {
-      const s = STATE[r.id];
-      if (s && s.status !== 'pre') {
-        // Build realistic pace history up to current point for chart
-        const goals = GOALS[r.id];
-        const pace  = s.elapsedSec / Math.max(s.distMi, 0.01);
-        // Synthesize pace history at key mile markers
-        s.paceHistory = [];
-        const profile = buildNonLinearProfile(goals, pace, 100);
-        profile.filter(p => p.mi > 0 && p.mi <= s.distMi).forEach(p => {
-          s.paceHistory.push({ mi: p.mi, elapsedSec: Math.round(p.sec) });
-        });
-        // Add actual current position
-        s.paceHistory.push({ mi: s.distMi, elapsedSec: s.elapsedSec });
-        computeETA(s, goals);
-      }
-      renderRunner(r.id);
-    });
-    updateHeaderStatus();
-    updateFamSpotETAs();
-    updateFamMapMarkers();
-    if(window._famMap) window._famMap.invalidateSize();
-  }, 80);
-};
+// simRace handles all runners inline now — just update fam map after
+window.addEventListener('DOMContentLoaded', () => {
+  const _origSimRaceForFam = window.simRace;
+  window.simRace = function(stage) {
+    _origSimRaceForFam(stage);
+    setTimeout(function() {
+      updateHeaderStatus();
+      updateFamSpotETAs();
+      updateFamMapMarkers();
+      if(window._famMap) window._famMap.invalidateSize();
+    }, 80);
+  };
+});;
 
 // ═══════════════════════════════════════════════════════════
 // FAMILY MAP (embedded Leaflet on Family HQ)
@@ -1286,7 +1317,7 @@ const TOUR_STEPS = [
     body: "Drag the slider to preview what any point in the race looks like. Let me simulate mile 6 (Prospect Park) for you now so you can see all the data come to life!",
     highlight: null,
     tip: "🔒 During the live race, the slider locks forward-only so you can't simulate backward.",
-    targetSel: '#gf-sim-slider',
+    targetSel: '#gf-pace-chart',
     action: () => { showTab('gf'); window.simRace && simRace('park'); },
     pos: 'top',
   },
@@ -1348,22 +1379,24 @@ function clearSpotlight() {
 function spotlightElement(sel) {
   clearSpotlight();
   if (!sel) return;
-  const el = document.querySelector(sel);
-  if (!el) return;
-  const rect = el.getBoundingClientRect();
-  const pad = 6;
-  const ring = document.createElement('div');
-  ring.className = 'tour-spotlight-ring';
-  ring.style.cssText = `position:fixed;z-index:4999;pointer-events:none;
-    top:${rect.top - pad}px;left:${rect.left - pad}px;
-    width:${rect.width + pad*2}px;height:${rect.height + pad*2}px;
-    border:2.5px solid #007AFF;border-radius:10px;
-    box-shadow:0 0 0 4000px rgba(0,0,0,0.35);
-    animation:tour-pulse 1.8s ease infinite;`;
-  document.body.appendChild(ring);
-  _spotlightEl = ring;
-  // Scroll element into view
-  el.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
+  try {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    // Only spotlight if element is visible on screen
+    if (rect.width === 0 || rect.height === 0) return;
+    const pad = 6;
+    const ring = document.createElement('div');
+    ring.className = 'tour-spotlight-ring';
+    ring.style.cssText = `position:fixed;z-index:4999;pointer-events:none;
+      top:${Math.max(0, rect.top - pad)}px;left:${Math.max(0, rect.left - pad)}px;
+      width:${rect.width + pad*2}px;height:${rect.height + pad*2}px;
+      border:2.5px solid #007AFF;border-radius:10px;
+      box-shadow:0 0 0 4000px rgba(0,0,0,0.35);
+      animation:tour-pulse 1.8s ease infinite;`;
+    document.body.appendChild(ring);
+    _spotlightEl = ring;
+  } catch(e) { console.warn('spotlight error:', e); }
 }
 
 function renderTourStep() {
