@@ -499,13 +499,13 @@ header { display:flex !important; height:56px; align-items:center; padding:0;
 .fam-hero { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg);
   box-shadow:var(--shadow-card); overflow:hidden; display:flex; align-items:stretch; }
 .fam-hero-left { padding:18px 20px; flex:1; display:flex; flex-direction:column; justify-content:center;
-  background:linear-gradient(135deg,#e0f2fe,#f0f9ff); border-right:1px solid var(--border); }
+  background:linear-gradient(135deg,#e0f2fe,#f0f9ff); border-right:1px solid var(--border); min-height:260px; }
 .fam-cd-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;
   color:var(--text-tertiary); margin-bottom:10px; }
 .fam-countdown-row { display:flex; align-items:baseline; gap:3px; }
 .fam-hero-race { font-size:11px; color:var(--text-tertiary); margin-top:10px; }
-.fam-hero-right { width:260px; flex-shrink:0; overflow:hidden; }
-.fam-photo-row { display:flex; height:140px; }
+.fam-hero-right { width:380px; flex-shrink:0; overflow:hidden; }
+.fam-photo-row { display:flex; height:260px; }
 .fam-photo { flex:1; object-fit:cover; min-width:0; }
 
 /* ══ PHOTO STRIP — fixed with background-image approach ══ */
@@ -611,8 +611,8 @@ main { flex: 1 0 auto; }
 .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
 
 /* Family HQ hero — celebratory */
-.fam-hero { min-height: 180px; }
-.fam-photo-row { height: 160px; }
+.fam-hero { min-height: 280px; }
+.fam-photo-row { height: 260px; }
 .fam-photo { object-fit: cover; }
 
 /* Travel / hometown cards in Family HQ */
