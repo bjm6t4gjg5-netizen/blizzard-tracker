@@ -1,7 +1,8 @@
 <script lang="ts">
   import { runnerSettingsFor, profiles, goalsStore, updateRunner, notify } from '../lib/stores';
   import { parseGoalTime, formatHMS, formatHMSFull } from '../lib/format';
-  import { buildGoalSplits, type SplitGoal } from '../lib/runners';
+  import { buildGoalSplits, ageFromDob, type SplitGoal } from '../lib/runners';
+  import { RACE_START } from '../lib/time';
   import EmojiPicker from './EmojiPicker.svelte';
 
   $: editingId = $runnerSettingsFor;
@@ -13,8 +14,13 @@
   let trackId = '';
   let emoji = '🏃';
   let color = '#007AFF';
-  let ageStr = '';
-  let gender: 'F' | 'M' | 'X' | '' = '';
+  let dob = '';
+  let gender: 'F' | 'M' | '' = '';
+  let heightFt = '';
+  let heightInRem = '';
+  let weightLbStr = '';
+  let wave: number | '' = '';
+  let corral = '';
   let goalTimeStr = '';
   let goalLabel = '';
   /** Editable per-mile checkpoint targets. Stored as string for the input,
@@ -32,8 +38,15 @@
       trackId = profile.trackId;
       emoji = profile.emoji;
       color = profile.color;
-      ageStr = profile.age != null ? String(profile.age) : '';
-      gender = profile.gender ?? '';
+      dob = profile.dob ?? '';
+      gender = (profile.gender as 'F' | 'M' | undefined) ?? '';
+      if (profile.heightIn != null) {
+        heightFt = String(Math.floor(profile.heightIn / 12));
+        heightInRem = String(profile.heightIn % 12);
+      } else { heightFt = ''; heightInRem = ''; }
+      weightLbStr = profile.weightLb != null ? String(profile.weightLb) : '';
+      wave = profile.wave ?? '';
+      corral = profile.corral ?? '';
       goalTimeStr = formatHMS(g.goalSec);
       goalLabel = g.goalLabel;
       splits = g.splitGoals.map(s => ({
@@ -44,6 +57,10 @@
       error = '';
     }
   }
+
+  // Live-compute the runner's age on race day from the DOB picker, so the
+  // user sees "Age 28 on race day" while they're editing.
+  $: ageOnRace = ageFromDob(dob, RACE_START);
 
   function close() {
     runnerSettingsFor.set(null);
@@ -87,26 +104,74 @@
         }
       }
 
-      // Age — bind:value on a type=number input gives Svelte a string but you
-      // can't trust the runtime type, so coerce defensively. THIS is what
-      // broke save in round 5.
-      const ageVal = typeof ageStr === 'number' ? ageStr : String(ageStr ?? '').trim();
-      let ageNum: number | undefined;
-      if (ageVal !== '') {
-        const n = typeof ageVal === 'number' ? ageVal : parseInt(ageVal, 10);
-        if (!Number.isFinite(n) || n < 5 || n > 100) {
-          error = 'Age should be a whole number between 5 and 100.';
+      // DOB validation
+      let dobOut: string | undefined;
+      if (dob.trim()) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dob.trim())) {
+          error = 'Date of birth must be YYYY-MM-DD.';
           return;
         }
-        ageNum = n;
+        const computed = ageFromDob(dob.trim(), RACE_START);
+        if (computed == null || computed < 5 || computed > 110) {
+          error = `Date of birth doesn't make sense (computed age ${computed ?? '?'}).`;
+          return;
+        }
+        dobOut = dob.trim();
+      }
+
+      // Height — combine feet + inches
+      let heightOut: number | undefined;
+      const ftN = heightFt.trim() ? parseInt(heightFt.trim(), 10) : 0;
+      const inN = heightInRem.trim() ? parseInt(heightInRem.trim(), 10) : 0;
+      if (heightFt.trim() || heightInRem.trim()) {
+        if (!Number.isFinite(ftN) || !Number.isFinite(inN) || ftN < 0 || ftN > 8 || inN < 0 || inN > 11) {
+          error = 'Height must be 0–8 ft and 0–11 in.';
+          return;
+        }
+        heightOut = ftN * 12 + inN;
+        if (heightOut < 30 || heightOut > 96) {
+          error = 'Height seems off — should be roughly 2.5 to 8 feet total.';
+          return;
+        }
+      }
+
+      // Weight
+      let weightOut: number | undefined;
+      if (weightLbStr.trim()) {
+        const wN = parseFloat(weightLbStr.trim());
+        if (!Number.isFinite(wN) || wN < 40 || wN > 500) {
+          error = 'Weight should be 40–500 lb.';
+          return;
+        }
+        weightOut = Math.round(wN);
+      }
+
+      // Wave + corral validation
+      let waveOut: 1 | 2 | 3 | 4 | undefined;
+      if (wave !== '' && wave != null) {
+        const w = Number(wave);
+        if (![1, 2, 3, 4].includes(w)) {
+          error = 'Wave must be 1, 2, 3, or 4.';
+          return;
+        }
+        waveOut = w as 1 | 2 | 3 | 4;
+      }
+      const corralOut = corral.trim().toUpperCase().slice(0, 1) || undefined;
+      if (corralOut && !/^[A-Z]$/.test(corralOut)) {
+        error = 'Corral must be a single letter (A–Z).';
+        return;
       }
 
       // Persist profile fields
       const profilePatch: Partial<Parameters<typeof updateRunner>[1]> = {
         emoji: (emoji ?? '').trim().slice(0, 4) || profile.emoji,
         color,
-        age: ageNum,
+        dob: dobOut,
         gender: gender || undefined,
+        heightIn: heightOut,
+        weightLb: weightOut,
+        wave: waveOut,
+        corral: corralOut,
       };
       if (!profile.fixed) {
         profilePatch.name = name.trim() || profile.name;
@@ -159,8 +224,11 @@
             <input id="rs-tid" class="form-input mono" bind:value={trackId} disabled={profile.fixed} style="text-transform: uppercase" />
           </div>
           <div class="form-group">
-            <label class="form-label" for="rs-age">Age</label>
-            <input id="rs-age" class="form-input" type="number" min="5" max="100" bind:value={ageStr} />
+            <label class="form-label" for="rs-dob">Date of birth</label>
+            <input id="rs-dob" class="form-input" type="date" bind:value={dob} />
+            {#if ageOnRace != null}
+              <div class="form-hint mono">Age {ageOnRace} on race day · May 16, 2026</div>
+            {/if}
           </div>
           <div class="form-group">
             <label class="form-label" for="rs-gender">Gender</label>
@@ -168,7 +236,46 @@
               <option value="">—</option>
               <option value="F">Female</option>
               <option value="M">Male</option>
-              <option value="X">Non-binary</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="form-group g-2">
+            <label class="form-label" for="rs-ht-ft">Height</label>
+            <div class="ht-row" id="rs-ht-ft">
+              <input class="form-input ht" type="number" min="0" max="8" bind:value={heightFt} placeholder="5" />
+              <span class="ht-unit">ft</span>
+              <input class="form-input ht" type="number" min="0" max="11" bind:value={heightInRem} placeholder="5" />
+              <span class="ht-unit">in</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rs-weight">Weight (lb)</label>
+            <input id="rs-weight" class="form-input" type="number" min="40" max="500" bind:value={weightLbStr} placeholder="125" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-title">Start wave</div>
+        <p class="sec-sub">Each wave goes off at a different time. Pick the wave + corral from the runner's RBC bib confirmation. Wave 1 = 7:00 AM, Wave 2 = 7:25 AM, Wave 3 = 7:50 AM, Wave 4 = 8:15 AM. Calendar export and arrival ETAs use this.</p>
+        <div class="grid">
+          <div class="form-group">
+            <label class="form-label" for="rs-wave">Wave</label>
+            <select id="rs-wave" class="form-input" bind:value={wave}>
+              <option value="">—</option>
+              <option value={1}>1 · 7:00 AM</option>
+              <option value={2}>2 · 7:25 AM</option>
+              <option value={3}>3 · 7:50 AM</option>
+              <option value={4}>4 · 8:15 AM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rs-corral">Corral</label>
+            <select id="rs-corral" class="form-input" bind:value={corral}>
+              <option value="">—</option>
+              {#each ['A','B','C','D','E','F'] as c}<option value={c}>{c}</option>{/each}
             </select>
           </div>
         </div>
@@ -279,6 +386,12 @@
     align-items: center;
     justify-content: space-between;
   }
+  .sec-sub {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+    line-height: 1.5;
+    margin: 0 0 10px;
+  }
   .sec-title-row .btn { font-size: 10px; text-transform: none; letter-spacing: 0; }
 
   .grid {
@@ -289,6 +402,14 @@
   .g-1 { grid-column: span 1; }
   .g-2 { grid-column: span 2; }
   .color { padding: 2px; height: 38px; }
+  .form-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+  .ht-row { display: flex; align-items: center; gap: 6px; }
+  .ht { max-width: 70px; }
+  .ht-unit { font-size: 13px; color: var(--text-tertiary); font-weight: 600; }
 
   .splits { width: 100%; border-collapse: collapse; font-size: 13px; }
   .splits th {

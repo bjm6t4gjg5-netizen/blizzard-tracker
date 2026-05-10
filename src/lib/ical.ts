@@ -6,8 +6,8 @@
 // ============================================================
 import { SPECTATOR_SPOTS } from './course';
 import { RACE_START } from './time';
-import type { RunnerState } from './runners';
-import type { RunnerProfile } from './runners';
+import type { RunnerState, RunnerProfile } from './runners';
+import { runnerStartTime, waveLabel } from './runners';
 
 interface Args {
   profiles: RunnerProfile[];
@@ -67,25 +67,42 @@ export function buildIcsFile({ profiles, states }: Args): string {
 
   const stamp = ics(new Date());
 
-  // The race itself
+  // First wave gun
   lines.push('BEGIN:VEVENT');
   lines.push(`UID:bkh2026-start@blizzard-tracker`);
   lines.push(`DTSTAMP:${stamp}`);
   lines.push(`DTSTART:${ics(RACE_START)}`);
   lines.push(`DTEND:${ics(new Date(RACE_START.getTime() + 30 * 60_000))}`);
-  lines.push(`SUMMARY:🏁 RBC Brooklyn Half — race start`);
+  lines.push(`SUMMARY:🏁 RBC Brooklyn Half — Wave 1 start (7:00 AM ET)`);
   lines.push(`LOCATION:Brooklyn Museum, Eastern Pkwy & Washington Ave`);
-  lines.push(`DESCRIPTION:${escapeText('Catherine and Helaine start the 2026 RBC Brooklyn Half. 13.1 miles to Coney Island.')}`);
+  lines.push(`DESCRIPTION:${escapeText('Wave 1 goes off at 7:00 AM. Waves 2/3/4 follow at 7:25 / 7:50 / 8:15.')}`);
   lines.push('END:VEVENT');
+
+  // One "wave start" event per runner (so spectators can see when each runner actually starts)
+  for (const profile of profiles) {
+    if (!profile.wave) continue;
+    const t = runnerStartTime(profile, RACE_START);
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:bkh2026-start-${profile.id}@blizzard-tracker`);
+    lines.push(`DTSTAMP:${stamp}`);
+    lines.push(`DTSTART:${ics(t)}`);
+    lines.push(`DTEND:${ics(new Date(t.getTime() + 5 * 60_000))}`);
+    lines.push(`SUMMARY:${escapeText(`${profile.emoji} ${profile.name.split(' ')[0]} starts — ${waveLabel(profile, RACE_START)}`)}`);
+    lines.push(`LOCATION:Brooklyn Museum`);
+    lines.push(`DESCRIPTION:${escapeText(`${profile.name} crosses the start line with ${waveLabel(profile, RACE_START)}.`)}`);
+    lines.push('END:VEVENT');
+  }
 
   for (const profile of profiles) {
     const state = states.get(profile.id);
     if (!state) continue;
     const arrivals = predictArrivals(state);
+    // Spectator-arrival events anchor off the runner's actual wave start.
+    const runnerStart = runnerStartTime(profile, RACE_START);
     for (const spot of SPECTATOR_SPOTS) {
       const sec = arrivals.get(spot.mi);
       if (sec == null) continue;
-      const at = new Date(RACE_START.getTime() + sec * 1000);
+      const at = new Date(runnerStart.getTime() + sec * 1000);
       const end = new Date(at.getTime() + 5 * 60_000);
       const officialNote = spot.official ? ` (${spot.official} cheer zone)` : '';
       lines.push('BEGIN:VEVENT');

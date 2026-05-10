@@ -68,6 +68,9 @@ export const CATHERINE_PRS: PR[] = [
 ];
 
 export const CATHERINE_RACES: Race[] = [
+  // Saint Rita 5th grade XC 2008 — DPL Champion (added via dad's note, round 8)
+  { date: '2008-10-25', name: 'Saint Rita JV XC — Championship',     location: 'Bishop Dunne',      distance: 'XC', event: '1.5 mi', time: null,    place: 1, highlight: '5th-grade DPL Champion', notes: 'Team championship — Catherine in the middle of the team photo.' },
+
   // Saint Rita JV XC 2009 (6th grade) — undefeated 1.5mi season
   { date: '2009-10-17', name: 'Saint Rita JV XC — Meet 1',          location: 'Norbuck',           distance: 'XC', event: '1.5 mi', time: '9:30',  place: 1, highlight: '1st — undefeated season' },
   { date: '2009-10-24', name: 'Saint Rita JV XC — Meet 2',          location: 'Bishop Dunne',      distance: 'XC', event: '1.5 mi', time: '10:24', place: 1 },

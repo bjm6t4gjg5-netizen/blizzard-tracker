@@ -1,7 +1,7 @@
 <script lang="ts">
   import { TOTAL_GAIN_FT, COURSE } from '../lib/course';
   import { devUnlocked, lockDevMode } from '../lib/devMode';
-  import { notify, demoMode } from '../lib/stores';
+  import { notify, demoTimeMin } from '../lib/stores';
   import DevLoginModal from './DevLoginModal.svelte';
   import VenmoButton from './VenmoButton.svelte';
 
@@ -12,7 +12,7 @@
       // One-click lock when already active. Avoids the modal popping up
       // again over the map and gives a clear way to log out.
       lockDevMode();
-      demoMode.set(null);
+      demoTimeMin.set(null);
       notify('🔒 Developer mode locked');
     } else {
       showDevModal = true;
@@ -30,6 +30,7 @@
       <span class="pill">⛰ {TOTAL_GAIN_FT}ft elev gain</span>
       <span class="pill">📡 RTRT.me live data</span>
       <VenmoButton variant="pill" label="🍺 Buy them a beer" />
+      <VenmoButton variant="pill" label="🛠 Tip the dev" user="leonschulte" note="Tip for Leon's Blizzard Tracker work 🛠" />
       <button
         class="dev-link"
         class:active={$devUnlocked}

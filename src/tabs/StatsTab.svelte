@@ -1,10 +1,12 @@
 <script lang="ts">
   import { profiles, runnerState, goalsStore } from '../lib/stores';
   import {
-    FIELD_HEADLINES, WOMEN_AGE_GROUPS, percentileFor, ageGroupFor,
+    FIELD_HEADLINES, WOMEN_AGE_GROUPS, MEN_AGE_GROUPS,
+    percentileFor, ageGroupFor,
   } from '../lib/stats';
   import { formatHMS, parseGoalTime } from '../lib/format';
   import { RACE_START } from '../lib/time';
+  import { ageFromDob } from '../lib/runners';
   import DistributionChart from '../components/DistributionChart.svelte';
   import StatsRow from '../components/StatsRow.svelte';
 
@@ -16,22 +18,32 @@
       lookupResult = 'Invalid format. Try 1:30:00';
       return;
     }
-    const pct = percentileFor(sec);
-    lookupResult = `Top ${pct}% of the field`;
+    const pctOverall = percentileFor(sec);
+    const pctW = percentileFor(sec, 'F');
+    const pctM = percentileFor(sec, 'M');
+    lookupResult = `Top ${pctOverall}% overall · ${pctW}% among women · ${pctM}% among men`;
   }
 
-  /** For each women's age band, list which of our runners falls into it. */
-  $: ageBandRunners = (() => {
+  /** Map (gender, age-band) → runners who land there. Uses DOB-computed age. */
+  function bandRunners(gender: 'F' | 'M') {
     const map = new Map<string, typeof $profiles>();
     for (const p of $profiles) {
-      if (p.gender !== 'F' || p.age == null) continue;
-      const band = ageGroupFor(p.age);
+      if (p.gender !== gender) continue;
+      const age = ageFromDob(p.dob, RACE_START);
+      if (age == null) continue;
+      const band = ageGroupFor(age, gender);
       if (!band) continue;
       if (!map.has(band.range)) map.set(band.range, [] as any);
       (map.get(band.range) as any).push(p);
     }
     return map;
-  })();
+  }
+  // Re-evaluate when the profiles list changes — referencing `$profiles`
+  // inside the body would create the comma-operator warning Svelte hates.
+  $: _profDep = $profiles;
+  $: womenBandRunners = (() => { void _profDep; return bandRunners('F'); })();
+  $: menBandRunners   = (() => { void _profDep; return bandRunners('M'); })();
+  $: anyConfigured = womenBandRunners.size > 0 || menBandRunners.size > 0;
 </script>
 
 <h2 class="title">Race stats &amp; field analysis</h2>
@@ -51,7 +63,7 @@
     <div class="card-header"><div class="card-title">Women's median by age group · 2025 est.</div></div>
     <div class="card-pad ag-list">
       {#each WOMEN_AGE_GROUPS as ag}
-        {@const here = ageBandRunners.get(ag.range)}
+        {@const here = womenBandRunners.get(ag.range)}
         <div class="ag-row" class:hit={!!here}>
           <span class="range">{ag.range}</span>
           <span class="mono median">{ag.label}</span>
@@ -64,17 +76,42 @@
           {/if}
         </div>
       {/each}
-      {#if ageBandRunners.size === 0}
-        <div class="empty">Set age + gender in each runner's ⚙ settings to see which band they fall into.</div>
-      {/if}
     </div>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="card-title">Finish-time distribution · 2025</div></div>
-    <div class="card-pad">
-      <DistributionChart />
+    <div class="card-header"><div class="card-title">Men's median by age group · 2025 est.</div></div>
+    <div class="card-pad ag-list">
+      {#each MEN_AGE_GROUPS as ag}
+        {@const here = menBandRunners.get(ag.range)}
+        <div class="ag-row" class:hit={!!here}>
+          <span class="range">{ag.range}</span>
+          <span class="mono median">{ag.label}</span>
+          {#if here}
+            <span class="runners">
+              {#each here as p}
+                <span class="r-tag" style="--pc: {p.color}">{p.emoji} {p.name.split(' ')[0]}</span>
+              {/each}
+            </span>
+          {/if}
+        </div>
+      {/each}
     </div>
+  </div>
+</div>
+
+{#if !anyConfigured}
+  <div class="card gap-md">
+    <div class="card-pad empty">
+      Set date of birth + gender in each runner's ⚙ settings to see which median band they fall into.
+    </div>
+  </div>
+{/if}
+
+<div class="card gap-md">
+  <div class="card-header"><div class="card-title">Finish-time distribution · 2025</div></div>
+  <div class="card-pad">
+    <DistributionChart />
   </div>
 </div>
 

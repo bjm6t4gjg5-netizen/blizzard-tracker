@@ -1,19 +1,19 @@
 <script lang="ts">
-  /** Venmo handle for all "buy them a beer" prompts. Same account is used
-      for both runners per Leon. */
-  const VENMO_USER = 'Catherine-Blizzard';
+  /** Venmo handle. Defaults to the runners' shared account; pass `user` to
+      override (e.g. "leonschulte" for the dev tip jar). */
+  export let user = 'Catherine-Blizzard';
 
   export let variant: 'primary' | 'pill' | 'ghost' = 'primary';
   export let label = '🍺 Venmo a beer';
   /** Optional pre-filled note shown when the user opens the Venmo page. */
   export let note = 'Race-day beer for the Blizzards 🏃‍♀️⚡';
 
-  $: href = `https://venmo.com/u/${VENMO_USER}?txn=pay&note=${encodeURIComponent(note)}`;
+  $: href = `https://venmo.com/u/${user}?txn=pay&note=${encodeURIComponent(note)}`;
 </script>
 
 <a class="venmo venmo-{variant}" {href} target="_blank" rel="noopener noreferrer">
   <span class="handle">{label}</span>
-  <span class="user mono">@{VENMO_USER}</span>
+  <span class="user mono">@{user}</span>
 </a>
 
 <style>

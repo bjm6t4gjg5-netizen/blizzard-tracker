@@ -6,11 +6,14 @@ import {
   type RunnerProfile, type RunnerState, type RunnerGoals,
   loadProfiles, saveProfiles, loadGoals, saveGoals,
   makeRunnerState, persistRunnerState, applySnapshot,
+  runnerStartOffsetMin, mileAtElapsed,
 } from './runners';
-import { fetchRunner, demoSnapshot, type DemoStage } from './rtrt';
+import { fetchRunner } from './rtrt';
 import { fetchWeather, type WeatherSnapshot } from './weather';
 import { now } from './time';
+import { TOTAL_MI, RACE_START } from './time';
 import { checkMilestones, ensurePermission, clearMilestones } from './notifications';
+import { load, save } from './storage';
 
 // ────────────────────────────────────────────────────────────
 // Profiles + per-runner goals
@@ -61,7 +64,16 @@ export const allRunnerStates = derived(profiles, $p => $p.map(p => runnerState(p
 
 export const lastRefreshAt = writable<number | null>(null);
 export const refreshing = writable(false);
-export const demoMode = writable<DemoStage | null>(null);
+
+/**
+ * Time-of-day simulator. When non-null, the value is the number of minutes
+ * past Wave 1 gun (7:00 AM ET) the simulator pretends it is. Each runner's
+ * state is then projected from `simMin - runnerStartOffsetMin(profile)` →
+ * elapsed time → mile (via the goal-pace profile).
+ *
+ * null = LIVE data from RTRT.
+ */
+export const demoTimeMin = writable<number | null>(null);
 
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -69,11 +81,35 @@ export async function refreshOne(id: string): Promise<void> {
   const profile = get(profiles).find(p => p.id === id);
   if (!profile) return;
 
-  // Demo mode: synthesize a snapshot, no network.
-  const demo = get(demoMode);
-  if (demo) {
-    const snap = { ...demoSnapshot(demo), fetchedAt: now(), source: 'demo' };
-    runnerState(id).update(s => applySnapshot(s, snap));
+  // Simulator: synthesize a per-runner snapshot from the chosen race-day time.
+  // Each runner's elapsed = (simMin - their wave-start offset) * 60.
+  const simMin = get(demoTimeMin);
+  if (simMin !== null) {
+    const goals = loadGoals(id);
+    const offsetMin = runnerStartOffsetMin(profile);
+    const elapsedSec = Math.round((simMin - offsetMin) * 60);
+    let status: RunnerState['status'];
+    let distMi = 0;
+    let elapsed = 0;
+    if (elapsedSec < 0) {
+      status = 'pre';
+    } else if (elapsedSec >= goals.goalSec) {
+      status = 'finished';
+      distMi = TOTAL_MI;
+      elapsed = goals.goalSec;
+    } else {
+      status = 'running';
+      distMi = mileAtElapsed(elapsedSec, goals.goalSec);
+      elapsed = elapsedSec;
+    }
+    runnerState(id).update(s => applySnapshot(s, {
+      status,
+      distMi,
+      elapsedSec: elapsed,
+      splits: [],
+      fetchedAt: now(),
+      source: 'sim',
+    }));
     return;
   }
 
@@ -130,15 +166,13 @@ function resetVolatileState(id: string): void {
   }));
 }
 
-// React to demoMode changes — always wipe positions first so the marker
-// snaps back to mile 0 when we switch stages or return to "Live".
-let prevDemo: DemoStage | null = null;
-demoMode.subscribe(d => {
-  if (d !== prevDemo) {
-    prevDemo = d;
+// React to simulator changes — always wipe positions first so the marker
+// snaps back when we move the slider or return to Live.
+let prevSim: number | null = null;
+demoTimeMin.subscribe(t => {
+  if (t !== prevSim) {
+    prevSim = t;
     for (const p of get(profiles)) resetVolatileState(p.id);
-    // Demo state changes shouldn't re-fire the same milestone notifications,
-    // so clear the "already-fired" log alongside the state.
     clearMilestones();
     refreshAll();
   }
@@ -219,6 +253,11 @@ export const activeTab = writable<string>('family');
 export const settingsOpen = writable<boolean>(false);
 /** When non-null, the per-runner settings modal opens for this runner id. */
 export const runnerSettingsFor = writable<string | null>(null);
+
+/** Persisted user-chosen tab order. Drag-and-drop in the tab bar mutates this. */
+const initialTabOrder = load<string[]>('tabOrder', []);
+export const tabOrder = writable<string[]>(initialTabOrder);
+tabOrder.subscribe(o => save('tabOrder', o));
 
 export const toast = writable<{ id: number; text: string } | null>(null);
 let toastSeq = 0;

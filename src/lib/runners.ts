@@ -20,10 +20,74 @@ export interface RunnerProfile {
   color: string;
   /** True for the two anchor runners (Catherine, Helaine). */
   fixed: boolean;
-  /** Age on race day. Optional. */
-  age?: number;
-  /** Gender — drives age-group lookup. Optional. */
-  gender?: 'F' | 'M' | 'X';
+  /** Date of birth, YYYY-MM-DD. Age is computed from this. */
+  dob?: string;
+  /** Gender — drives age-group lookup. */
+  gender?: 'F' | 'M';
+  /** Height in inches (total). 67 = 5'7". */
+  heightIn?: number;
+  /** Body weight in pounds. */
+  weightLb?: number;
+  /** Start wave: 1, 2, 3, or 4 (RBC Brooklyn Half has four waves). */
+  wave?: 1 | 2 | 3 | 4;
+  /** Corral letter within the wave: A, B, C, ... */
+  corral?: string;
+}
+
+// ────────────────────────────────────────────────────────────
+// Wave start times
+// ────────────────────────────────────────────────────────────
+
+/** Official RBC Brooklyn Half 2026 wave-start times. */
+const WAVE_START_OFFSET_MIN: Record<1 | 2 | 3 | 4, number> = {
+  1: 0,    // 7:00 AM ET
+  2: 25,   // 7:25 AM
+  3: 50,   // 7:50 AM
+  4: 75,   // 8:15 AM
+};
+
+/** Approximate corral-to-corral funnel delay within a wave (minutes). */
+function corralOffsetMin(corral: string | undefined): number {
+  if (!corral) return 0;
+  const idx = corral.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+  if (idx < 0 || idx > 25) return 0;
+  // ~2 minutes between adjacent corrals — placeholder until NYRR confirms.
+  return idx * 2;
+}
+
+/** Compute a runner's actual gun/chip start time on race day. */
+export function runnerStartTime(profile: RunnerProfile, raceStart: Date): Date {
+  const wave = (profile.wave ?? 1) as 1 | 2 | 3 | 4;
+  const offsetMin = WAVE_START_OFFSET_MIN[wave] + corralOffsetMin(profile.corral);
+  return new Date(raceStart.getTime() + offsetMin * 60_000);
+}
+
+/** Minutes from Wave 1 gun (7:00 AM ET) when this runner crosses the start. */
+export function runnerStartOffsetMin(profile: RunnerProfile): number {
+  const wave = (profile.wave ?? 1) as 1 | 2 | 3 | 4;
+  return WAVE_START_OFFSET_MIN[wave] + corralOffsetMin(profile.corral);
+}
+
+/** Human-readable wave + corral label (e.g. "Wave 1 · Corral B · 7:02 AM"). */
+export function waveLabel(profile: RunnerProfile, raceStart: Date): string {
+  if (!profile.wave) return '';
+  const t = runnerStartTime(profile, raceStart);
+  const hours = t.toLocaleTimeString('en-US', {
+    hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York',
+  });
+  const corralPart = profile.corral ? ` · Corral ${profile.corral}` : '';
+  return `Wave ${profile.wave}${corralPart} · ${hours} ET`;
+}
+
+/** Compute integer age from a YYYY-MM-DD birthday relative to a reference date. */
+export function ageFromDob(dob: string | undefined, asOf: Date = new Date()): number | null {
+  if (!dob || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
+  const birth = new Date(dob + 'T00:00:00');
+  if (Number.isNaN(birth.getTime())) return null;
+  let age = asOf.getFullYear() - birth.getFullYear();
+  const m = asOf.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && asOf.getDate() < birth.getDate())) age--;
+  return age >= 0 && age < 150 ? age : null;
 }
 
 /** A scenario is a named "what-if" race plan with a flat-equivalent pace. */
@@ -91,8 +155,10 @@ export interface RunnerState {
 // ────────────────────────────────────────────────────────────
 
 export const DEFAULT_PROFILES: ReadonlyArray<RunnerProfile> = [
-  { id: 'gf',  name: 'Catherine Blizzard', trackId: 'RMGBEVSK', emoji: '💙', color: '#007AFF', fixed: true, age: 28, gender: 'F' },
-  { id: 'mom', name: 'Helaine Blizzard',   trackId: 'RRM2PLD3', emoji: '⚡', color: '#5856D6', fixed: true, age: 58, gender: 'F' },
+  // Catherine — born 25 May 1998. Wave 1 · Corral B (7:02 AM start).
+  { id: 'gf',  name: 'Catherine Blizzard', trackId: 'RMGBEVSK', emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, corral: 'B' },
+  // Helaine — placeholder DOB; Wave 3 · Corral C (~7:54 AM start).
+  { id: 'mom', name: 'Helaine Blizzard',   trackId: 'RRM2PLD3', emoji: '⚡', color: '#5856D6', fixed: true, dob: '1967-09-01', gender: 'F', heightIn: 64, weightLb: 130, wave: 3, corral: 'C' },
 ];
 
 export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
@@ -117,23 +183,23 @@ export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
     ],
   },
   mom: {
-    goalSec: 130 * 60,
-    goalLabel: 'Sub-2:10',
-    goalMilePaceSec: 9 * 60 + 55,
+    goalSec: 110 * 60,
+    goalLabel: 'Sub-1:50',
+    goalMilePaceSec: 8 * 60 + 24,
     scenarios: [
-      { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 9 * 60 + 30,  desc: 'Everything goes right' },
-      { key: 'goal',    label: 'Sub-2:10',   emoji: '🎯', color: '#5856D6', flatPaceSec: null,         desc: 'Goal pace, elevation-adjusted' },
-      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 10 * 60 + 30, desc: 'Comfortable steady effort' },
-      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 11 * 60 + 30, desc: 'Slower second half' },
-      { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 13 * 60 + 0,  desc: 'Easy finish' },
+      { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 7 * 60 + 55, desc: 'Everything clicks' },
+      { key: 'goal',    label: 'Sub-1:50',   emoji: '🎯', color: '#5856D6', flatPaceSec: null,        desc: 'Goal pace, elevation-adjusted' },
+      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 8 * 60 + 45, desc: 'Solid race' },
+      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 9 * 60 + 30, desc: 'Warm / conservative' },
+      { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 11 * 60 + 0, desc: 'Backup plan' },
     ],
     splitGoals: [
-      { label: 'Mile 1',  mi: 1.0,      targetSec:  10 * 60 + 10 },
-      { label: 'Mile 3',  mi: 3.0,      targetSec:  30 * 60 + 0  },
-      { label: 'Mile 5',  mi: 5.0,      targetSec:  50 * 60 + 0  },
-      { label: 'Mile 7',  mi: 7.0,      targetSec:  70 * 60 + 0  },
-      { label: 'Mile 10', mi: 10.0,     targetSec: 100 * 60 + 0  },
-      { label: 'Finish',  mi: TOTAL_MI, targetSec: 130 * 60      },
+      { label: 'Mile 1',  mi: 1.0,      targetSec:  8 * 60 + 40 },
+      { label: 'Mile 3',  mi: 3.0,      targetSec: 25 * 60 + 30 },
+      { label: 'Mile 5',  mi: 5.0,      targetSec: 42 * 60 + 30 },
+      { label: 'Mile 7',  mi: 7.0,      targetSec: 59 * 60 + 30 },
+      { label: 'Mile 10', mi: 10.0,     targetSec: 84 * 60 + 30 },
+      { label: 'Finish',  mi: TOTAL_MI, targetSec: 110 * 60     },
     ],
   },
 };
@@ -235,6 +301,23 @@ export function buildPaceProfile(flatPaceSec: number): { mi: number; sec: number
     pts.push({ mi: +next.toFixed(3), sec: cum });
   }
   return pts;
+}
+
+/** Given an elapsed-time-from-runner-start, project how far they'd be along
+ *  the course using their goal-time pace profile (elevation/fatigue model). */
+export function mileAtElapsed(elapsedSec: number, goalSec: number): number {
+  if (elapsedSec <= 0) return 0;
+  if (elapsedSec >= goalSec) return TOTAL_MI;
+  const flat = flatPaceForGoal(goalSec);
+  const profile = buildPaceProfile(flat);
+  for (let i = 0; i < profile.length - 1; i++) {
+    if (profile[i + 1].sec >= elapsedSec) {
+      const span = profile[i + 1].sec - profile[i].sec || 1e-9;
+      const t = (elapsedSec - profile[i].sec) / span;
+      return profile[i].mi + (profile[i + 1].mi - profile[i].mi) * t;
+    }
+  }
+  return TOTAL_MI;
 }
 
 /** Solve for the flat pace that hits a target finish time. */

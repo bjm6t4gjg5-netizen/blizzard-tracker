@@ -2,7 +2,13 @@
 // storage.ts — versioned localStorage with safe fallback
 // ============================================================
 
-const PREFIX = 'blizzard:v2:';
+/**
+ * Versioned key prefix. Bumping this number invalidates every persisted
+ * setting (goals, profiles, tour-seen, theme, etc.) so a schema change
+ * doesn't leave stale data masking the new defaults. v3 bump shipped with
+ * Helaine's sub-1:50 goal + wave/corral fields.
+ */
+const PREFIX = 'blizzard:v3:';
 
 /** Read a value, validating the schema. Returns fallback on any error or version mismatch. */
 export function load<T>(key: string, fallback: T): T {

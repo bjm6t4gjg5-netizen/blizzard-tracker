@@ -3,15 +3,43 @@
   import { RACE_START, countdownTo } from '../lib/time';
   import {
     profiles, runnerState, activeTab,
-    refreshAll, lastRefreshAt, refreshing, demoMode,
+    refreshAll, lastRefreshAt, refreshing, demoTimeMin,
   } from '../lib/stores';
-  import type { DemoStage } from '../lib/rtrt';
   import RunnerPill from './RunnerPill.svelte';
   import { devUnlocked, lockDevMode } from '../lib/devMode';
   import AppearanceModal from './AppearanceModal.svelte';
   import { openTour } from '../lib/tour';
 
   let appearanceOpen = false;
+
+  /** Format a "minutes-past-7am" value as "h:MM AM/PM" for display. */
+  function fmtTimeOfDay(min: number | null): string {
+    if (min === null) return 'Live';
+    const totalMinFrom7 = min; // 0 = 7:00 AM
+    const totalAbsMin = 7 * 60 + totalMinFrom7;
+    let h = Math.floor(totalAbsMin / 60);
+    const m = ((totalAbsMin % 60) + 60) % 60;
+    const ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${String(m).padStart(2, '0')} ${ap}`;
+  }
+
+  // Sim slider value when active. Defaults to 0 (7:00 AM) on first reveal.
+  let simSliderMin = 0;
+  $: if ($demoTimeMin !== null) simSliderMin = $demoTimeMin;
+
+  /** Preset jump-points, picked to demonstrate the staggered wave races. */
+  const SIM_PRESETS: { label: string; min: number; note: string }[] = [
+    { label: 'Pre-race',         min: -10, note: '6:50 AM' },
+    { label: 'Wave 1 gun',       min:   0, note: 'Catherine starts' },
+    { label: 'Cat ~30 min in',   min:  32, note: '7:32 — Cat ~4mi · Helaine pre' },
+    { label: 'Wave 3 gun',       min:  50, note: 'Helaine starts' },
+    { label: 'Cat finishing',    min:  92, note: '8:32 — Cat at finish · Helaine ~5mi' },
+    { label: 'Helaine ~7mi',     min: 130, note: '9:10 — Cat done · Helaine on Ocean Pkwy' },
+    { label: 'Helaine finishing',min: 164, note: '9:44 — both done soon' },
+    { label: 'All done',         min: 180, note: '10:00 AM' },
+  ];
 
   let cd = countdownTo(RACE_START);
   let cdHandle: ReturnType<typeof setInterval> | null = null;
@@ -49,16 +77,6 @@
     if (cdHandle) clearInterval(cdHandle);
     if (lastRefreshHandle) clearInterval(lastRefreshHandle);
   });
-
-  const DEMO_STAGES: { key: DemoStage | null; label: string; tip: string }[] = [
-    { key: null,     label: 'Live',  tip: 'Real RTRT data' },
-    { key: 'pre',    label: 'Pre',   tip: 'Pre-race' },
-    { key: 'early',  label: '3 mi',  tip: 'Early race' },
-    { key: 'park',   label: '6 mi',  tip: 'In Prospect Park' },
-    { key: 'ocean',  label: '9 mi',  tip: 'On Ocean Pkwy' },
-    { key: 'late',   label: '11 mi', tip: 'Late race' },
-    { key: 'finish', label: 'Fin',   tip: 'Finished' },
-  ];
 
   let demoOpen = false;
 </script>
@@ -99,8 +117,8 @@
     </div>
 
     <div class="controls">
-      {#if $demoMode}
-        <span class="demo-flag" title="Showing simulated race data">DEMO · {$demoMode}</span>
+      {#if $demoTimeMin !== null}
+        <span class="demo-flag" title="Showing simulated race data">SIM · {fmtTimeOfDay($demoTimeMin)}</span>
       {/if}
       <span class="refresh-info" title="Last refresh">
         <span class="spin" class:on={$refreshing}></span>
@@ -112,22 +130,70 @@
 
       {#if $devUnlocked}
         <div class="demo-menu">
-          <button class="hdr-btn dev-btn" on:click={() => (demoOpen = !demoOpen)} title="Demo race position" aria-haspopup="menu">🛠</button>
+          <button class="hdr-btn dev-btn" on:click={() => (demoOpen = !demoOpen)} title="Race-day time simulator" aria-haspopup="menu">🛠</button>
           {#if demoOpen}
-            <div class="demo-pop" role="menu" tabindex="-1" on:mouseleave={() => (demoOpen = false)}>
-              <div class="demo-pop-title">Preview race position</div>
-              {#each DEMO_STAGES as st}
-                <button
-                  class="demo-row"
-                  class:active={$demoMode === st.key}
-                  on:click={() => { demoMode.set(st.key); demoOpen = false; }}
-                >
-                  <span>{st.label}</span>
-                  <span class="demo-row-tip">{st.tip}</span>
-                </button>
-              {/each}
+            <div class="demo-pop demo-pop-wide" role="menu" tabindex="-1">
+              <div class="demo-pop-head">
+                <div>
+                  <div class="demo-pop-title">Race-day time simulator</div>
+                  <div class="demo-pop-sub">
+                    {#if $demoTimeMin === null}
+                      <span class="live-dot"></span> Currently <strong>Live</strong> (real RTRT data)
+                    {:else}
+                      Simulating <strong>{fmtTimeOfDay($demoTimeMin)}</strong> · runners projected from their own wave start
+                    {/if}
+                  </div>
+                </div>
+                <button class="x-btn" on:click={() => (demoOpen = false)} aria-label="Close">✕</button>
+              </div>
+
+              <div class="slider-wrap">
+                <input
+                  type="range"
+                  min="-30"
+                  max="210"
+                  step="1"
+                  bind:value={simSliderMin}
+                  on:input={() => demoTimeMin.set(simSliderMin)}
+                />
+                <div class="slider-ticks">
+                  <span>6:30</span>
+                  <span>7:00</span>
+                  <span>7:30</span>
+                  <span>8:00</span>
+                  <span>8:30</span>
+                  <span>9:00</span>
+                  <span>9:30</span>
+                  <span>10:00</span>
+                  <span>10:30</span>
+                </div>
+              </div>
+
+              <div class="presets-title">Quick jump</div>
+              <div class="presets">
+                {#each SIM_PRESETS as p}
+                  <button
+                    class="preset"
+                    class:active={$demoTimeMin === p.min}
+                    on:click={() => demoTimeMin.set(p.min)}
+                    title={p.note}
+                  >
+                    <span class="preset-label">{p.label}</span>
+                    <span class="preset-note">{p.note}</span>
+                  </button>
+                {/each}
+              </div>
+
               <div class="demo-divider"></div>
-              <button class="demo-row demo-row-logout" on:click={() => { lockDevMode(); demoMode.set(null); demoOpen = false; }}>
+              <button
+                class="demo-row"
+                class:active={$demoTimeMin === null}
+                on:click={() => { demoTimeMin.set(null); demoOpen = false; }}
+              >
+                <span>📡 Lock to Live data</span>
+                <span class="demo-row-tip">Real RTRT</span>
+              </button>
+              <button class="demo-row demo-row-logout" on:click={() => { lockDevMode(); demoTimeMin.set(null); demoOpen = false; }}>
                 <span>Lock dev mode</span>
                 <span class="demo-row-tip">Hide tools</span>
               </button>
@@ -239,10 +305,76 @@
     padding: 6px;
     z-index: 100;
   }
+  .demo-pop-wide { width: 340px; padding: 12px; }
   .demo-pop-title {
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
     color: var(--text-tertiary); padding: 6px 10px;
   }
+  .demo-pop-wide .demo-pop-title { padding: 0; }
+  .demo-pop-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .demo-pop-sub {
+    font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;
+  }
+  .demo-pop-sub strong { color: var(--text-primary); font-weight: 700; }
+  .live-dot {
+    display: inline-block; width: 7px; height: 7px;
+    border-radius: 50%; background: var(--green);
+    margin-right: 4px;
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes live-pulse { 50% { opacity: 0.4; } }
+  .x-btn {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: none; background: var(--surface-2); color: var(--text-tertiary);
+    cursor: pointer; font-size: 11px;
+    flex-shrink: 0;
+  }
+  .x-btn:hover { background: var(--separator); color: var(--text-primary); }
+
+  .slider-wrap { margin: 10px 0 14px; }
+  .slider-wrap input[type="range"] {
+    width: 100%;
+    accent-color: var(--blue);
+    height: 24px;
+  }
+  .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+  }
+
+  .presets-title {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-tertiary); margin-bottom: 6px;
+  }
+  .presets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .preset {
+    display: flex; flex-direction: column; align-items: flex-start;
+    padding: 6px 9px;
+    border: 1px solid var(--separator-soft);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: left;
+    transition: all 100ms ease;
+  }
+  .preset:hover { background: var(--blue-soft); border-color: var(--blue); }
+  .preset.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .preset.active .preset-note { color: rgba(255,255,255,0.8); }
+  .preset-label { font-size: 11.5px; font-weight: 600; color: var(--text-primary); }
+  .preset.active .preset-label { color: white; }
+  .preset-note { font-size: 9.5px; color: var(--text-tertiary); margin-top: 1px; }
   .demo-row {
     display: flex; width: 100%;
     align-items: center; justify-content: space-between;

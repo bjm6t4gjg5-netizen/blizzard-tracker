@@ -10,8 +10,11 @@
   import CareerHelaine from '../components/CareerHelaine.svelte';
   import SixStar from '../components/SixStar.svelte';
   import VenmoButton from '../components/VenmoButton.svelte';
+  import RunnerWaveCountdown from '../components/RunnerWaveCountdown.svelte';
   import { HELAINE_SUMMARY, CATHERINE_SUMMARY } from '../lib/career';
   import { formatHMS } from '../lib/format';
+  import { waveLabel } from '../lib/runners';
+  import { RACE_START } from '../lib/time';
 
   export let profile: RunnerProfile;
   let view: 'today' | 'career' = 'today';
@@ -63,6 +66,12 @@
         >⚙</button>
       </div>
       <div class="hero-sub">RBC Brooklyn Half 2026 · {profile.trackId} · Goal: {formatHMS($goals.goalSec)} ({$goals.goalLabel})</div>
+      {#if profile.wave}
+        <div class="hero-wave-row">
+          <span class="hero-wave">🏁 {waveLabel(profile, RACE_START)}</span>
+          <RunnerWaveCountdown {profile} />
+        </div>
+      {/if}
       {#if profile.id === 'gf'}
         <div class="hero-badges">
           <span class="hb">🏅 2× XC Champion (6th, 8th)</span>
@@ -76,7 +85,7 @@
         {/if}
       {:else if profile.id === 'mom'}
         <div class="hero-badges">
-          <span class="hb mono">19 marathons since 2005</span>
+          <span class="hb mono">{HELAINE_SUMMARY.marathons} marathons since {HELAINE_SUMMARY.firstYear}</span>
           <span class="hb">⭐ {HELAINE_SUMMARY.starCount} of 6 World Majors</span>
         </div>
         {#if HELAINE_SUMMARY.starCount > 0}
@@ -147,6 +156,25 @@
   .hero-name-row { display: flex; align-items: center; gap: 10px; }
   .hero-name { font-weight: 800; font-size: 26px; letter-spacing: -0.8px; color: var(--text-primary); }
   .hero-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .hero-wave-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .hero-wave {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+  }
   .settings-btn {
     width: 36px; height: 36px;
     border-radius: 50%;

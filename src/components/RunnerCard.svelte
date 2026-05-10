@@ -123,19 +123,20 @@
 <style>
   .runner-card { padding: 16px; }
 
-  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  /* Tighter, more iOS-like top row — avatar 40px, simpler border. */
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .avatar {
-    width: 44px; height: 44px;
+    width: 40px; height: 40px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--pc) 14%, white);
+    background: color-mix(in srgb, var(--pc) 12%, var(--surface));
     color: var(--pc);
     display: flex; align-items: center; justify-content: center;
     font-weight: 700;
-    font-size: 14px;
-    border: 1.5px solid color-mix(in srgb, var(--pc) 35%, white);
+    font-size: 13px;
+    letter-spacing: -0.2px;
   }
   .who { flex: 1; min-width: 0; }
-  .name { font-weight: 700; font-size: 17px; letter-spacing: -0.3px; }
+  .name { font-weight: 700; font-size: 16px; letter-spacing: -0.3px; }
   .sub { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
 
   .status {
@@ -157,13 +158,13 @@
   .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 14px;
   }
   .stat {
     background: var(--surface-2);
     border-radius: var(--radius-sm);
-    padding: 10px;
+    padding: 12px 8px;
     text-align: center;
   }
   .lbl {
@@ -172,8 +173,9 @@
   }
   .num {
     font-family: var(--font-mono); font-variant-numeric: tabular-nums;
-    font-weight: 700; font-size: 20px; color: var(--pc);
+    font-weight: 700; font-size: 22px; color: var(--pc);
     margin: 2px 0;
+    letter-spacing: -0.5px;
   }
   .unit { font-size: 10px; color: var(--text-muted); }
 

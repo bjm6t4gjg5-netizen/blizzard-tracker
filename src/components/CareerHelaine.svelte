@@ -1,46 +1,7 @@
 <script lang="ts">
   import { HELAINE_RACES, HELAINE_SUMMARY } from '../lib/career';
   import SixStar from './SixStar.svelte';
-
-  // Year-by-year roll-up
-  $: byYear = (() => {
-    const map = new Map<number, { marathons: number; halves: number; other: number; races: typeof HELAINE_RACES }>();
-    for (const r of HELAINE_RACES) {
-      const y = +r.date.slice(0, 4);
-      if (!map.has(y)) map.set(y, { marathons: 0, halves: 0, other: 0, races: [] as any });
-      const bucket = map.get(y)!;
-      if (r.distance === 'Marathon') bucket.marathons++;
-      else if (r.distance === 'Half') bucket.halves++;
-      else bucket.other++;
-      (bucket.races as any).push(r);
-    }
-    return [...map.entries()].sort(([a], [b]) => a - b);
-  })();
-
-  $: maxBar = (() => {
-    let m = 0;
-    for (const [, b] of byYear) m = Math.max(m, b.marathons + b.halves + b.other);
-    return Math.max(m, 1);
-  })();
-
-  let hover: { year: number; marathons: number; halves: number; other: number; x: number; y: number } | null = null;
-
-  function showHover(e: Event, year: number, b: { marathons: number; halves: number; other: number }) {
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const host = target.closest('.bars-host') as HTMLElement | null;
-    if (!host) return;
-    const hostRect = host.getBoundingClientRect();
-    hover = {
-      year,
-      marathons: b.marathons,
-      halves: b.halves,
-      other: b.other,
-      x: rect.left - hostRect.left + rect.width / 2,
-      y: rect.top - hostRect.top - 6,
-    };
-  }
-  function clearHover() { hover = null; }
+  import YearBarChart from './YearBarChart.svelte';
 </script>
 
 <div class="career">
@@ -68,51 +29,11 @@
     </div>
   </div>
 
-  <!-- Year-by-year bar chart (CSS) -->
+  <!-- Races per year — Chart.js stacked bars with totals labelled above each year -->
   <div class="card">
-    <div class="card-header"><div class="card-title">Races per year</div></div>
+    <div class="card-header"><div class="card-title">Races per year · {HELAINE_SUMMARY.firstYear}–today</div></div>
     <div class="card-pad">
-      <div class="bars-host">
-        <div class="bars">
-          {#each byYear as [year, b]}
-            <div
-              class="bar-col"
-              on:mouseenter={(e) => showHover(e, year, b)}
-              on:mouseleave={clearHover}
-              on:focus={(e) => showHover(e, year, b)}
-              on:blur={clearHover}
-              role="img"
-              aria-label={`${year}: ${b.marathons} marathon, ${b.halves} half, ${b.other} other`}
-              tabindex="0"
-            >
-              <div class="bars-stack">
-                <div class="bar bar-mar" style="height: {(b.marathons / maxBar) * 100}%"></div>
-                <div class="bar bar-hlf" style="height: {(b.halves / maxBar) * 100}%"></div>
-                <div class="bar bar-oth" style="height: {(b.other / maxBar) * 100}%"></div>
-              </div>
-              <div class="year">{String(year).slice(2)}</div>
-            </div>
-          {/each}
-        </div>
-        {#if hover}
-          <div class="tip" style="left: {hover.x}px; top: {hover.y}px;">
-            <div class="tip-year">{hover.year}</div>
-            <div class="tip-rows">
-              <div><span class="tdot tdot-mar"></span>{hover.marathons} marathon{hover.marathons === 1 ? '' : 's'}</div>
-              <div><span class="tdot tdot-hlf"></span>{hover.halves} half{hover.halves === 1 ? '' : 's'}</div>
-              {#if hover.other > 0}
-                <div><span class="tdot tdot-oth"></span>{hover.other} other</div>
-              {/if}
-            </div>
-            <div class="tip-total mono">{hover.marathons + hover.halves + hover.other} total</div>
-          </div>
-        {/if}
-      </div>
-      <div class="legend">
-        <span><span class="lg lg-mar"></span>Marathon</span>
-        <span><span class="lg lg-hlf"></span>Half</span>
-        <span><span class="lg lg-oth"></span>Other</span>
-      </div>
+      <YearBarChart races={HELAINE_RACES} height="200px" />
     </div>
   </div>
 
@@ -183,92 +104,6 @@
   .goal-tag-text { font-size: 12px; color: var(--text-secondary); }
   .goal-tag-done { background: linear-gradient(135deg, #34C759, #007AFF); }
 
-  /* Year-bars chart */
-  .bars-host { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .bars {
-    display: grid;
-    grid-template-columns: repeat(22, minmax(18px, 1fr));
-    gap: 4px;
-    height: 130px;
-    align-items: end;
-    min-width: 100%;
-  }
-  .bar-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    height: 100%;
-    cursor: pointer;
-    transition: transform 80ms ease;
-  }
-  .bar-col:hover { transform: translateY(-2px); }
-  .bar-col:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
-
-  /* Hover tooltip */
-  .tip {
-    position: absolute;
-    transform: translate(-50%, -100%);
-    background: rgba(28, 28, 30, 0.95);
-    color: white;
-    border-radius: 8px;
-    padding: 8px 12px;
-    min-width: 140px;
-    font-size: 11.5px;
-    line-height: 1.4;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-    pointer-events: none;
-    z-index: 10;
-    animation: tip-fade 120ms ease;
-  }
-  @keyframes tip-fade { from { opacity: 0; transform: translate(-50%, -95%); } }
-  .tip-year {
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: -0.2px;
-    margin-bottom: 4px;
-  }
-  .tip-rows { display: flex; flex-direction: column; gap: 2px; }
-  .tip-rows > div { display: inline-flex; align-items: center; gap: 6px; }
-  .tdot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
-  .tdot-mar { background: var(--purple); }
-  .tdot-hlf { background: var(--blue); }
-  .tdot-oth { background: var(--text-muted); }
-  .tip-total {
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(255,255,255,0.15);
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-  }
-  .bars-stack {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column-reverse;
-    border-radius: 4px 4px 0 0;
-    overflow: hidden;
-  }
-  .bar { width: 100%; min-height: 0; transition: opacity 100ms; }
-  .bar:hover { opacity: 0.85; }
-  .bar-mar { background: var(--purple); }
-  .bar-hlf { background: var(--blue); }
-  .bar-oth { background: var(--text-muted); }
-  .year { font-size: 9px; color: var(--text-tertiary); font-family: var(--font-mono); }
-
-  .legend {
-    display: flex;
-    gap: 12px;
-    margin-top: 10px;
-    font-size: 10px;
-    color: var(--text-tertiary);
-  }
-  .legend > span { display: inline-flex; align-items: center; gap: 4px; }
-  .lg { width: 10px; height: 10px; display: inline-block; border-radius: 2px; }
-  .lg-mar { background: var(--purple); }
-  .lg-hlf { background: var(--blue); }
-  .lg-oth { background: var(--text-muted); }
-
   /* Race log */
   .races { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .races th {
@@ -319,8 +154,6 @@
 
   @media (max-width: 700px) {
     .counters { grid-template-columns: repeat(2, 1fr); }
-    /* Keep all 22 years in one row but allow horizontal scroll. */
-    .bars { grid-template-columns: repeat(22, 28px); min-width: max-content; }
     .races th, .races td { padding: 6px 8px; font-size: 11.5px; }
   }
   @media (max-width: 540px) {

@@ -41,13 +41,16 @@
   --font-mono:
     'SF Mono', ui-monospace, 'Menlo', 'Monaco', monospace;
 
-  /* Layout */
+  /* Layout — radii and shadows tuned to feel iOS / macOS-like:
+     small radius for inputs, medium for cards, large for sheets.
+     Shadows are intentionally soft and short — Apple uses very light
+     elevation. */
   --radius-sm: 8px;
   --radius: 14px;
   --radius-lg: 22px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow:    0 4px 12px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow:    0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.08), 0 1px 4px rgba(15, 23, 42, 0.04);
 
   --gap-xs: 6px;
   --gap-sm: 10px;
@@ -156,6 +159,47 @@ a:hover { text-decoration: underline; }
    inline style="--pc: …" and stay untouched. */
 :root[data-theme="dark"] .card { background: var(--surface); }
 :root[data-theme="dark"] body { color-scheme: dark; }
+
+/* Dark-mode contrast overrides for cards that use intentionally bright
+   gradient backgrounds (MVP banner, beer card, hero strips). They keep
+   their warm/amber appearance, but text gets bumped to the darkest
+   ink so it remains readable. */
+:root[data-theme="dark"] .beer-card,
+:root[data-theme="dark"] .mvp {
+  /* Background gradient stays; nothing to override here — just make sure
+     we don't accidentally lose contrast on text. */
+  color: #1C1C1E;
+}
+:root[data-theme="dark"] .beer-title,
+:root[data-theme="dark"] .mvp-title  { color: #0A0A14; }
+:root[data-theme="dark"] .beer-sub,
+:root[data-theme="dark"] .mvp-sub    { color: #2C2C2E; }
+
+/* Form inputs need explicit color in dark mode — the browser default
+   white-on-white is unreadable. */
+:root[data-theme="dark"] input.form-input,
+:root[data-theme="dark"] select.form-input,
+:root[data-theme="dark"] textarea.form-input {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--separator);
+}
+:root[data-theme="dark"] input.form-input::placeholder,
+:root[data-theme="dark"] select.form-input::placeholder {
+  color: var(--text-muted);
+}
+/* Date pickers in Safari/Chrome dark mode need a hint */
+:root[data-theme="dark"] input[type="date"],
+:root[data-theme="dark"] input[type="color"],
+:root[data-theme="dark"] input[type="number"] {
+  color-scheme: dark;
+}
+
+/* Coach Dan code/kbd-style chips embedded in messages */
+:root[data-theme="dark"] .msg-coach .bubble :global(code),
+:root[data-theme="dark"] .msg-coach .bubble :global(strong) {
+  color: var(--blue);
+}
 
 /* ────────────────────────────────────────────────────────────
    Reusable atoms

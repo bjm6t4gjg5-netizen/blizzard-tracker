@@ -44,6 +44,7 @@ export const TOUR_STEPS: ReadonlyArray<TourStep> = [
     title: 'Real course, real route',
     body: 'A Garmin trace of the actual 2026 NYRR course — no more hand-drawn lines that zigzag through Brooklyn. Cheer-zone pins, mile markers, and pulsing runner positions all live here.',
     tab: 'family',
+    placement: 'top',
   },
   {
     target: '[data-tour="ical"]',
@@ -77,8 +78,8 @@ export const TOUR_STEPS: ReadonlyArray<TourStep> = [
   },
   {
     target: '[data-tour="tabs"]',
-    title: 'Add or remove runners',
-    body: 'Click ⊕ at the end of the tab bar to add anyone with an RTRT tracker ID for this event. Catherine and Helaine stay anchored.',
+    title: 'Tabs are draggable',
+    body: 'Drag any tab to reorder them — your preferred layout is remembered across sessions. On iPad / iPhone, long-press a tab then slide it. Click ⊕ at the end to add a custom runner (anyone with an RTRT tracker ID).',
   },
   {
     target: '[data-tour="appearance"]',
@@ -89,6 +90,16 @@ export const TOUR_STEPS: ReadonlyArray<TourStep> = [
     target: '[data-tour="dev"]',
     title: 'Developer mode',
     body: 'Click "Developer" in the footer and enter the password to unlock the demo menu. Then preview what the app looks like at any race position without waiting for live data.',
+  },
+  {
+    target: '[data-tour="coach"]',
+    title: 'Meet Coach Dan',
+    body: 'A race-day chatbot. Ask him about pacing strategy, where to stand, weather, the runners\' records — anything you\'d ask a friend who knows the course. He\'s in the bottom-right corner and persists between visits.',
+  },
+  {
+    target: null,
+    title: '📲 Add it to your home screen',
+    body: 'On iPhone/iPad Safari: tap the Share button → "Add to Home Screen". The app launches full-screen with its own icon, just like a native app. On Android Chrome: tap ⋮ → "Install app".',
   },
   {
     target: '[data-tour="help"]',

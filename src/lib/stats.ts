@@ -5,7 +5,7 @@
 // public results. Marked "est." in the UI.
 // ============================================================
 
-/** [finishSeconds, percentOfFieldAtOrUnder]. Anchors interpolated linearly. */
+/** Overall RBC Brooklyn Half field. [finishSeconds, percentOfFieldAtOrUnder]. */
 export const FIELD_CDF: ReadonlyArray<[number, number]> = [
   [4_800, 1], [5_400, 3], [5_700, 6], [6_000, 11], [6_300, 18],
   [6_600, 26], [6_900, 35], [7_200, 45], [7_500, 54], [7_800, 62],
@@ -13,16 +13,36 @@ export const FIELD_CDF: ReadonlyArray<[number, number]> = [
   [10_200, 94], [10_800, 97], [11_400, 99],
 ];
 
+/** Women-only sub-population. Lifted a few minutes slower at each rank. */
+export const WOMEN_FIELD_CDF: ReadonlyArray<[number, number]> = [
+  [5_400, 1], [5_700, 2], [6_000, 4], [6_300, 8], [6_600, 13],
+  [6_900, 19], [7_200, 27], [7_500, 36], [7_800, 45], [8_100, 54],
+  [8_400, 62], [8_700, 70], [9_000, 77], [9_300, 82], [9_900, 89],
+  [10_500, 93], [11_100, 96], [11_700, 98],
+];
+
+/** Men-only sub-population. ~10–15 min faster than women at each percentile. */
+export const MEN_FIELD_CDF: ReadonlyArray<[number, number]> = [
+  [4_500, 1], [5_100, 3], [5_400, 7], [5_700, 13], [6_000, 22],
+  [6_300, 32], [6_600, 43], [6_900, 54], [7_200, 64], [7_500, 73],
+  [7_800, 80], [8_100, 86], [8_400, 90], [8_700, 93], [9_300, 96],
+  [9_900, 98], [10_500, 99],
+];
+
 /**
  * Returns the runner's percentile (1 = top of field) for a given finish time.
- * E.g., percentileFor(5400) → ~3 (top 3%).
+ * Pass a gender to use the male/female sub-CDF; default is the overall field.
  */
-export function percentileFor(sec: number): number {
+export function percentileFor(sec: number, gender?: 'F' | 'M'): number {
+  const cdf =
+    gender === 'F' ? WOMEN_FIELD_CDF :
+    gender === 'M' ? MEN_FIELD_CDF :
+    FIELD_CDF;
   if (!Number.isFinite(sec) || sec <= 0) return 100;
-  if (sec <= FIELD_CDF[0][0]) return FIELD_CDF[0][1];
-  for (let i = 0; i < FIELD_CDF.length - 1; i++) {
-    const [a, pa] = FIELD_CDF[i];
-    const [b, pb] = FIELD_CDF[i + 1];
+  if (sec <= cdf[0][0]) return cdf[0][1];
+  for (let i = 0; i < cdf.length - 1; i++) {
+    const [a, pa] = cdf[i];
+    const [b, pb] = cdf[i + 1];
     if (sec <= b) {
       const t = (sec - a) / (b - a);
       return Math.round(pa + (pb - pa) * t);
@@ -50,6 +70,19 @@ export const WOMEN_AGE_GROUPS: ReadonlyArray<AgeGroupBand> = [
   { range: '65+',   median: 11400, label: '3:10:00' },
 ];
 
+export const MEN_AGE_GROUPS: ReadonlyArray<AgeGroupBand> = [
+  { range: '18–24', median: 6720,  label: '1:52:00' },
+  { range: '25–29', median: 6780,  label: '1:53:00' },
+  { range: '30–34', median: 6900,  label: '1:55:00' },
+  { range: '35–39', median: 7080,  label: '1:58:00' },
+  { range: '40–44', median: 7260,  label: '2:01:00' },
+  { range: '45–49', median: 7500,  label: '2:05:00' },
+  { range: '50–54', median: 7800,  label: '2:10:00' },
+  { range: '55–59', median: 8220,  label: '2:17:00' },
+  { range: '60–64', median: 8820,  label: '2:27:00' },
+  { range: '65+',   median: 9720,  label: '2:42:00' },
+];
+
 export const FIELD_HEADLINES = {
   finishers: 28_500,
   overallMedianSec: 8040,   // ~2:14:00
@@ -70,18 +103,19 @@ export function ageOnRaceDay(birthISO: string, raceDate: Date): number | null {
   return age;
 }
 
-export function ageGroupFor(age: number): AgeGroupBand | null {
+export function ageGroupFor(age: number, gender: 'F' | 'M' = 'F'): AgeGroupBand | null {
   if (age < 18) return null;
-  if (age <= 24) return WOMEN_AGE_GROUPS[0];
-  if (age <= 29) return WOMEN_AGE_GROUPS[1];
-  if (age <= 34) return WOMEN_AGE_GROUPS[2];
-  if (age <= 39) return WOMEN_AGE_GROUPS[3];
-  if (age <= 44) return WOMEN_AGE_GROUPS[4];
-  if (age <= 49) return WOMEN_AGE_GROUPS[5];
-  if (age <= 54) return WOMEN_AGE_GROUPS[6];
-  if (age <= 59) return WOMEN_AGE_GROUPS[7];
-  if (age <= 64) return WOMEN_AGE_GROUPS[8];
-  return WOMEN_AGE_GROUPS[9];
+  const table = gender === 'M' ? MEN_AGE_GROUPS : WOMEN_AGE_GROUPS;
+  if (age <= 24) return table[0];
+  if (age <= 29) return table[1];
+  if (age <= 34) return table[2];
+  if (age <= 39) return table[3];
+  if (age <= 44) return table[4];
+  if (age <= 49) return table[5];
+  if (age <= 54) return table[6];
+  if (age <= 59) return table[7];
+  if (age <= 64) return table[8];
+  return table[9];
 }
 
 /** Histogram bins for the finish-time distribution chart. */

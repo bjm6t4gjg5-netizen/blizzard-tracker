@@ -61,9 +61,10 @@
       }
     }
 
-    // Hide the extreme scenarios by default — six lines on one chart is
-    // visual mush. The legend lets you click any of them back on.
-    const hiddenByDefault = new Set(['dream', 'tough', 'runwalk']);
+    // Default visible: Best/Dream + Goal + Tough — three contrast bands that
+    // bracket the realistic outcome space. Strong + Run-Walk hide initially
+    // (legend toggles them back on).
+    const hiddenByDefault = new Set(['strong', 'runwalk']);
     // ALL predictions are dashed. Only the actual race trace is solid, so
     // the runner's real progress visually pops away from the noise of plans.
     // The goal uses long dashes; alternatives use a short dash.
@@ -129,43 +130,62 @@
     };
   }
 
-  function nowLineDataset() {
-    if (!midRace) return null;
-    // Vertical line at the current mile, drawn as a thin secondary plot.
-    return {
-      label: 'Now',
-      data: [
-        { x: state.distMi, y: 0 },
-        { x: state.distMi, y: 250 }, // tall enough that the chart will clip
-      ],
-      borderColor: 'rgba(28, 28, 30, 0.35)',
-      borderWidth: 1.5,
-      borderDash: [3, 3],
-      pointRadius: 0,
-      backgroundColor: 'transparent',
-      fill: false,
-      showLine: true,
-      tension: 0,
-    };
-  }
-
   $: datasets = (() => {
     const ds: any[] = [];
     const fromMi  = midRace ? state.distMi : 0;
     const fromSec = midRace ? state.elapsedSec : 0;
-    for (const s of goals.scenarios) ds.push(scenarioDataset(s, goals, fromMi, fromSec));
+    // Once the race is over for this runner, predictions add noise.
+    // Show only the actual line + the original goal-split markers so the
+    // story becomes "here's what happened vs the goal".
+    if (!finished) {
+      for (const s of goals.scenarios) ds.push(scenarioDataset(s, goals, fromMi, fromSec));
+    }
     ds.push(goalSplitsDataset());
     const actual = actualDataset();
     if (actual) ds.push(actual);
-    const now = nowLineDataset();
-    if (now) ds.push(now);
     return ds;
   })();
+
+  /**
+   * Vertical "now" line — drawn straight onto the canvas after the datasets.
+   *
+   * Why a plugin and not a dataset: the line needs to span y=0 → y=chartMax,
+   * but a dataset with y=250 would force Chart.js's auto-scale to extend the
+   * y-axis up to 250 even when the slowest scenario only reaches ~95. That
+   * was the v3.x bug where mid-race scenarios got visually crushed into the
+   * bottom third of the chart.
+   */
+  const nowLinePlugin = {
+    id: 'nowLine',
+    afterDatasetsDraw(c: any) {
+      if (!midRace) return;
+      const x = c.scales.x?.getPixelForValue(state.distMi);
+      if (x == null || !Number.isFinite(x)) return;
+      const ctx = c.ctx;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(28, 28, 30, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x, c.chartArea.top);
+      ctx.lineTo(x, c.chartArea.bottom);
+      ctx.stroke();
+      // Small "Now" label at top of the line
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(28, 28, 30, 0.6)';
+      ctx.font = '600 9px -apple-system, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('now', x, c.chartArea.top - 2);
+      ctx.restore();
+    },
+  };
 
   onMount(() => {
     chart = new Chart(canvas, {
       type: 'line',
       data: { datasets },
+      plugins: [nowLinePlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -177,13 +197,11 @@
             position: 'top',
             labels: {
               boxWidth: 10, boxHeight: 10, font: { size: 10 }, color: '#3A3A3C',
-              filter: (item) => item.text !== 'Now',
             },
           },
           tooltip: {
             mode: 'nearest',
             intersect: false,
-            filter: (ctx) => ctx.dataset.label !== 'Now',
             callbacks: {
               title: (items) => `Mile ${(items[0].parsed.x ?? 0).toFixed(2)}`,
               label: (ctx) => {
@@ -206,9 +224,10 @@
           },
           y: {
             beginAtZero: true,
-            // Y auto-scales from the visible datasets only. With dream/tough/
-            // runwalk hidden by default, the range tightens to ~0–95 min for
-            // Catherine and ~0–135 for Helaine, making line differences pop.
+            // Chart.js auto-scales y from visible datasets only, so hiding
+            // Dream/Tough/Run-Walk tightens the range and amplifies the gap
+            // between the lines you DO see.
+            grace: '5%',     // tiny breathing room above the slowest visible line
             title: { display: true, text: 'Elapsed (min)', color: '#A1A1A6', font: { size: 11 } },
             ticks: { color: '#A1A1A6', font: { size: 10 } },
             grid: { color: 'rgba(0,0,0,0.04)' },

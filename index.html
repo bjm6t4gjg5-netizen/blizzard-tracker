@@ -7,15 +7,21 @@
   <meta name="theme-color" content="#0A84FF" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Blizzard Tracker" />
+  <!-- iOS home-screen short label. iOS picks this verbatim when added. -->
+  <meta name="apple-mobile-web-app-title" content="Blizzard Racing" />
   <meta
     name="description"
     content="Live tracker for Catherine and Helaine Blizzard at the 2026 RBC Brooklyn Half Marathon."
   />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./icon-192.png" />
-  <link rel="icon" type="image/png" href="./icon-192.png" />
-  <title>⚡ Blizzard Tracker — RBC Brooklyn Half 2026</title>
+  <!-- iOS home-screen icon. apple-touch-icon should be 180×180 for iPhone @3x.
+       The image is generated at build time from photo-trashbag-both.jpeg
+       (center-cropped square). Replace by overwriting these PNGs. -->
+  <link rel="apple-touch-icon" sizes="180x180" href="./icon-apple-touch.png" />
+  <link rel="apple-touch-icon" href="./icon-apple-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+  <title>⚡ Blizzard Racing — RBC Brooklyn Half 2026</title>
 
   <!-- Leaflet CSS only; JS comes from npm via the bundle. -->
   <link

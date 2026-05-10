@@ -2,6 +2,9 @@
   import { CATHERINE_PRS, CATHERINE_RACES, CATHERINE_SUMMARY } from '../lib/career';
   import SixStar from './SixStar.svelte';
 
+  let teamPhotoOk = true;
+  function onTeamPhotoError() { teamPhotoOk = false; }
+
   $: byYear = (() => {
     const map = new Map<number, typeof CATHERINE_RACES>();
     for (const r of CATHERINE_RACES) {
@@ -49,7 +52,30 @@
     <div class="counter"><div class="num">3:06:12</div><div class="lbl">Marathon PR · Boston 2025</div></div>
     <div class="counter"><div class="num">5:46</div><div class="lbl">1600m PR · 8th grade</div></div>
     <div class="counter"><div class="num">{CATHERINE_SUMMARY.wins}</div><div class="lbl">1st-place finishes</div></div>
-    <div class="counter"><div class="num">2× 🏆</div><div class="lbl">XC Champion seasons</div></div>
+    <div class="counter"><div class="num">3× 🏆</div><div class="lbl">XC Champion seasons</div></div>
+  </div>
+
+  <!-- 5th grade team photo placeholder — drop the JPEG into public/ to enable. -->
+  <div class="team-photo">
+    {#if teamPhotoOk}
+      <figure class="tp-figure">
+        <img
+          src="./photo-xc-5th-team.jpeg"
+          alt="Saint Rita Spartans XC team — Catherine in the middle"
+          loading="lazy"
+          on:error={onTeamPhotoError}
+        />
+        <figcaption>Saint Rita Spartans · 5th-grade DPL Champions, fall 2008 · Catherine in the middle</figcaption>
+      </figure>
+    {:else}
+      <div class="team-photo-fb">
+        <span class="trophy">🏆</span>
+        <div>
+          <div class="fb-title">5th-grade DPL Championship — fall 2008</div>
+          <div class="fb-sub">Catherine in the middle of the Saint Rita Spartans. Drop <code>photo-xc-5th-team.jpeg</code> into <code>public/</code> to enable.</div>
+        </div>
+      </div>
+    {/if}
   </div>
 
   <!-- World Major tracker (same component Helaine uses) -->
@@ -142,12 +168,18 @@
     display: grid;
     grid-template-columns: 1fr 1.4fr;
     gap: var(--gap-md);
+    /* Always warm/amber regardless of theme — but force readable text colors
+       (the gold background is light, so dark text always wins). */
     background: linear-gradient(135deg, #FFF7E6 0%, #FFE9B3 100%);
+    color: #2A2002;
     border-radius: var(--radius);
     padding: 18px;
     border: 1px solid rgba(255, 184, 0, 0.35);
     box-shadow: var(--shadow-sm);
   }
+  .mvp-title { color: #2A2002; }
+  .mvp-sub   { color: #5C4500; }
+  .mvp-eyebrow { color: #B8860B; }
   .mvp-photo {
     aspect-ratio: 4 / 5;
     border-radius: 10px;
@@ -183,10 +215,44 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #B8860B;
   }
   .mvp-title { font-size: 22px; font-weight: 800; letter-spacing: -0.6px; margin: 4px 0 8px; }
-  .mvp-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+  .mvp-sub { font-size: 13px; line-height: 1.5; margin: 0; }
+
+  .team-photo {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--separator-soft);
+  }
+  .tp-figure { margin: 0; }
+  .tp-figure img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: center 40%;
+  }
+  .tp-figure figcaption {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--separator-soft);
+    background: var(--surface-2);
+  }
+  .team-photo-fb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 22px;
+    background: linear-gradient(135deg, #FFF7E6 0%, #FFE9B3 100%);
+    color: #5C4500;
+  }
+  .team-photo-fb .trophy { font-size: 44px; flex-shrink: 0; }
+  .fb-title { font-weight: 700; font-size: 14px; color: #2A2002; }
+  .fb-sub { font-size: 12px; margin-top: 4px; color: #5C4500; }
+  .fb-sub code { background: rgba(255,255,255,0.55); padding: 1px 6px; border-radius: 4px; font-size: 11px; }
 
   .counters {
     display: grid;

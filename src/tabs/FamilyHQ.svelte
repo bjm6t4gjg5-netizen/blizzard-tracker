@@ -109,7 +109,7 @@
     gap: var(--gap-md);
     padding: var(--gap-lg);
     margin-bottom: var(--gap-md);
-    background: linear-gradient(135deg, #FFFFFF 0%, #F2F8FF 60%, #E0F2FE 100%);
+    background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--blue) 8%, var(--surface)) 60%, color-mix(in srgb, var(--blue) 18%, var(--surface)) 100%);
     border: 1px solid var(--separator-soft);
   }
   .hero-eyebrow { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 0.4px; text-transform: uppercase; }
@@ -188,7 +188,7 @@
 
   .ical-card {
     margin-top: var(--gap-md);
-    background: linear-gradient(135deg, #FFFFFF 0%, #F2F8FF 100%);
+    background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--blue) 6%, var(--surface)) 100%);
     border: 1px solid var(--separator-soft);
     border-radius: var(--radius);
     padding: 16px;
@@ -196,7 +196,10 @@
     align-items: center;
     gap: var(--gap-md);
     box-shadow: var(--shadow-sm);
+    color: var(--text-primary);
   }
+  .ical-title { color: var(--text-primary); }
+  .ical-sub   { color: var(--text-tertiary); }
 
   /* ───── Beer / Venmo CTA card ───── */
   .beer-card {

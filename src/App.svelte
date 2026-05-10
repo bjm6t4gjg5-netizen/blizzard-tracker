@@ -3,7 +3,7 @@
   import {
     profiles, activeTab,
     refreshAll, startAutoRefresh, stopAutoRefresh,
-    loadWeather, demoMode,
+    loadWeather, demoTimeMin,
   } from './lib/stores';
   import { runnerState } from './lib/stores';
   import { devUnlocked } from './lib/devMode';
@@ -16,6 +16,8 @@
   import RunnerSettingsModal from './components/RunnerSettingsModal.svelte';
   import Confetti from './components/Confetti.svelte';
   import TourGuide from './components/TourGuide.svelte';
+  import CoachDan from './components/CoachDan.svelte';
+  import InstallBanner from './components/InstallBanner.svelte';
   import { maybeAutoStart } from './lib/tour';
   import FamilyHQ from './tabs/FamilyHQ.svelte';
   import RunnerTab from './tabs/RunnerTab.svelte';
@@ -26,11 +28,15 @@
   let mounted = false;
 
   onMount(() => {
-    // ?demo=early|park|ocean|late|finish|pre — only honored when developer
-    // mode is unlocked, so casual visitors can't trigger fake race state.
+    // ?sim=<minutes-past-7AM> — only honored when developer mode is unlocked,
+    // so casual visitors can't drop into fake race state. e.g., ?sim=30 jumps
+    // to 7:30 AM (Catherine ~4mi, Helaine pre-race).
     const params = new URLSearchParams(location.search);
-    const demo = params.get('demo');
-    if (demo && get(devUnlocked)) demoMode.set(demo as DemoStage);
+    const sim = params.get('sim');
+    if (sim != null && get(devUnlocked)) {
+      const n = parseInt(sim, 10);
+      if (Number.isFinite(n) && n >= -60 && n <= 240) demoTimeMin.set(n);
+    }
 
     // Touch every runner state store so they exist before any tab renders.
     for (const p of $profiles) runnerState(p.id);
@@ -77,6 +83,8 @@
 {#if mounted}
   <Confetti />
   <TourGuide />
+  <CoachDan />
+  <InstallBanner />
 {/if}
 
 <style>
