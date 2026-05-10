@@ -1,0 +1,282 @@
+/* ============================================================
+   app.css — Global tokens + element resets.
+   Per-component styles live inside their .svelte files.
+   ============================================================ */
+
+:root {
+  /* Brand colors — invariant across themes */
+  --blue: #007AFF;
+  --blue-deep: #0040DD;
+  --blue-soft: rgba(0, 122, 255, 0.10);
+  --purple: #5856D6;
+  --purple-soft: rgba(88, 86, 214, 0.10);
+  --green: #34C759;
+  --orange: #FF9500;
+  --red: #FF3B30;
+  --yellow: #FFD60A;
+
+  /* Race brand gradients */
+  --grad-blizzard: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+  --grad-bg: radial-gradient(ellipse at top, #E0F2FE 0%, #F2F8FF 35%, #F5F5F7 100%);
+
+  /* Light surfaces */
+  --surface: #FFFFFF;
+  --surface-2: #F5F5F7;
+  --surface-3: #FAFAFC;
+  --surface-glass: rgba(255, 255, 255, 0.78);
+  --separator: #E5E5EA;
+  --separator-soft: #F0F0F2;
+
+  /* Light text */
+  --text-primary: #1C1C1E;
+  --text-secondary: #3A3A3C;
+  --text-tertiary: #6E6E73;
+  --text-muted: #A1A1A6;
+  --text-on-color: #FFFFFF;
+
+  /* Type */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+    'Inter', system-ui, sans-serif;
+  --font-mono:
+    'SF Mono', ui-monospace, 'Menlo', 'Monaco', monospace;
+
+  /* Layout */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow:    0 4px 12px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.06);
+
+  --gap-xs: 6px;
+  --gap-sm: 10px;
+  --gap-md: 14px;
+  --gap-lg: 22px;
+  --gap-xl: 36px;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Dark theme — iOS-inspired high-contrast palette
+   ──────────────────────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  --grad-bg: radial-gradient(ellipse at top, #1A1A2E 0%, #131320 35%, #0A0A14 100%);
+
+  --surface:   #1C1C1E;
+  --surface-2: #2C2C2E;
+  --surface-3: #3A3A3C;
+  --surface-glass: rgba(28, 28, 30, 0.82);
+  --separator:      #38383A;
+  --separator-soft: #2C2C2E;
+
+  --text-primary:   #F2F2F7;
+  --text-secondary: #D1D1D6;
+  --text-tertiary:  #98989F;
+  --text-muted:     #6E6E73;
+  --text-on-color:  #FFFFFF;
+
+  --blue-soft:   rgba(10, 132, 255, 0.20);
+  --purple-soft: rgba(94, 92, 230, 0.20);
+
+  /* Slightly brighter brand hues for dark backgrounds */
+  --blue:   #0A84FF;
+  --green:  #30D158;
+  --orange: #FF9F0A;
+  --red:    #FF453A;
+  --yellow: #FFD60A;
+  --purple: #5E5CE6;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow:    0 4px 12px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Accent overrides — re-map the chrome accent without touching
+   per-runner brand colors. Applied via [data-accent="…"].
+   ──────────────────────────────────────────────────────────── */
+:root[data-accent="indigo"]   { --blue: #5856D6; --blue-deep: #3F3D9C; --blue-soft: rgba(88, 86, 214, 0.12); --grad-bg: radial-gradient(ellipse at top, #EAE9FA 0%, #F4F3FF 35%, #F5F5F7 100%); }
+:root[data-accent="magenta"]  { --blue: #FF2D55; --blue-deep: #C8002F; --blue-soft: rgba(255, 45, 85, 0.12); --grad-bg: radial-gradient(ellipse at top, #FFE5EC 0%, #FFF3F5 35%, #F5F5F7 100%); }
+:root[data-accent="orange"]   { --blue: #FF9500; --blue-deep: #C26B00; --blue-soft: rgba(255, 149, 0, 0.14); --grad-bg: radial-gradient(ellipse at top, #FFF1DB 0%, #FFF8EB 35%, #F5F5F7 100%); }
+:root[data-accent="green"]    { --blue: #34C759; --blue-deep: #1F9D4F; --blue-soft: rgba(52, 199, 89, 0.14); --grad-bg: radial-gradient(ellipse at top, #DCF7E3 0%, #EEFBF1 35%, #F5F5F7 100%); }
+:root[data-accent="teal"]     { --blue: #0AB1B1; --blue-deep: #017A7A; --blue-soft: rgba(10, 177, 177, 0.14); --grad-bg: radial-gradient(ellipse at top, #D7F4F4 0%, #ECFAFA 35%, #F5F5F7 100%); }
+:root[data-accent="graphite"] { --blue: #3A3A3C; --blue-deep: #1C1C1E; --blue-soft: rgba(58, 58, 60, 0.12); --grad-bg: radial-gradient(ellipse at top, #ECECEE 0%, #F4F4F6 35%, #F5F5F7 100%); }
+
+/* Dark + accent overrides keep dark gradient + brighter accent */
+:root[data-theme="dark"][data-accent="indigo"]   { --blue: #7D7BFE; --grad-bg: radial-gradient(ellipse at top, #1F1E3A 0%, #131320 35%, #0A0A14 100%); }
+:root[data-theme="dark"][data-accent="magenta"]  { --blue: #FF6480; --grad-bg: radial-gradient(ellipse at top, #2E1620 0%, #1A0E14 35%, #0A0608 100%); }
+:root[data-theme="dark"][data-accent="orange"]   { --blue: #FFB340; --grad-bg: radial-gradient(ellipse at top, #2C1E0A 0%, #1A1208 35%, #0F0904 100%); }
+:root[data-theme="dark"][data-accent="green"]    { --blue: #5BE077; --grad-bg: radial-gradient(ellipse at top, #0F2A1A 0%, #0A1B12 35%, #050D08 100%); }
+:root[data-theme="dark"][data-accent="teal"]     { --blue: #2FDDDD; --grad-bg: radial-gradient(ellipse at top, #0A2828 0%, #061A1A 35%, #030E0E 100%); }
+:root[data-theme="dark"][data-accent="graphite"] { --blue: #BBBBBE; --grad-bg: radial-gradient(ellipse at top, #1A1A1E 0%, #131318 35%, #0A0A0E 100%); }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+}
+html, body { min-height: 100vh; }
+#app {
+  /* Sticky-footer: header + main + footer stack vertically; main flex-grows
+     so the footer always sits at the viewport bottom on short pages. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--grad-bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* All color-mix() fills in components honour the chosen accent because
+   they reference var(--blue) by name. Per-runner colors are passed via
+   inline style="--pc: …" and stay untouched. */
+:root[data-theme="dark"] .card { background: var(--surface); }
+:root[data-theme="dark"] body { color-scheme: dark; }
+
+/* ────────────────────────────────────────────────────────────
+   Reusable atoms
+   ──────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card-pad { padding: var(--gap-md); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap-md);
+  border-bottom: 1px solid var(--separator-soft);
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: -0.1px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--blue);
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.1px;
+  transition: transform 80ms ease, opacity 100ms ease, background 100ms ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); opacity: 0.85; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-ghost { background: transparent; color: var(--blue); }
+.btn-ghost:hover { background: var(--blue-soft); }
+.btn-soft { background: var(--blue-soft); color: var(--blue); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.label-uppercase {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+}
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.gap-md { margin-bottom: var(--gap-md); }
+.gap-lg { margin-bottom: var(--gap-lg); }
+
+/* Layout container that centers content with sane mobile padding */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--gap-md);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Form atoms
+   ──────────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 12px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+.form-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--separator);
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: border-color 100ms ease, box-shadow 100ms ease;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Skeleton + chart utility
+   ──────────────────────────────────────────────────────────── */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

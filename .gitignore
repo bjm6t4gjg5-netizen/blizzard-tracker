@@ -3,3 +3,16 @@ dist/
 .DS_Store
 *.local
 .env
+.env.*
+.svelte-kit
+.vite
+*.tsbuildinfo
+coverage/
+
+# Vite writes per-build cache files next to the config — never commit these
+vite.config.js.timestamp-*.mjs
+vite.config.ts.timestamp-*.mjs
+
+# Scratch / sandbox artifacts
+_write_test.txt
+package.json.test
