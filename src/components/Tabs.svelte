@@ -1,14 +1,20 @@
 <script lang="ts">
   import { profiles, activeTab, settingsOpen, tabOrder } from '../lib/stores';
+  import { devUnlocked } from '../lib/devMode';
 
-  interface TabSpec { id: string; label: string; emoji: string; }
+  interface TabSpec { id: string; label: string; emoji: string; devOnly?: boolean; }
 
-  function defaultIds(profs: typeof $profiles): string[] {
-    return ['family', ...profs.map(p => p.id), 'weather', 'stats'];
+  /** Tabs that only appear when developer mode is unlocked. They render with
+   *  a small orange dot so we know they aren't public. */
+  const DEV_ONLY_TABS = new Set(['old-races', 'training']);
+
+  function defaultIds(profs: typeof $profiles, devOn: boolean): string[] {
+    const base = ['family', ...profs.map(p => p.id), 'weather', 'stats'];
+    return devOn ? [...base, 'old-races', 'training'] : base;
   }
 
   $: orderedIds = (() => {
-    const def = defaultIds($profiles);
+    const def = defaultIds($profiles, $devUnlocked);
     const stored = $tabOrder;
     const allowed = new Set(def);
     const kept = stored.filter(id => allowed.has(id));
@@ -17,12 +23,19 @@
   })();
 
   $: tabs = orderedIds.map(id => {
-    if (id === 'family')  return { id, label: 'Family HQ', emoji: '🏠' } as TabSpec;
-    if (id === 'weather') return { id, label: 'Weather',   emoji: '🌤' } as TabSpec;
-    if (id === 'stats')   return { id, label: 'Stats',     emoji: '📊' } as TabSpec;
+    const devOnly = DEV_ONLY_TABS.has(id);
+    if (id === 'family')    return { id, label: 'Family HQ', emoji: '🏠', devOnly } as TabSpec;
+    if (id === 'weather')   return { id, label: 'Weather',   emoji: '🌤', devOnly } as TabSpec;
+    if (id === 'stats')     return { id, label: 'Stats',     emoji: '📊', devOnly } as TabSpec;
+    if (id === 'old-races') return { id, label: 'Old Races', emoji: '📁', devOnly } as TabSpec;
+    if (id === 'training')  return { id, label: 'Training',  emoji: '💪', devOnly } as TabSpec;
     const p = $profiles.find(p => p.id === id);
-    return { id, label: p?.name.split(' ')[0] ?? id, emoji: p?.emoji ?? '🏃' } as TabSpec;
+    return { id, label: p?.name.split(' ')[0] ?? id, emoji: p?.emoji ?? '🏃', devOnly } as TabSpec;
   });
+
+  // If the user switched off dev mode while sitting on a dev-only tab, jump
+  // them back to Family HQ so they don't see a blank pane.
+  $: if (!$devUnlocked && DEV_ONLY_TABS.has($activeTab)) activeTab.set('family');
 
   // ────────────────────────────────────────────────────────────
   // Drag-and-drop reordering.
@@ -159,6 +172,9 @@
     >
       <span class="emoji">{t.emoji}</span>
       <span class="label">{t.label}</span>
+      {#if t.devOnly}
+        <span class="dev-dot" title="Developer-only tab — not visible in the public app"></span>
+      {/if}
     </div>
   {/each}
   <button
@@ -220,6 +236,17 @@
   }
   .tab:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .emoji { font-size: 14px; }
+
+  /* Dev-only tab indicator — small orange dot, signalling the tab is hidden
+     in the public build. */
+  .dev-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--orange) 35%, transparent);
+    flex-shrink: 0;
+  }
+  .tab.active .dev-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4); }
 
   .tab-add {
     margin-left: auto;

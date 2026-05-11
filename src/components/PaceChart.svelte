@@ -117,16 +117,30 @@
     };
   }
 
+  /**
+   * The user's editable per-mile target times form the canonical goal line —
+   * a clean blue dotted line through the split anchors, no large markers.
+   * Hover still works via Chart.js's nearest-point tooltip.
+   */
   function goalSplitsDataset() {
     return {
-      label: '🎯 Goal splits',
-      data: goals.splitGoals.map(g => ({ x: g.mi, y: +(g.targetSec / 60).toFixed(2) })),
-      borderColor: '#FF9500',
-      backgroundColor: '#FF9500',
-      pointRadius: 6,
-      pointStyle: 'crossRot',
-      borderWidth: 0,
-      showLine: false,
+      label: '🎯 Goal',
+      data: goals.splitGoals
+        .slice()
+        .sort((a, b) => a.mi - b.mi)
+        .map(g => ({ x: g.mi, y: +(g.targetSec / 60).toFixed(2) })),
+      borderColor: '#007AFF',
+      backgroundColor: 'transparent',
+      borderWidth: 2.5,
+      borderDash: [4, 5],
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointBackgroundColor: '#FFFFFF',
+      pointBorderColor: '#007AFF',
+      pointBorderWidth: 2,
+      tension: 0.15,
+      showLine: true,
+      order: 0,
     };
   }
 

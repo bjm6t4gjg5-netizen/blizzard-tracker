@@ -214,7 +214,25 @@
   }
   @media (max-width: 600px) {
     .hist-grid { grid-template-columns: repeat(2, 1fr); }
-    .ag-row { grid-template-columns: 1fr 1fr; }
-    .runners { grid-column: 1 / -1; }
+    /* Keep the three columns (range / median / runner-chip) on one row
+       even on iPhone, and let the chip shrink rather than wrap. */
+    .ag-row {
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      font-size: 12.5px;
+    }
+    .runners {
+      flex-wrap: nowrap;
+      gap: 4px;
+      max-width: 50%;
+      overflow: hidden;
+    }
+    .r-tag {
+      padding: 2px 7px;
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 </style>

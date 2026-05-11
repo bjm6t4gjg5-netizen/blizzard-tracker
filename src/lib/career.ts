@@ -27,6 +27,8 @@ export interface Race {
   /** Notable result flag: 1st place, MVP, PR, etc. */
   highlight?: string;
   notes?: string;
+  /** External link to official results / Strava activity. */
+  href?: string;
 }
 
 export interface PR {
@@ -54,7 +56,8 @@ export interface CareerData {
 // ────────────────────────────────────────────────────────────
 
 export const CATHERINE_PRS: PR[] = [
-  { event: 'Marathon',      mark: '3:06:12',   paceLabel: '7:06 / mi',    date: '2025-04-21', meet: '129th Boston Marathon',     isAdult: true, href: 'https://strava.app.link/ifPE0MD912b' },
+  { event: 'Marathon',      mark: '3:07:36',   paceLabel: '7:09 / mi',    date: '2025-04-21', meet: '129th Boston Marathon',     isAdult: true, href: 'https://www.baa.org/races/boston-marathon/results/?runner=6425' },
+  { event: 'Half marathon', mark: '1:32:17',   paceLabel: '7:03 / mi',    date: '2023-01-28', meet: 'Too Cold to Hold (Dallas)', isAdult: true, href: 'https://results.raceroster.com/v3/events/r67hrfknpckbs57q/race/143514' },
   { event: '1600m',         mark: '5:46.22',   paceLabel: '5:48 / mi',    date: '2012-05-12', meet: 'DPL Varsity City Meet' },
   { event: '800m',          mark: '2:30.62',   paceLabel: '5:03 / mi',    date: '2012-05-12', meet: 'DPL Varsity City Meet' },
   { event: '400m',          mark: '1:04.78',   paceLabel: '6.48/100m',    date: '2012-05-12', meet: 'DPL Varsity City Meet' },
@@ -64,7 +67,6 @@ export const CATHERINE_PRS: PR[] = [
   { event: 'XC 2 mi',       mark: '12:49',     paceLabel: '6:25 / mi',    date: '2011-10-15', meet: 'DPL Varsity Meet 1' },
   { event: 'XC 1.5 mi',     mark: '9:30',      paceLabel: '6:20 / mi',    date: '2009-10-17', meet: 'DPL JV Meet 1' },
   { event: 'XC 3000m',      mark: '11:54',     paceLabel: '6:24 / mi',    date: '2010-11-07', meet: 'USATF JO SW Assoc Champ.' },
-  { event: 'Half marathon', mark: '1:30:00',   paceLabel: '~6:52 / mi',   date: '2026-05-16', meet: 'BKH 2026 (goal)',           isAdult: true },
 ];
 
 export const CATHERINE_RACES: Race[] = [
@@ -108,12 +110,22 @@ export const CATHERINE_RACES: Race[] = [
   { date: '2012-05-12', name: 'DPL Varsity City Meet', location: 'Dallas', distance: 'Track', event: '800m',  time: '2:30.62', place: 1, highlight: 'Win · season PR' },
   { date: '2012-05-12', name: 'DPL Varsity City Meet', location: 'Dallas', distance: 'Track', event: '1600m', time: '5:46.22', place: 1, highlight: 'Win · season PR · MVP' },
 
-  // Adult marathons / halfs (the ones already shown in the v1 hero strip)
-  { date: '2023-05-20', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',   distance: 'Half',     time: null, highlight: 'BKH veteran' },
-  { date: '2024-05-05', name: 'Eugene Marathon',              location: 'Eugene, OR',     distance: 'Marathon', time: null },
-  { date: '2025-04-21', name: 'Boston Marathon',              location: 'Hopkinton → Boston, MA', distance: 'Marathon', time: '3:06:12', place: undefined, worldMajor: true, highlight: 'Marathon PR · 7:06/mi · 818ft gain', notes: 'Catherine\'s fastest marathon. Garmin Forerunner 245. Avg HR 179 bpm.' },
-  { date: '2025-09-21', name: 'Berlin Marathon',              location: 'Berlin, Germany', distance: 'Marathon', time: null, worldMajor: true },
-  { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',   distance: 'Half',     time: null, notes: 'Sub-90 goal' },
+  // ─── Adult half marathons (Catherine's email, oldest → newest) ───
+  { date: '2022-04-09', name: 'Vermont Unplugged Half',       location: 'Burlington, VT',  distance: 'Half',     event: '13.1 mi', time: '1:38:59', highlight: 'First half · first race since 2012', notes: 'Cold start.', href: 'https://runsignup.com/Race/Results/53489' },
+  { date: '2022-10-02', name: 'Mayflower Wind Cape Half',     location: 'Cape Cod, MA',    distance: 'Half',     event: '13.1 mi', time: '1:35:26', href: 'https://results.raceroster.com/v3/events/jj3g775t3nueszyn/race/146096?filter_search=Catherine+Blizzard' },
+  { date: '2022-11-13', name: 'BAA Half Marathon',            location: 'Boston, MA',      distance: 'Half',     event: '13.1 mi', time: '1:33:25' },
+  { date: '2023-01-28', name: 'Too Cold to Hold Half',        location: 'Dallas, TX',      distance: 'Half',     event: '13.1 mi', time: '1:32:17', highlight: 'Half PR', href: 'https://results.raceroster.com/v3/events/r67hrfknpckbs57q/race/143514?filter_search=Catherine+Blizzard&sort=overallPlace+desc' },
+  { date: '2023-05-20', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: '1:33:24', notes: 'No training — left margin on the clock.', href: 'https://results.nyrr.org/event/23BKH/result/9323' },
+
+  // ─── Adult marathons (Catherine's email, oldest → newest) ───
+  { date: '2023-12-10', name: 'Dallas Marathon',              location: 'Dallas, TX',      distance: 'Marathon', time: '3:17:46', highlight: 'First marathon', href: 'https://dallas.mychiptime.com/searchevent.php?id=15519' },
+  { date: '2024-04-28', name: 'Eugene Marathon',              location: 'Eugene, OR',      distance: 'Marathon', time: '3:13:10', href: 'https://runsignup.com/Race/Results/146129/IndividualResult/zbsf?resultSetId=447468#U87091045' },
+  { date: '2025-04-21', name: '129th Boston Marathon',        location: 'Hopkinton → Boston, MA', distance: 'Marathon', time: '3:07:36', worldMajor: true, highlight: 'Marathon PR · 7:09/mi · 818ft gain', notes: 'Garmin Forerunner 245. Avg HR 179 bpm.', href: 'https://www.baa.org/races/boston-marathon/results/?runner=6425' },
+  { date: '2025-04-27', name: 'Big Sur Marathon',             location: 'Carmel, CA',      distance: 'Marathon', time: '3:34:30', highlight: 'Boston-to-Big-Sur · 6 days after Boston · 2,182 ft gain', href: 'https://results.svetiming.com/Big-Sur/events/2025/Big-Sur-International-Marathon/results' },
+  { date: '2025-09-21', name: 'Berlin Marathon',              location: 'Berlin, Germany', distance: 'Marathon', time: '3:22:43', worldMajor: true, highlight: '5th World Major star · 80°F heat', href: 'https://api.results.scc-events.com/cert/6101?ei=BM&t=BM_2025&l=en&y=2025' },
+
+  // ─── Upcoming ───
+  { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: null, notes: 'Sub-1:32 goal — PR attempt.' },
 ];
 
 // ────────────────────────────────────────────────────────────
@@ -125,65 +137,92 @@ const H = (year: number, distance: Race['distance'], name: string, location: str
   distance, name, location, time: null, ...opts,
 });
 
+/** Helper for races with a real date AND chip time (newer xlsx). */
+const HT = (date: string, distance: Race['distance'], name: string, location: string, time: string, opts: Partial<Race> = {}): Race => ({
+  date, distance, name, location, time, ...opts,
+});
+
+// All marathons have real chip times from Helaine's xlsx. Halfs use year-only
+// where exact date isn't recorded.
 export const HELAINE_RACES: Race[] = [
+  // ─── 2005 ───
   H(2005, 'Half',     'North Trails Half Marathon',         'Dallas'),
   H(2005, 'Half',     'The Half',                           'Dallas'),
-  H(2006, 'Marathon', 'Dallas White Rock Marathon',         'Dallas',                 { highlight: 'First marathon' }),
+  // ─── 2006 ───
+  HT('2006-12-10', 'Marathon', 'Dallas White Rock Marathon',   'Dallas',                 '4:33:20', { highlight: 'First marathon' }),
+  // ─── 2007 ───
+  HT('2007-12-09', 'Marathon', 'Dallas White Rock Marathon',   'Dallas',                 '4:06:59'),
   H(2007, 'Half',     'DRC Half Marathon',                  'Dallas'),
-  H(2007, 'Marathon', 'Dallas White Rock Marathon',         'Dallas'),
+  // ─── 2008 ───
+  HT('2008-12-14', 'Marathon', 'Dallas White Rock Marathon',   'Dallas',                 '4:10:24'),
   H(2008, 'Half',     'DRC Half Marathon',                  'Dallas'),
-  H(2008, 'Marathon', 'Dallas White Rock Marathon',         'Dallas'),
+  // ─── 2009 ───
+  HT('2009-12-13', 'Marathon', 'Metro PCS Dallas Marathon',    'Dallas',                 '3:59:39'),
   H(2009, 'Half',     'DRC Half Marathon',                  'Dallas'),
-  H(2009, 'Marathon', 'Metro PCS Dallas Marathon',          'Dallas'),
+  // ─── 2010 ───
+  HT('2010-12-05', 'Marathon', 'Metro PCS Dallas Marathon',    'Dallas',                 '4:24:47'),
   H(2010, 'Half',     'DRC Half Marathon',                  'Dallas'),
-  H(2010, 'Marathon', 'Metro PCS Dallas Marathon',          'Dallas'),
-  H(2011, 'Marathon', 'Boston Marathon',                    'Boston, MA',             { worldMajor: true, highlight: 'First World Major' }),
+  // ─── 2011 ───
+  HT('2011-04-18', 'Marathon', 'Boston Marathon',              'Boston, MA',             '4:15:56', { worldMajor: true, highlight: 'First World Major' }),
+  // ─── 2012 ───
+  HT('2012-12-09', 'Marathon', 'Metro PCS Dallas Marathon',    'Dallas',                 '4:29:58'),
   H(2012, 'Half',     'Rock N Roll Half Marathon',          'Dallas'),
-  H(2012, 'Marathon', 'Metro PCS Dallas Marathon',          'Dallas'),
+  // ─── 2013 ───
+  HT('2013-04-28', 'Marathon', 'Big Sur Marathon',             'Carmel, CA',             '4:08:55'),
+  HT('2013-11-03', 'Marathon', 'New York Marathon',            'New York, NY',           '4:08:22', { worldMajor: true }),
   H(2013, 'Half',     'Rock N Roll Half Marathon',          'Dallas'),
-  H(2013, 'Marathon', 'Big Sur Marathon',                   'Carmel, CA'),
   H(2013, 'Half',     'The Half',                           'Dallas'),
-  H(2013, 'Marathon', 'New York Marathon',                  'New York, NY',           { worldMajor: true }),
-  H(2013, 'Marathon', 'Metro PCS Dallas Marathon',          'Dallas'),
+  // ─── 2014 ───
+  HT('2014-10-12', 'Marathon', 'Chicago Marathon',             'Chicago, IL',            '3:58:53', { worldMajor: true }),
+  HT('2014-11-02', 'Marathon', 'New York Marathon',            'New York, NY',           '4:09:33', { worldMajor: true }),
+  HT('2014-12-14', 'Marathon', 'Metro PCS Dallas Marathon',    'Dallas',                 '4:11:20'),
   H(2014, 'Half',     'Rock N Roll Half Marathon',          'Dallas'),
   H(2014, 'Half',     'Plano Balloon Festival Half',        'Plano, TX'),
-  H(2014, 'Marathon', 'Chicago Marathon',                   'Chicago, IL',            { worldMajor: true }),
-  H(2014, 'Marathon', 'New York Marathon',                  'New York, NY',           { worldMajor: true }),
-  H(2014, 'Marathon', 'Metro PCS Dallas Marathon',          'Dallas'),
+  // ─── 2015 ───
   H(2015, 'Half',     'Dallas Half Marathon',               'Dallas'),
-  H(2016, 'Marathon', 'OKC Memorial Marathon',              'Oklahoma City, OK'),
-  H(2016, 'Marathon', 'Mount Desert Island Marathon',       'Mount Desert Island, ME'),
+  // ─── 2016 ───
+  HT('2016-04-24', 'Marathon', 'OKC Memorial Marathon',        'Oklahoma City, OK',      '4:04:08'),
+  HT('2016-10-16', 'Marathon', 'Mount Desert Island Marathon', 'Mount Desert Island, ME','4:11:29'),
   H(2016, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
+  // ─── 2017 ───
+  HT('2017-10-22', 'Marathon', 'Marine Corps Marathon',        'Washington, DC',         '3:55:55'),
   H(2017, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
   H(2017, 'Half',     'Trinity River Levee Half Marathon',  'Dallas'),
-  H(2017, 'Marathon', 'Marine Corps Marathon',              'Washington, DC'),
-  H(2018, 'Marathon', 'OKC Memorial Marathon',              'Oklahoma City, OK'),
-  H(2018, 'Marathon', 'Marine Corps Marathon',              'Washington, DC'),
+  // ─── 2018 ───
+  HT('2018-10-28', 'Marathon', 'Marine Corps Marathon',        'Washington, DC',         '3:40:41', { highlight: 'Marathon PR' }),
+  H(2018, 'Half',     'OKC Memorial Half',                  'Oklahoma City, OK'),
   H(2018, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
-  H(2019, 'Marathon', 'London Marathon',                    'London, UK',             { worldMajor: true }),
+  // ─── 2019 ───
+  HT('2019-04-28', 'Marathon', 'London Marathon',              'London, UK',             '3:42:29', { worldMajor: true }),
   H(2019, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
+  // ─── 2020 ───
+  HT('2020-09-12', 'Marathon', 'Boston Marathon (virtual, Dallas)', 'Dallas',           '3:53:04', { worldMajor: true }),
   H(2020, 'Half',     'BMW Dallas Half Marathon (virtual)', 'Dallas'),
   H(2020, '5K',       'BMW Dallas 5K (virtual)',            'Dallas'),
-  H(2020, 'Marathon', 'Boston Marathon',                    'Boston, MA',             { worldMajor: true }),
-  H(2021, 'Marathon', 'Boston Marathon',                    'Boston, MA',             { worldMajor: true }),
+  // ─── 2021 ───
+  HT('2021-10-11', 'Marathon', 'Boston Marathon',              'Boston, MA',             '3:54:11', { worldMajor: true }),
+  // ─── 2022 ───
+  HT('2022-11-06', 'Marathon', 'New York Marathon',            'New York, NY',           '4:32:52', { worldMajor: true }),
   H(2022, 'Half',     'Charleston Half Marathon',           'Charleston, SC'),
-  H(2022, 'Marathon', 'New York Marathon',                  'New York, NY',           { worldMajor: true }),
   H(2022, 'Half',     'Unplugged Half Marathon',            'Burlington, VT'),
   H(2022, 'Half',     'BMW Dallas Half Marathon (virtual)', 'Dallas'),
-  H(2023, 'Mixed',    'Too Cold to Handle (Half/10/5)',     'Dallas'),
+  // ─── 2023 ───
   H(2023, 'Half',     'Brooklyn Half Marathon',             'Brooklyn, NY',           { highlight: 'Brooklyn course veteran' }),
   H(2023, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
-  H(2024, 'Marathon', 'Eugene Marathon',                    'Eugene, OR'),
+  H(2023, 'Half',     'Too Cold to Hold',                   'Dallas'),
+  // ─── 2024 ───
+  HT('2024-04-28', 'Marathon', 'Eugene Marathon',              'Eugene, OR',             '3:45:09'),
   H(2024, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
-  H(2025, 'Marathon', 'Boston Marathon',                    'Boston, MA',             { worldMajor: true }),
-  H(2025, 'Marathon', 'Berlin Marathon',                    'Berlin, Germany',        { worldMajor: true, highlight: '5th World Major star' }),
+  // ─── 2025 ───
+  HT('2025-04-21', 'Marathon', 'Boston Marathon',              'Boston, MA',             '3:54:16', { worldMajor: true }),
+  HT('2025-09-21', 'Marathon', 'Berlin Marathon',              'Berlin, Germany',        '4:11:18', { worldMajor: true, highlight: '5th World Major star' }),
   H(2025, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
-  H(2025, 'Mixed',    'Too Hot to Handle (Half/10/5)',      'Dallas'),
+  H(2025, 'Half',     'Too Hot to Handle',                  'Dallas'),
 ];
 
 export const HELAINE_PRS: PR[] = [
-  { event: 'Marathon',      mark: '—',     paceLabel: null, date: '2025-09-21', meet: 'Berlin Marathon (most recent)', isAdult: true },
-  { event: 'Half marathon', mark: '2:10:00', paceLabel: '~9:55 / mi', date: '2026-05-16', meet: 'BKH 2026 (goal)',  isAdult: true },
+  { event: 'Marathon',      mark: '3:40:41', paceLabel: '8:25 / mi',  date: '2018-10-28', meet: 'Marine Corps Marathon', isAdult: true },
+  { event: 'Half marathon', mark: '1:50:00', paceLabel: '~8:24 / mi', date: '2026-05-16', meet: 'BKH 2026 (goal)',        isAdult: true },
 ];
 
 // ────────────────────────────────────────────────────────────
@@ -264,7 +303,7 @@ export const CATHERINE_SUMMARY = summarize(CATHERINE_RACES);
 export const HELAINE_SUMMARY   = summarize(HELAINE_RACES);
 
 export function careerFor(runnerId: string): CareerData | null {
-  if (runnerId === 'gf')  return { runnerId, bio: 'Saint Rita Spartan (2009-2012). Undefeated XC champion 6th and 8th grade. DPL Varsity City Meet MVP 2012. Adult marathoner: Boston, Berlin, two Brooklyn Halves and counting.', prs: CATHERINE_PRS, races: CATHERINE_RACES };
-  if (runnerId === 'mom') return { runnerId, bio: '53 races since 2005. 19 marathons. 5 of 6 World Marathon Major stars (Boston ×3, NYC ×3, Chicago, London, Berlin). Tokyo remains.', prs: HELAINE_PRS, races: HELAINE_RACES };
+  if (runnerId === 'gf')  return { runnerId, bio: 'Saint Rita Spartan (2008-2012). Undefeated XC champion 5th/6th/8th grade. DPL Varsity City Meet MVP 2012. 5 marathons (3:07:36 PR at Boston 2025), 5 half marathons (1:32:17 PR).', prs: CATHERINE_PRS, races: CATHERINE_RACES };
+  if (runnerId === 'mom') return { runnerId, bio: '23 marathons since 2006 — 3:40:41 PR at Marine Corps 2018. 5 of 6 World Marathon Major stars (Boston ×3, NYC ×3, Chicago, London, Berlin). Tokyo remains.',     prs: HELAINE_PRS,   races: HELAINE_RACES };
   return null;
 }

@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { HELAINE_RACES, HELAINE_SUMMARY } from '../lib/career';
+  import { HELAINE_RACES, HELAINE_SUMMARY, HELAINE_PRS } from '../lib/career';
   import SixStar from './SixStar.svelte';
   import YearBarChart from './YearBarChart.svelte';
+  import MarathonRoster from './MarathonRoster.svelte';
+
+  const marathonPR = HELAINE_PRS.find(p => p.event === 'Marathon')?.mark ?? null;
 </script>
 
 <div class="career">
@@ -28,6 +31,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Marathon roster — every marathon with chip time, newest-first -->
+  <MarathonRoster races={HELAINE_RACES} prTime={marathonPR} />
 
   <!-- Races per year — Chart.js stacked bars with totals labelled above each year -->
   <div class="card">

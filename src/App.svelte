@@ -23,7 +23,8 @@
   import RunnerTab from './tabs/RunnerTab.svelte';
   import WeatherTab from './tabs/WeatherTab.svelte';
   import StatsTab from './tabs/StatsTab.svelte';
-  import type { DemoStage } from './lib/rtrt';
+  import OldRacesTab from './tabs/OldRacesTab.svelte';
+  import TrainingTab from './tabs/TrainingTab.svelte';
 
   let mounted = false;
 
@@ -73,6 +74,15 @@
     <div class="pane" class:active={$activeTab === 'stats'}>
       {#if mounted && $activeTab === 'stats'}<StatsTab />{/if}
     </div>
+
+    {#if $devUnlocked}
+      <div class="pane" class:active={$activeTab === 'old-races'}>
+        {#if mounted && $activeTab === 'old-races'}<OldRacesTab />{/if}
+      </div>
+      <div class="pane" class:active={$activeTab === 'training'}>
+        {#if mounted && $activeTab === 'training'}<TrainingTab />{/if}
+      </div>
+    {/if}
   </div>
 </main>
 

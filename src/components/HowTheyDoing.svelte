@@ -1,29 +1,41 @@
 <script lang="ts">
-  import { profiles, runnerState } from '../lib/stores';
-  import { RACE_START, countdownTo } from '../lib/time';
   import { onMount, onDestroy } from 'svelte';
-  import { weather } from '../lib/stores';
+  import { writable, derived, get } from 'svelte/store';
+  import type { Readable } from 'svelte/store';
+  import { profiles, runnerState, weather, demoTimeMin } from '../lib/stores';
+  import { RACE_START, countdownTo } from '../lib/time';
   import { weatherIcon } from '../lib/weather';
   import { formatHMS } from '../lib/format';
-  import type { RunnerState } from '../lib/runners';
-  import type { Readable } from 'svelte/store';
+  import type { RunnerProfile, RunnerState } from '../lib/runners';
+
+  // ────────────────────────────────────────────────────────────
+  // Reactive plumbing
+  //
+  // Old version manually iterated stores inside a $: block and used a
+  // get() helper that didn't re-subscribe — which is why stale dev-mode
+  // text persisted after returning to Live. The fix is a derived store
+  // that takes ALL runner-state stores as inputs, so any state change
+  // (including being reset to pre-race on demo exit) triggers a redraw.
+  // ────────────────────────────────────────────────────────────
+
+  interface Row { profile: RunnerProfile; state: RunnerState; }
 
   let cd = countdownTo(RACE_START);
-  let tick: ReturnType<typeof setInterval> | null = null;
-  onMount(() => { tick = setInterval(() => (cd = countdownTo(RACE_START)), 30_000); });
-  onDestroy(() => { if (tick) clearInterval(tick); });
+  let tickHandle: ReturnType<typeof setInterval> | null = null;
+  onMount(() => { tickHandle = setInterval(() => (cd = countdownTo(RACE_START)), 30_000); });
+  onDestroy(() => { if (tickHandle) clearInterval(tickHandle); });
 
-  // Compose a single readable store with all runner states.
-  $: stateStores = $profiles.map(p => ({ profile: p, store: runnerState(p.id) }));
-
-  $: rs = stateStores.map(({ profile, store }) => ({ profile, state: get(store) }));
-
-  function get<T>(store: Readable<T>): T {
-    let value!: T;
-    const unsub = store.subscribe(v => (value = v));
-    unsub();
-    return value;
+  /** Build a fresh derived store every time the profiles list changes. */
+  function buildLiveStore(p: RunnerProfile[]): Readable<Row[]> {
+    const stores = p.map(pp => runnerState(pp.id));
+    if (stores.length === 0) return writable<Row[]>([]);
+    return derived(stores as unknown as Readable<RunnerState>[], (states) =>
+      p.map((profile, i) => ({ profile, state: (states as RunnerState[])[i] }))
+    );
   }
+
+  let liveStore: Readable<Row[]> = buildLiveStore($profiles);
+  $: liveStore = buildLiveStore($profiles);
 
   function lineForRunning(state: RunnerState, name: string): string {
     const goal = state.etaSec ? formatHMS(state.etaSec) : null;
@@ -34,36 +46,42 @@
       : `${name} is at mile ${dist} (${pct}%) — too early to predict.`;
   }
 
-  function summary(): string {
-    if (rs.length === 0) return 'No runners configured.';
+  function summary(rows: Row[]): string {
+    if (rows.length === 0) return 'No runners configured.';
 
-    const allFinished = rs.every(({ state }) => state.status === 'finished');
-    const anyRunning = rs.some(({ state }) => state.status === 'running');
+    // Treat "running" / "finished" only if EITHER the simulator is on OR the
+    // runner has real movement. After exiting dev mode, resetVolatileState
+    // wipes distMi/elapsedSec back to 0 so this collapses to pre-race text.
+    const anyRunning = rows.some(r => r.state.status === 'running' && (r.state.distMi > 0.05 || r.state.elapsedSec > 5));
+    const allFinished = rows.every(r => r.state.status === 'finished' && r.state.elapsedSec > 60);
 
     if (allFinished) {
-      return rs
-        .map(({ profile, state }) => `${profile.name.split(' ')[0]} finished in ${formatHMS(state.elapsedSec)} 🏆`)
+      return rows
+        .map(r => `${r.profile.name.split(' ')[0]} finished in ${formatHMS(r.state.elapsedSec)} 🏆`)
         .join('. ') + '.';
     }
 
     if (anyRunning) {
-      return rs
-        .map(({ profile, state }) => {
-          const first = profile.name.split(' ')[0];
-          if (state.status === 'finished') return `${first} done in ${formatHMS(state.elapsedSec)}`;
-          if (state.status === 'running')  return lineForRunning(state, first);
-          return `${first} hasn't started yet.`;
-        })
-        .join(' ');
+      return rows.map(r => {
+        const first = r.profile.name.split(' ')[0];
+        if (r.state.status === 'finished' && r.state.elapsedSec > 60) {
+          return `${first} done in ${formatHMS(r.state.elapsedSec)}`;
+        }
+        if (r.state.status === 'running' && (r.state.distMi > 0.05 || r.state.elapsedSec > 5)) {
+          return lineForRunning(r.state, first);
+        }
+        return `${first} hasn't started yet.`;
+      }).join(' ');
     }
 
     // Pre-race
     const days = cd.days, hours = cd.hours;
     const wxLine = (() => {
-      const r = $weather?.raceStartHour;
+      const w = get(weather);
+      const r = w?.raceStartHour;
       if (!r) return 'Forecast loading.';
-      const w = weatherIcon(r.weatherCode);
-      return `Forecast: ${w.icon} ${Math.round(r.tempF)}°F, ${w.label.toLowerCase()}, ${r.precipPct}% rain.`;
+      const ic = weatherIcon(r.weatherCode);
+      return `Forecast: ${ic.icon} ${Math.round(r.tempF)}°F, ${ic.label.toLowerCase()}, ${r.precipPct}% rain.`;
     })();
 
     if (cd.started) return 'Race is underway. Live data should appear shortly.';
@@ -72,14 +90,14 @@
     return `Race starts within the hour — runners are at the start line. ${wxLine}`;
   }
 
-  // Re-evaluate when any input changes — explicit refs so Svelte tracks them.
-  $: _wxDep = $weather;
-  $: _cdDep = cd;
-  $: _rsDep = rs;
-  $: text = ((): string => {
-    void _wxDep; void _cdDep; void _rsDep;
-    return summary();
-  })();
+  // Reactive text — depends on the derived store, the weather store, the
+  // countdown tick, and (crucially) the demo-mode store so the moment dev
+  // mode is locked we recompute.
+  $: text = summary($liveStore);
+  $: _depTick = cd;       // ← tick dependency
+  $: _depWx   = $weather;
+  $: _depSim  = $demoTimeMin;
+  $: { void _depTick; void _depWx; void _depSim; }
 </script>
 
 <div class="how" data-tour="how-doing">

@@ -5,10 +5,14 @@
 /**
  * Versioned key prefix. Bumping this number invalidates every persisted
  * setting (goals, profiles, tour-seen, theme, etc.) so a schema change
- * doesn't leave stale data masking the new defaults. v3 bump shipped with
- * Helaine's sub-1:50 goal + wave/corral fields.
+ * doesn't leave stale data masking the new defaults.
+ *
+ * v3: Helaine sub-1:50 goal + wave/corral fields
+ * v4: Catherine goal Sub-1:32, "goal" scenario removed (canonical goal line
+ *     now drawn from editable mile splits), Helaine wave 2 Corral C,
+ *     Helaine DOB 1964-04-13, height 5'7", weight 120 lb.
  */
-const PREFIX = 'blizzard:v3:';
+const PREFIX = 'blizzard:v4:';
 
 /** Read a value, validating the schema. Returns fallback on any error or version mismatch. */
 export function load<T>(key: string, fallback: T): T {

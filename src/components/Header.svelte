@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { RACE_START, countdownTo } from '../lib/time';
+  import { derived } from 'svelte/store';
+  import type { Readable } from 'svelte/store';
+  import { RACE_START, CHICAGO_MARATHON_2026, countdownTo } from '../lib/time';
   import {
     profiles, runnerState, activeTab,
     refreshAll, lastRefreshAt, refreshing, demoTimeMin,
   } from '../lib/stores';
+  import type { RunnerState } from '../lib/runners';
   import RunnerPill from './RunnerPill.svelte';
   import { devUnlocked, lockDevMode } from '../lib/devMode';
   import AppearanceModal from './AppearanceModal.svelte';
@@ -41,10 +44,48 @@
     { label: 'All done',         min: 180, note: '10:00 AM' },
   ];
 
+  // ────────────────────────────────────────────────────────────
+  // Race-phase logic for the header clock
+  //
+  // pre-bkh   → counting down to Wave 1 gun (May 16, 7:00 AM ET)
+  // live      → at least one runner is actively running
+  // chicago   → both runners finished; flip to "Road to Chicago" countdown
+  //
+  // The phase is derived from runner-state stores (which also reflect the
+  // dev simulator), so dragging the time slider in dev mode flips the
+  // header in real time.
+  // ────────────────────────────────────────────────────────────
+
+  type Phase = 'pre-bkh' | 'live' | 'chicago';
+
+  function buildPhaseStore(p: typeof $profiles): Readable<Phase> {
+    if (p.length === 0) return derived(profiles, () => 'pre-bkh' as Phase);
+    const stores = p.map(pp => runnerState(pp.id));
+    return derived(stores as unknown as Readable<RunnerState>[], (states) => {
+      const ss = states as RunnerState[];
+      if (ss.length === 0) return 'pre-bkh';
+      const allFinished = ss.every(s => s.status === 'finished' && s.elapsedSec > 60);
+      if (allFinished) return 'chicago';
+      const anyRunning = ss.some(
+        s => (s.status === 'running' && (s.distMi > 0.05 || s.elapsedSec > 5)) ||
+             (s.status === 'finished' && s.elapsedSec > 60),   // partial-finish in middle of group
+      );
+      if (anyRunning) return 'live';
+      return 'pre-bkh';
+    });
+  }
+  let phaseStore: Readable<Phase> = buildPhaseStore($profiles);
+  $: phaseStore = buildPhaseStore($profiles);
+
+  // Two separate countdowns — the active one is picked by the phase.
   let cd = countdownTo(RACE_START);
+  let cdChicago = countdownTo(CHICAGO_MARATHON_2026);
   let cdHandle: ReturnType<typeof setInterval> | null = null;
   let lastRefreshDisplay = '—';
   let lastRefreshHandle: ReturnType<typeof setInterval> | null = null;
+
+  /** A pulse counter for the "Race is live" indicator — ticks every second. */
+  let livePulse = 0;
 
   function refreshLabel(ts: number | null): string {
     if (!ts) return '—';
@@ -60,8 +101,11 @@
 
   onMount(() => {
     cd = countdownTo(RACE_START);
+    cdChicago = countdownTo(CHICAGO_MARATHON_2026);
     cdHandle = setInterval(() => {
       cd = countdownTo(RACE_START);
+      cdChicago = countdownTo(CHICAGO_MARATHON_2026);
+      livePulse += 1;
     }, 1000);
     const updateRefresh = () => {
       lastRefreshDisplay = refreshLabel($lastRefreshAt);
@@ -96,10 +140,29 @@
       </div>
     </div>
 
-    <div class="cd" class:cd-go={cd.started} data-tour="countdown">
-      {#if cd.started}
-        <div class="cd-go-label">🏁 Race underway</div>
+    <div
+      class="cd"
+      class:cd-live={$phaseStore === 'live'}
+      class:cd-chicago={$phaseStore === 'chicago'}
+      data-tour="countdown"
+    >
+      {#if $phaseStore === 'live'}
+        <!-- ─── Race is happening right now ─── -->
+        <span class="live-dot" aria-hidden="true"></span>
+        <div class="cd-live-label">
+          <span class="lbl-top">🏁 Race is live</span>
+          <span class="lbl-sub">RBC Brooklyn Half · {pad(cd.hours === 0 ? 0 : 0)}—follow the runner pills →</span>
+        </div>
+      {:else if $phaseStore === 'chicago'}
+        <!-- ─── Both done — road to Chicago Marathon ─── -->
+        <div class="cd-chicago-label">
+          <span class="chi-eyebrow">🏆 Road to Chicago</span>
+          <span class="chi-time mono">
+            {pad(cdChicago.days)}d {pad(cdChicago.hours)}h {pad(cdChicago.minutes)}m {pad(cdChicago.seconds)}s
+          </span>
+        </div>
       {:else}
+        <!-- ─── Pre-race countdown to Wave 1 gun ─── -->
         <div class="cd-unit"><span class="cd-num">{pad(cd.days)}</span><span class="cd-lbl">days</span></div>
         <span class="cd-sep">:</span>
         <div class="cd-unit"><span class="cd-num">{pad(cd.hours)}</span><span class="cd-lbl">hrs</span></div>
@@ -234,21 +297,70 @@
 
   .cd {
     display: flex;
-    align-items: baseline;
-    gap: 2px;
+    align-items: center;
+    gap: 8px;
     padding: 6px 12px;
     border-radius: var(--radius-sm);
     background: var(--blue-soft);
     color: var(--blue);
+    transition: background 200ms ease, color 200ms ease;
   }
-  .cd-go {
-    background: linear-gradient(135deg, #34C759, #007AFF);
+  /* "Race is live" — pulsing green gradient. */
+  .cd-live {
+    background: linear-gradient(135deg, #34C759, #1F9D4F);
     color: white;
     padding: 8px 14px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
+    box-shadow: 0 0 0 0 rgba(52, 199, 89, 0);
+    animation: live-glow 2s ease-in-out infinite;
   }
-  .cd-go-label { font-size: 13px; font-weight: 700; }
+  @keyframes live-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.0); }
+    50%      { box-shadow: 0 0 0 6px rgba(52, 199, 89, 0.25); }
+  }
+  .live-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.85);
+    animation: live-pulse 1s ease-in-out infinite;
+  }
+  @keyframes live-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.85); }
+    50%      { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); }
+  }
+  .cd-live-label {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+  .lbl-top { font-size: 13px; font-weight: 700; letter-spacing: -0.2px; }
+  .lbl-sub { font-size: 9px; opacity: 0.85; margin-top: 1px; }
+
+  /* "Road to Chicago" — warm gradient, mono countdown. */
+  .cd-chicago {
+    background: linear-gradient(135deg, #FF9500, #FF3B30);
+    color: white;
+    padding: 8px 14px;
+  }
+  .cd-chicago-label {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+  .chi-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.9;
+  }
+  .chi-time {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: -0.2px;
+    margin-top: 2px;
+  }
+
   .cd-unit { display: flex; flex-direction: column; align-items: center; }
   .cd-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 16px; line-height: 1; }
   .cd-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
@@ -407,10 +519,14 @@
     /* iPhone — strip every non-essential pixel */
     .brand-title { font-size: 14px; letter-spacing: -0.2px; }
     .brand svg { width: 22px; height: 26px; }
-    .cd { padding: 4px 6px; gap: 1px; }
+    .cd { padding: 4px 6px; gap: 6px; }
     .cd-num { font-size: 12px; }
     .cd-lbl { font-size: 6px; }
     .cd-sep { margin: 0 2px; }
+    .lbl-top { font-size: 11px; }
+    .lbl-sub { display: none; }
+    .chi-time { font-size: 12px; }
+    .chi-eyebrow { font-size: 9px; }
     .controls { gap: 4px; }
     .hdr-btn { width: 28px; height: 28px; font-size: 13px; }
     .refresh-info { display: none; }

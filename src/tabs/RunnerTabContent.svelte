@@ -27,20 +27,22 @@
   $: state = runnerState(profile.id);
   $: goals = goalsStore(profile.id);
 
+  /** Per-runner photo strips. Catherine's set rebuilt per her email:
+   *  drops MET, SPO running, mom-and-me, old Boston-start in favour of the
+   *  new finish-line + Brandenburg + Big Sur + Eugene-beer shots. */
   const photosFor: Record<string, string[]> = {
     gf: [
-      './photo-bkh2023.jpeg',
-      './photo-kidrun.jpeg',
-      './photo-berlin.jpeg',
-      './photo-boston-start.jpeg',
-      './photo-running.jpeg',
-      './photo-met.jpeg',
+      './photo-boston-finish-hands-up.jpeg',
+      './photo-boston2bigsur-medals.jpeg',
+      './photo-berlin-brandenburg.jpeg',
+      './photo-eugene-beer.jpeg',
+      './photo-bkh2023-finish.jpeg',
+      './photo-fly-human-fly-hoka.jpeg',
     ],
     mom: [
       './photo-boston-medals.jpeg',
       './photo-dallas.jpeg',
       './photo-trashbag-helaine.jpeg',
-      './photo-trashbag-both.jpeg',
       './photo-eugene.jpeg',
     ],
   };
@@ -74,9 +76,9 @@
       {/if}
       {#if profile.id === 'gf'}
         <div class="hero-badges">
-          <span class="hb">🏅 2× XC Champion (6th, 8th)</span>
-          <span class="hb">🏆 2012 DPL City Meet MVP</span>
-          <span class="hb mono">3:06:12 marathon PR</span>
+          <span class="hb mono">🏆 3:07:36 Boston PR</span>
+          <span class="hb mono">🏃‍♀️ 1:32:17 half PR</span>
+          <span class="hb">⚡ 5 marathons in 22 months</span>
         </div>
         {#if CATHERINE_SUMMARY.starCount > 0}
           <div class="hero-stars">

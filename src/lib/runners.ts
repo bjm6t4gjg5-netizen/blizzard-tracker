@@ -38,12 +38,16 @@ export interface RunnerProfile {
 // Wave start times
 // ────────────────────────────────────────────────────────────
 
-/** Official RBC Brooklyn Half 2026 wave-start times. */
+/**
+ * Official RBC Brooklyn Half 2026 wave-start times.
+ * Per Catherine's bib confirmation: waves are 30 minutes apart
+ * (was 25 in earlier years).
+ */
 const WAVE_START_OFFSET_MIN: Record<1 | 2 | 3 | 4, number> = {
   1: 0,    // 7:00 AM ET
-  2: 25,   // 7:25 AM
-  3: 50,   // 7:50 AM
-  4: 75,   // 8:15 AM
+  2: 30,   // 7:30 AM
+  3: 60,   // 8:00 AM
+  4: 90,   // 8:30 AM
 };
 
 /** Approximate corral-to-corral funnel delay within a wave (minutes). */
@@ -155,40 +159,49 @@ export interface RunnerState {
 // ────────────────────────────────────────────────────────────
 
 export const DEFAULT_PROFILES: ReadonlyArray<RunnerProfile> = [
-  // Catherine — born 25 May 1998. Wave 1 · Corral B (7:02 AM start).
+  // Catherine — born 25 May 1998 (age 28). Wave 1 · Corral B → 7:02 AM start.
   { id: 'gf',  name: 'Catherine Blizzard', trackId: 'RMGBEVSK', emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, corral: 'B' },
-  // Helaine — placeholder DOB; Wave 3 · Corral C (~7:54 AM start).
-  { id: 'mom', name: 'Helaine Blizzard',   trackId: 'RRM2PLD3', emoji: '⚡', color: '#5856D6', fixed: true, dob: '1967-09-01', gender: 'F', heightIn: 64, weightLb: 130, wave: 3, corral: 'C' },
+  // Helaine — born 13 Apr 1964 (age 62). Wave 2 · Corral C → 7:34 AM start.
+  // Brand color: Apple Pink (#FF2D55) — visually distinct from Catherine's
+  // blue so heat maps + map markers + chart lines never read as the same
+  // runner at a glance.
+  { id: 'mom', name: 'Helaine Blizzard',   trackId: 'RRM2PLD3', emoji: '⚡', color: '#FF2D55', fixed: true, dob: '1964-04-13', gender: 'F', heightIn: 67, weightLb: 120, wave: 2, corral: 'C' },
 ];
 
 export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
   gf: {
-    goalSec: 90 * 60,
-    goalLabel: 'Sub-90',
-    goalMilePaceSec: 6 * 60 + 52,
+    // Catherine's stated goal per her email: "absolutely do under a 1:32"
+    // (existing half PR is 1:32:17 at Too Cold to Hold 2023). 1:32 is the
+    // PR-attempt target; sub-90 is a future stretch.
+    goalSec: 92 * 60,
+    goalLabel: 'Sub-1:32',
+    goalMilePaceSec: 7 * 60 + 1,
+    // Note: there's no 'goal' scenario — the canonical goal line is drawn
+    // from the editable split targets below. Keeping it as a scenario would
+    // duplicate the same line under a different label.
     scenarios: [
       { key: 'dream',   label: 'Dream Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 6 * 60 + 10, desc: 'Everything clicks, negative split' },
-      { key: 'goal',    label: 'Sub-90 Goal', emoji: '🎯', color: '#007AFF', flatPaceSec: null,        desc: 'Elevation-adjusted ~6:52/mi flat eq.' },
       { key: 'strong',  label: 'Strong Day',  emoji: '💪', color: '#5856D6', flatPaceSec: 7 * 60 + 0,  desc: 'Solid race, slight fade late' },
       { key: 'tough',   label: 'Tough Day',   emoji: '😅', color: '#FF9500', flatPaceSec: 7 * 60 + 30, desc: 'Warm/crowded, conservative finish' },
       { key: 'runwalk', label: 'Run/Walk',    emoji: '🚶', color: '#FF3B30', flatPaceSec: 8 * 60 + 30, desc: 'Backup plan, guaranteed finish' },
     ],
     splitGoals: [
-      { label: 'Mile 1',  mi: 1.0,      targetSec:  7 * 60 + 5  },
-      { label: 'Mile 3',  mi: 3.0,      targetSec: 20 * 60 + 30 },
-      { label: 'Mile 5',  mi: 5.0,      targetSec: 34 * 60 + 35 },
-      { label: 'Mile 7',  mi: 7.0,      targetSec: 48 * 60 + 35 },
-      { label: 'Mile 10', mi: 10.0,     targetSec: 68 * 60 + 50 },
-      { label: 'Finish',  mi: TOTAL_MI, targetSec: 90 * 60      },
+      // Sub-1:32 (5,520 sec / 13.1 mi ≈ 7:01/mi flat eq.).
+      { label: 'Mile 1',  mi: 1.0,      targetSec:  7 * 60 + 15 },
+      { label: 'Mile 3',  mi: 3.0,      targetSec: 20 * 60 + 55 },
+      { label: 'Mile 5',  mi: 5.0,      targetSec: 35 * 60 + 25 },
+      { label: 'Mile 7',  mi: 7.0,      targetSec: 49 * 60 + 40 },
+      { label: 'Mile 10', mi: 10.0,     targetSec: 70 * 60 + 20 },
+      { label: 'Finish',  mi: TOTAL_MI, targetSec: 92 * 60      },
     ],
   },
   mom: {
     goalSec: 110 * 60,
     goalLabel: 'Sub-1:50',
     goalMilePaceSec: 8 * 60 + 24,
+    // No 'goal' scenario — the editable split targets drive the goal line.
     scenarios: [
       { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 7 * 60 + 55, desc: 'Everything clicks' },
-      { key: 'goal',    label: 'Sub-1:50',   emoji: '🎯', color: '#5856D6', flatPaceSec: null,        desc: 'Goal pace, elevation-adjusted' },
       { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 8 * 60 + 45, desc: 'Solid race' },
       { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 9 * 60 + 30, desc: 'Warm / conservative' },
       { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 11 * 60 + 0, desc: 'Backup plan' },

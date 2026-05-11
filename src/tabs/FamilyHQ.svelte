@@ -1,6 +1,9 @@
 <script lang="ts">
   import { get } from 'svelte/store';
+  import { derived } from 'svelte/store';
+  import type { Readable } from 'svelte/store';
   import { profiles, runnerState, notify } from '../lib/stores';
+  import type { RunnerState } from '../lib/runners';
   import { TOTAL_GAIN_FT } from '../lib/course';
   import { buildIcsFile, downloadIcs } from '../lib/ical';
   import CourseMap from '../components/CourseMap.svelte';
@@ -9,13 +12,33 @@
   import VsCard from '../components/VsCard.svelte';
   import HowTheyDoing from '../components/HowTheyDoing.svelte';
   import VenmoButton from '../components/VenmoButton.svelte';
+  import PostRaceScreen from '../components/PostRaceScreen.svelte';
+
+  /**
+   * Derived "all runners finished" signal. Rebuilt when the profile list
+   * changes so newly added runners count too. When true, Family HQ flips
+   * to the post-race celebration view automatically — including from the
+   * dev simulator's "All done" preset.
+   */
+  function buildFinishedStore(p: typeof $profiles): Readable<boolean> {
+    if (p.length === 0) return derived(profiles, () => false);
+    const stores = p.map(pp => runnerState(pp.id));
+    return derived(stores as unknown as Readable<RunnerState>[], (states) =>
+      (states as RunnerState[]).length > 0 &&
+      (states as RunnerState[]).every(s => s.status === 'finished' && s.elapsedSec > 60)
+    );
+  }
+  let allFinishedStore: Readable<boolean> = buildFinishedStore($profiles);
+  $: allFinishedStore = buildFinishedStore($profiles);
 
   /** Hero photos shown in the Family HQ header — laid out as a clean
       3-column grid (no rotation/overlap). */
-  const heroPhotos: { src: string; caption: string }[] = [
-    { src: './photo-boston-medals.jpeg', caption: 'Boston 2025' },
-    { src: './photo-trashbag-both.jpeg', caption: 'Pre-race ritual' },
-    { src: './photo-eugene.jpeg',        caption: 'Eugene 2024' },
+  /** Two compact photos in the hero — mom + daughter with medals, and the
+   *  Eugene post-race beer (the one that's both of them in the family photo
+   *  strip). Smaller height than before, no captions. */
+  const heroPhotos = [
+    './photo-boston-medals.jpeg',
+    './photo-eugene-beer.jpeg',
   ];
 
   function exportCalendar() {
@@ -27,6 +50,10 @@
   }
 </script>
 
+{#if $allFinishedStore}
+  <!-- Race-day complete: Champions-League-style thank-you + Chicago countdown -->
+  <PostRaceScreen />
+{:else}
 <HowTheyDoing />
 
 <div class="hero card">
@@ -42,12 +69,9 @@
       <span class="pill">⛰ {TOTAL_GAIN_FT}ft</span>
     </div>
   </div>
-  <div class="hero-photos">
-    {#each heroPhotos as p}
-      <figure class="hero-photo-fig">
-        <img src={p.src} alt={p.caption} loading="lazy" />
-        <figcaption>{p.caption}</figcaption>
-      </figure>
+  <div class="hero-photo-pair">
+    {#each heroPhotos as src}
+      <img {src} alt="" loading="lazy" />
     {/each}
   </div>
 </div>
@@ -101,6 +125,7 @@
   </div>
   <button class="btn" on:click={exportCalendar}>Download .ics</button>
 </div>
+{/if}
 
 <style>
   .hero {
@@ -126,35 +151,22 @@
     color: var(--text-secondary);
   }
 
-  .hero-photos {
+  .hero-photo-pair {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
-    align-content: start;
+    align-self: center;
   }
-  .hero-photo-fig {
-    margin: 0;
+  .hero-photo-pair img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center 25%;
+    display: block;
     background: white;
-    border-radius: 10px;
-    overflow: hidden;
+    border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--separator-soft);
-    transition: transform 200ms ease, box-shadow 200ms ease;
-  }
-  .hero-photo-fig:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-  .hero-photo-fig img {
-    width: 100%;
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    display: block;
-  }
-  .hero-photo-fig figcaption {
-    padding: 6px 8px;
-    font-size: 10.5px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    text-align: center;
-    letter-spacing: -0.1px;
   }
 
   .vs-grid {
@@ -264,7 +276,6 @@
   }
   @media (max-width: 880px) {
     .hero { grid-template-columns: 1fr; }
-    .hero-photos { min-height: 160px; }
     .hero-title { font-size: 24px; }
     .vs-grid { grid-template-columns: 1fr; }
     .ical-card { flex-direction: column; align-items: flex-start; }
@@ -274,7 +285,7 @@
     .hero-title { font-size: 20px; line-height: 1.15; }
     .hero-sub { font-size: 12px; }
     .hero-meta .pill { font-size: 10px; padding: 3px 8px; }
-    .hero-photos { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .hero-photo-pair img { aspect-ratio: 4 / 3; }
     .hero-photo-fig figcaption { font-size: 9px; padding: 4px 6px; }
     .legend { display: none; }
     .beer-card { flex-direction: column; align-items: flex-start; padding: 16px; text-align: left; }

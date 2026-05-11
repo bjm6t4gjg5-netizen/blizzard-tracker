@@ -259,7 +259,7 @@
 
       <div class="section">
         <div class="sec-title">Start wave</div>
-        <p class="sec-sub">Each wave goes off at a different time. Pick the wave + corral from the runner's RBC bib confirmation. Wave 1 = 7:00 AM, Wave 2 = 7:25 AM, Wave 3 = 7:50 AM, Wave 4 = 8:15 AM. Calendar export and arrival ETAs use this.</p>
+        <p class="sec-sub">Each wave goes off at a different time. Pick the wave + corral from the runner's RBC bib confirmation. <b>Wave 1 = 7:00 AM · Wave 2 = 7:30 AM · Wave 3 = 8:00 AM · Wave 4 = 8:30 AM</b>. Calendar export and arrival ETAs use this.</p>
         <div class="grid">
           <div class="form-group">
             <label class="form-label" for="rs-wave">Wave</label>

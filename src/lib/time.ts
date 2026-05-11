@@ -7,6 +7,9 @@
 /** RBC Brooklyn Half 2026: Saturday May 16, 2026 at 7:00 AM EDT (UTC-4). */
 export const RACE_START = new Date('2026-05-16T07:00:00-04:00');
 
+/** Bank of America Chicago Marathon 2026: Sunday October 11, 2026 at 7:30 AM CDT. */
+export const CHICAGO_MARATHON_2026 = new Date('2026-10-11T07:30:00-05:00');
+
 /** Total race distance, miles. Fixed by USATF certification. */
 export const TOTAL_MI = 13.1094;
 

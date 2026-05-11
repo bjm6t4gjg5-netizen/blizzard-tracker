@@ -3,6 +3,7 @@
   import { fly, fade, scale } from 'svelte/transition';
   import { cannedEngine, QUICK_REPLIES, type CoachMessage } from '../lib/coach';
   import { load, save } from '../lib/storage';
+  import { coachHidden } from '../lib/coachVisibility';
 
   /** Path to a future Coach Dan profile photo. If the file exists at this
       path, it's used as the avatar. If not, we fall back to styled "CD"
@@ -17,6 +18,14 @@
   ]);
   let listEl: HTMLDivElement;
   let avatarFailed = false;
+
+  function hideCoach() {
+    open = false;
+    coachHidden.set(true);
+  }
+  function showCoach() {
+    coachHidden.set(false);
+  }
 
   // Persist messages so the conversation survives reloads.
   $: save('coachThread', messages.slice(-30)); // cap history
@@ -74,8 +83,22 @@
   $: if (open) scrollToBottom();
 </script>
 
+<!-- "Bring Coach Dan back" mini-pill when he's hidden -->
+{#if $coachHidden}
+  <button
+    class="reopen"
+    on:click={showCoach}
+    aria-label="Show Coach Dan"
+    title="Show Coach Dan"
+    transition:scale={{ duration: 200 }}
+  >
+    <span>↻</span>
+    <span class="reopen-label">Coach Dan</span>
+  </button>
+{/if}
+
 <!-- Floating launcher button -->
-{#if !open}
+{#if !open && !$coachHidden}
   <button
     class="launcher"
     on:click={() => (open = true)}
@@ -110,7 +133,8 @@
         <div class="head-status"><span class="dot"></span> Race-day assistant</div>
       </div>
       <button class="head-icon" on:click={clearThread} title="Clear conversation" aria-label="Clear">↺</button>
-      <button class="head-icon" on:click={() => (open = false)} aria-label="Close">✕</button>
+      <button class="head-icon" on:click={() => (open = false)} title="Minimise" aria-label="Minimise">–</button>
+      <button class="head-icon head-icon-hide" on:click={hideCoach} title="Hide Coach Dan for this session" aria-label="Hide">✕</button>
     </header>
 
     <div class="msgs" bind:this={listEl}>
@@ -169,6 +193,29 @@
     font-size: 13px;
     transition: transform 100ms ease, box-shadow 150ms ease;
   }
+
+  /* "Show Coach Dan" mini-pill — appears bottom-left so it doesn't steal
+     the corner from any future chat-launcher position. */
+  .reopen {
+    position: fixed;
+    bottom: 22px;
+    left: 18px;
+    z-index: 1500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--separator);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  .reopen:hover { color: var(--blue); border-color: var(--blue); }
+  .reopen-label { letter-spacing: -0.1px; }
   .launcher:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(15, 23, 42, 0.22); }
   .launcher-label { padding-right: 4px; letter-spacing: -0.2px; }
 
@@ -251,6 +298,7 @@
     transition: background 100ms ease, color 100ms ease;
   }
   .head-icon:hover { background: var(--separator); color: var(--text-primary); }
+  .head-icon-hide:hover { background: rgba(255, 59, 48, 0.10); color: var(--red); }
 
   .msgs {
     flex: 1;
@@ -370,6 +418,7 @@
       padding: 6px 14px 6px 6px;
     }
     .launcher-label { font-size: 12px; }
+    .reopen { bottom: 16px; left: 12px; }
     .panel {
       bottom: 0;
       right: 0;

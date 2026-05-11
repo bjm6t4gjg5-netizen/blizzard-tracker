@@ -1,10 +1,14 @@
 <script lang="ts">
   import { CATHERINE_PRS, CATHERINE_RACES, CATHERINE_SUMMARY } from '../lib/career';
   import SixStar from './SixStar.svelte';
+  import MarathonRoster from './MarathonRoster.svelte';
+  import YearBarChart from './YearBarChart.svelte';
 
   let teamPhotoOk = true;
   function onTeamPhotoError() { teamPhotoOk = false; }
 
+  // Newest year at the TOP per Catherine's feedback. DPL/8th-grade rolls to
+  // the bottom of the log so the recent marathons read first.
   $: byYear = (() => {
     const map = new Map<number, typeof CATHERINE_RACES>();
     for (const r of CATHERINE_RACES) {
@@ -12,8 +16,11 @@
       if (!map.has(y)) map.set(y, [] as any);
       (map.get(y) as any).push(r);
     }
-    return [...map.entries()].sort(([a], [b]) => a - b);
+    return [...map.entries()].sort(([a], [b]) => b - a);
   })();
+
+  // PR strings used to flag rows in the marathon roster.
+  const marathonPR = CATHERINE_PRS.find(p => p.event === 'Marathon')?.mark ?? null;
 
   // The dad's MVP photo, if dropped into public/. Falls back to a styled card.
   const mvpPhoto = './photo-mvp-2012.jpeg';
@@ -49,10 +56,10 @@
 
   <!-- Headline counters -->
   <div class="counters">
-    <div class="counter"><div class="num">3:06:12</div><div class="lbl">Marathon PR · Boston 2025</div></div>
-    <div class="counter"><div class="num">5:46</div><div class="lbl">1600m PR · 8th grade</div></div>
-    <div class="counter"><div class="num">{CATHERINE_SUMMARY.wins}</div><div class="lbl">1st-place finishes</div></div>
-    <div class="counter"><div class="num">3× 🏆</div><div class="lbl">XC Champion seasons</div></div>
+    <div class="counter"><div class="num">3:07:36</div><div class="lbl">Marathon PR · Boston 2025</div></div>
+    <div class="counter"><div class="num">1:32:17</div><div class="lbl">Half PR · Too Cold to Hold 2023</div></div>
+    <div class="counter"><div class="num">5</div><div class="lbl">Marathons since Dec 2023</div></div>
+    <div class="counter"><div class="num">{CATHERINE_SUMMARY.starCount}/6</div><div class="lbl">World Major stars</div></div>
   </div>
 
   <!-- 5th grade team photo placeholder — drop the JPEG into public/ to enable. -->
@@ -76,6 +83,17 @@
         </div>
       </div>
     {/if}
+  </div>
+
+  <!-- Marathon roster — mirrors Helaine's style, newest-first, thumbnails -->
+  <MarathonRoster races={CATHERINE_RACES} prTime={marathonPR} />
+
+  <!-- Races per year chart -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Races per year · 2009 → today</div></div>
+    <div class="card-pad">
+      <YearBarChart races={CATHERINE_RACES} height="180px" />
+    </div>
   </div>
 
   <!-- World Major tracker (same component Helaine uses) -->
