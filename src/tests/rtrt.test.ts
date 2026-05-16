@@ -73,6 +73,30 @@ const ON_COURSE_BEFORE_5K: any = {
   },
 };
 
+// Catherine's actual FINISH payload — captured race day after she crossed
+// the line in 1:30:28. lpn="FINISH", epc="100", emiles=13.109, and the
+// list[] contains the FINISH row with isFinish=1.
+const CATHERINE_FINISHED: any = {
+  list: [
+    { time: '00:00:00.00', point: 'START',  label: 'START',     pid: 'RMGBEVSK', epochTime: '1778929371.00', isStart: '1' },
+    { time: '00:21:04.60', point: '5K',     label: '5K/3.1mi',  pid: 'RMGBEVSK', epochTime: '1778930635.60', pace: '06:48 min/mile' },
+    { time: '01:30:28.22', point: 'FINISH', label: 'Finish',    pid: 'RMGBEVSK', epochTime: '1778934799.22', pace: '07:12 min/mile', isFinish: '1' },
+  ],
+  info: {
+    loc: {
+      RMGBEVSK: {
+        pace: '07:12 min/mile',
+        paceAvg: '06:55 min/mile',
+        epc: '100',
+        emiles: '13.109',
+        lpn: 'FINISH',
+        course: 'halfmarathon',
+        wavestart: '1778929208.55',
+      },
+    },
+  },
+};
+
 const NOISE: any = { info: {} };
 
 describe('parseSplitsResponse', () => {
@@ -151,6 +175,17 @@ describe('parseSplitsResponse', () => {
     expect(p.status).toBe('pre');
     expect(p.distMi).toBeNull();
     expect(p.elapsedSec).toBeNull();
+  });
+
+  it('locks elapsed to the chip finish time, no extrapolation', () => {
+    // Pin "now" two hours AFTER she crossed the line. If the parser were
+    // still extrapolating from personalStart, elapsed would balloon to 2+ hrs.
+    const finishEpoch = 1778934799;
+    const twoHoursLater = finishEpoch + 2 * 3600;
+    const p = parseSplitsResponse(CATHERINE_FINISHED, 'RMGBEVSK', twoHoursLater);
+    expect(p.status).toBe('finished');
+    // Chip finish time = 01:30:28 = 5428 sec. Must NOT have ballooned.
+    expect(p.elapsedSec).toBe(1 * 3600 + 30 * 60 + 28);
   });
 
   it('tolerates fractional-second time formats like 00:00:00.00', () => {

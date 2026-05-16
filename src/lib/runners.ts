@@ -446,11 +446,21 @@ export function computeEta(state: RunnerState): EtaResult {
 
 export function applySnapshot(state: RunnerState, snap: RtrtSnapshot): RunnerState {
   const newDist = snap.distMi != null ? Math.min(Math.max(snap.distMi, 0), TOTAL_MI) : state.distMi;
-  // Monotonic on elapsed: never go backward, so the 1-second UI tick in
-  // stores.ts is never overwritten with a slightly-stale API value (which
-  // would cause visible 1-sec hiccups on the stopwatch).
+  // Elapsed handling:
+  //  - When finished: snap to the chip finish time exactly. Bypass the
+  //    monotonic max — otherwise the locally-ticked elapsed (which may have
+  //    drifted a second or two past the chip time) would stick around forever.
+  //  - While running: monotonic max so the 1-second UI tick is never
+  //    overwritten with a slightly-stale API value.
   const apiElapsed = snap.elapsedSec != null ? Math.max(snap.elapsedSec, 0) : null;
-  const newElapsed = apiElapsed != null ? Math.max(state.elapsedSec, apiElapsed) : state.elapsedSec;
+  let newElapsed: number;
+  if (snap.status === 'finished' && apiElapsed != null) {
+    newElapsed = apiElapsed;
+  } else if (apiElapsed != null) {
+    newElapsed = Math.max(state.elapsedSec, apiElapsed);
+  } else {
+    newElapsed = state.elapsedSec;
+  }
 
   // Append to pace history only if we actually moved (avoids spamming dupes).
   let history = state.paceHistory;

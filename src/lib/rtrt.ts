@@ -282,8 +282,10 @@ export function parseSplitsResponse(
 
   // ── LIVE position from info.loc[pid] — the headline data for "where are
   // they right now". Only trust this when the runner is actually on course
-  // (i.e. no pending block).
-  if (loc && !hasPending) {
+  // (i.e. no pending block and NOT finished — for a finisher the chip time
+  // from the FINISH split row is the ground truth, and extrapolating elapsed
+  // forward from personalStart would tick past her chip time forever).
+  if (loc && !hasPending && !finished) {
     const liveMi = parseFloat(loc.emiles ?? '');
     if (Number.isFinite(liveMi) && liveMi > 0 && (maxDistMi == null || liveMi > maxDistMi)) {
       maxDistMi = liveMi;
