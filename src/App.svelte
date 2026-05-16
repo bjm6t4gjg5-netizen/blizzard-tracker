@@ -42,7 +42,7 @@
     // Touch every runner state store so they exist before any tab renders.
     for (const p of $profiles) runnerState(p.id);
 
-    startAutoRefresh(60_000);
+    startAutoRefresh(5_000);
     loadWeather();
     mounted = true;
     maybeAutoStart();

@@ -76,6 +76,41 @@ export const refreshing = writable(false);
 export const demoTimeMin = writable<number | null>(null);
 
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
+let tickTimer: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * 1-second client-side tick. For each currently-running runner, advances
+ * elapsedSec by 1 and recomputes pct/eta. This makes the visible stopwatch
+ * tick smoothly between API polls (which happen every 5s). API responses
+ * are monotonic (Math.max in applySnapshot) so the ticker never gets
+ * overwritten backwards.
+ */
+function startTicker(): void {
+  if (tickTimer != null) return;
+  tickTimer = setInterval(() => {
+    // Sim mode owns elapsedSec entirely — don't fight it.
+    if (get(demoTimeMin) !== null) return;
+    for (const store of stateStores.values()) {
+      store.update(s => {
+        if (s.status !== 'running') return s;
+        const next = s.elapsedSec + 1;
+        return {
+          ...s,
+          elapsedSec: next,
+          // Don't recompute pct/eta every second — distMi only changes on
+          // API polls, and those refresh derived fields via applySnapshot.
+        };
+      });
+    }
+  }, 1_000);
+}
+
+function stopTicker(): void {
+  if (tickTimer != null) {
+    clearInterval(tickTimer);
+    tickTimer = null;
+  }
+}
 
 export async function refreshOne(id: string): Promise<void> {
   const profile = get(profiles).find(p => p.id === id);
@@ -132,12 +167,13 @@ export async function refreshAll(): Promise<void> {
   }
 }
 
-export function startAutoRefresh(intervalMs = 60_000): void {
+export function startAutoRefresh(intervalMs = 5_000): void {
   stopAutoRefresh();
   // Ask for Notification permission once. If denied, we silently skip pings.
   ensurePermission();
   refreshAll(); // immediate
   refreshTimer = setInterval(refreshAll, intervalMs);
+  startTicker();
 }
 
 export function stopAutoRefresh(): void {
@@ -145,6 +181,7 @@ export function stopAutoRefresh(): void {
     clearInterval(refreshTimer);
     refreshTimer = null;
   }
+  stopTicker();
 }
 
 /** Wipe volatile race-day state for one runner without touching their profile. */

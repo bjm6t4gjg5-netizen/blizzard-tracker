@@ -446,7 +446,11 @@ export function computeEta(state: RunnerState): EtaResult {
 
 export function applySnapshot(state: RunnerState, snap: RtrtSnapshot): RunnerState {
   const newDist = snap.distMi != null ? Math.min(Math.max(snap.distMi, 0), TOTAL_MI) : state.distMi;
-  const newElapsed = snap.elapsedSec != null ? Math.max(snap.elapsedSec, 0) : state.elapsedSec;
+  // Monotonic on elapsed: never go backward, so the 1-second UI tick in
+  // stores.ts is never overwritten with a slightly-stale API value (which
+  // would cause visible 1-sec hiccups on the stopwatch).
+  const apiElapsed = snap.elapsedSec != null ? Math.max(snap.elapsedSec, 0) : null;
+  const newElapsed = apiElapsed != null ? Math.max(state.elapsedSec, apiElapsed) : state.elapsedSec;
 
   // Append to pace history only if we actually moved (avoids spamming dupes).
   let history = state.paceHistory;
