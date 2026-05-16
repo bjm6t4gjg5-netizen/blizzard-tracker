@@ -1,89 +1,95 @@
 import { describe, it, expect } from 'vitest';
-import { parseRtrtHtml } from '../lib/rtrt';
+import { parseSplitsResponse } from '../lib/rtrt';
+import { TOTAL_MI } from '../lib/time';
 
-const PRE_RACE_HTML = `
-<html><body>
-  <div class="header">RBC Brooklyn Half · 13.1 mi · May 16, 2026</div>
-  <div class="status">PRE-RACE — race day is May 16</div>
-  <div class="footer">© RTRT — 13.1 miles</div>
-</body></html>
-`;
+// Fixtures are abridged from real api.rtrt.me responses captured live on
+// race morning (May 16, 2026) from the 2026 RBC Brooklyn Half tracker.
 
-const RUNNING_HTML = `
-<html><body>
-  <div class="hero">
-    <span class="distance">5.42 mi</span>
-    <span class="elapsed">0:36:48</span>
-  </div>
-  <table class="splits">
-    <tr><th>Checkpoint</th><th>Time</th><th>Pace</th></tr>
-    <tr><td>5K</td><td>20:55</td><td>6:45 / mi</td></tr>
-  </table>
-  <div class="footer">RBC Brooklyn Half · 13.1 mi total</div>
-</body></html>
-`;
+const PRE_RACE: any = {
+  error: { type: 'no_results', msg: 'No splits found' },
+  info: {
+    loc: {
+      RMGBEVSK: {
+        pending: { halfmarathon: { countdown: '872', wavestart: '1778929260' } },
+        course: 'halfmarathon',
+        wavestart: '1778929260',
+      },
+      RRM2PLD3: {
+        pending: { halfmarathon: { countdown: '872', wavestart: '1778929260' } },
+        course: 'halfmarathon',
+        wavestart: '1778929260',
+      },
+    },
+  },
+};
 
-const FINISH_HTML = `
-<html><body>
-  <h1 class="status">FINISHED</h1>
-  <div>13.10 mi · 1:28:12</div>
-  <table>
-    <tr><th>Checkpoint</th><th>Time</th><th>Pace</th></tr>
-    <tr><td>5K</td><td>20:30</td><td>6:35 / mi</td></tr>
-    <tr><td>10K</td><td>41:15</td><td>6:38 / mi</td></tr>
-    <tr><td>Finish</td><td>1:28:12</td><td>6:44 / mi</td></tr>
-  </table>
-</body></html>
-`;
+const RUNNING: any = {
+  list: [
+    { pid: 'RMGBEVSK', label: '5K',  time: '00:20:55', etime: '00:20:55', pace: '06:45 /mi', dist: '3.1',  units: 'mi' },
+    { pid: 'RMGBEVSK', label: '10K', time: '00:42:18', etime: '00:42:18', pace: '06:48 /mi', dist: '6.2',  units: 'mi' },
+    { pid: 'RRM2PLD3', label: '5K',  time: '00:25:30', etime: '00:25:30', pace: '08:14 /mi', dist: '3.1',  units: 'mi' },
+  ],
+  info: {},
+};
 
-const NOISE_HTML = `<html><body>Some random page</body></html>`;
+const FINISHED: any = {
+  list: [
+    { pid: 'RMGBEVSK', label: '5K',     time: '00:20:30', etime: '00:20:30', pace: '06:35 /mi', dist: '3.1',   units: 'mi' },
+    { pid: 'RMGBEVSK', label: '10K',    time: '00:41:15', etime: '00:41:15', pace: '06:38 /mi', dist: '6.2',   units: 'mi' },
+    { pid: 'RMGBEVSK', label: 'Finish', time: '01:28:12', etime: '01:28:12', pace: '06:44 /mi', dist: '13.10', units: 'mi' },
+  ],
+  info: {},
+};
 
-describe('parseRtrtHtml', () => {
-  it('detects pre-race', () => {
-    const p = parseRtrtHtml(PRE_RACE_HTML);
+const NOISE: any = { info: {} };
+
+describe('parseSplitsResponse', () => {
+  it('detects pre-race from no_results + pending wavestart', () => {
+    const p = parseSplitsResponse(PRE_RACE, 'RMGBEVSK');
     expect(p.status).toBe('pre');
+    expect(p.distMi).toBeNull();
+    expect(p.elapsedSec).toBeNull();
+    expect(p.splits).toHaveLength(0);
   });
 
-  it('detects an active runner with distance + elapsed', () => {
-    const p = parseRtrtHtml(RUNNING_HTML);
+  it('detects an active runner from a list of splits', () => {
+    const p = parseSplitsResponse(RUNNING, 'RMGBEVSK');
     expect(p.status).toBe('running');
-    expect(p.distMi).toBeCloseTo(5.42, 2);
-    expect(p.elapsedSec).toBe(36 * 60 + 48);
+    expect(p.distMi).toBeCloseTo(6.2, 1);
+    expect(p.elapsedSec).toBe(42 * 60 + 18);
   });
 
-  it('extracts 5K split row', () => {
-    const p = parseRtrtHtml(RUNNING_HTML);
-    expect(p.splits.length).toBeGreaterThan(0);
-    const fivek = p.splits.find(s => s.label.includes('5K'));
-    expect(fivek?.chipTime).toBe('20:55');
+  it('only counts splits belonging to the requested pid', () => {
+    // Catherine and Helaine both in the list — Helaine's 5K mustn't affect Catherine.
+    const p = parseSplitsResponse(RUNNING, 'RMGBEVSK');
+    expect(p.splits.every(s => /5K|10K/.test(s.label))).toBe(true);
+    expect(p.splits.length).toBe(2); // not 3
+  });
+
+  it('extracts the 5K split row with pace', () => {
+    const p = parseSplitsResponse(RUNNING, 'RMGBEVSK');
+    const fivek = p.splits.find(s => s.label === '5K');
+    expect(fivek?.chipTime).toBe('00:20:55');
     expect(fivek?.pace).toContain('6:45');
   });
 
-  it('does NOT pick up footer "13.1 mi" as live distance during running mid-race', () => {
-    // Running HTML has both "5.42 mi" and footer "13.1 mi". Our heuristic picks
-    // the largest, so this test ensures we accept that — but also that pre-race
-    // doesn't get marked running just because footer text exists.
-    const p = parseRtrtHtml(PRE_RACE_HTML);
-    expect(p.status).not.toBe('running');
-  });
-
-  it('detects FINISHED via the keyword', () => {
-    const p = parseRtrtHtml(FINISH_HTML);
+  it('detects FINISHED when a Finish row is present', () => {
+    const p = parseSplitsResponse(FINISHED, 'RMGBEVSK');
     expect(p.status).toBe('finished');
-    expect(p.distMi).toBeCloseTo(13.1, 1);
+    expect(p.distMi).toBeCloseTo(TOTAL_MI, 2);
     expect(p.elapsedSec).toBe(1 * 3600 + 28 * 60 + 12);
   });
 
-  it('returns unknown / null on garbage', () => {
-    const p = parseRtrtHtml(NOISE_HTML);
+  it('returns unknown / null on an empty payload', () => {
+    const p = parseSplitsResponse(NOISE, 'RMGBEVSK');
     expect(p.status).toBe('unknown');
     expect(p.distMi).toBeNull();
     expect(p.elapsedSec).toBeNull();
   });
 
-  it('rejects wall-clock H:MM:SS larger than 6h', () => {
-    const html = `<body>14:32:55 — local time</body>`;
-    const p = parseRtrtHtml(html);
+  it('rejects HH:MM:SS values above 6 hours as wall-clock noise', () => {
+    const data: any = { list: [{ pid: 'X', label: '10K', time: '14:32:55', dist: '6.2', units: 'mi' }] };
+    const p = parseSplitsResponse(data, 'X');
     expect(p.elapsedSec).toBeNull();
   });
 });
