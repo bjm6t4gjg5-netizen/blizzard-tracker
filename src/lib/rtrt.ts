@@ -50,12 +50,14 @@ interface RtrtSplitRow {
   pid?: string;
   label?: string;     // "5K", "10K", "Finish", etc.
   name?: string;      // alt label some events use
-  time?: string;      // chip/clock time "HH:MM:SS" or "MM:SS"
+  point?: string;     // "START", "5K", "FINISH"
+  time?: string;      // chip/clock time "HH:MM:SS[.SS]" or "MM:SS"
   etime?: string;     // elapsed time since start mat
   pace?: string;      // "06:48 /mi" or similar
   dist?: string;      // distance number as string, see units
   units?: string;     // "mi" or "km"
   loc?: string;       // location/checkpoint slug
+  epochTime?: string; // unix seconds when crossing was recorded
 }
 
 interface RtrtPending {
@@ -63,15 +65,28 @@ interface RtrtPending {
   wavestart?: string;
 }
 
+interface RtrtLiveLoc {
+  /** Pending block exists if the runner hasn't crossed the start mat yet. */
+  pending?: Record<string, RtrtPending>;
+  course?: string;
+  wavestart?: string;
+  /** Live estimated distance traveled, in miles. The headline live field. */
+  emiles?: string;
+  /** Current pace string, e.g. "06:45 min/mile". */
+  pace?: string;
+  paceAvg?: string;
+  mph?: string;
+  /** Last point name crossed (e.g. "START"). */
+  lpn?: string;
+  /** Next point name (e.g. "5K"). */
+  npn?: string;
+}
+
 interface SplitsResponse {
   list?: RtrtSplitRow[];
   error?: { type: string; msg: string };
   info?: {
-    loc?: Record<string, {
-      pending?: Record<string, RtrtPending>;
-      course?: string;
-      wavestart?: string;
-    }>;
+    loc?: Record<string, RtrtLiveLoc>;
   };
 }
 
@@ -185,7 +200,8 @@ export async function fetchRunners(trackIds: string[]): Promise<Record<string, R
 // Parser (pure function — covered by unit tests)
 // ────────────────────────────────────────────────────────────
 
-const HMS_RE = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/;
+// Accept "MM:SS", "H:MM:SS", and "HH:MM:SS.dd" (trailing fractional seconds)
+const HMS_RE = /^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?$/;
 
 function parseHmsToSec(s: string | undefined): number | null {
   if (!s) return null;
@@ -218,33 +234,72 @@ function distToMiles(dist: string | undefined, units: string | undefined): numbe
 export function parseSplitsResponse(
   data: SplitsResponse,
   pid: string,
+  /** Override the "now" clock — only used in tests. */
+  nowSec: number = Math.floor(Date.now() / 1000),
 ): Omit<RtrtSnapshot, 'fetchedAt' | 'source'> {
+  const loc = data.info?.loc?.[pid];
   const rows = (data.list ?? []).filter(r => !r.pid || r.pid === pid);
+
+  const hasPending = !!loc?.pending && Object.keys(loc.pending).length > 0;
 
   let maxDistMi: number | null = null;
   let maxElapsedSec: number | null = null;
   let finished = false;
+  /** When did THIS runner cross the start mat? */
+  let personalStartEpoch: number | null = null;
   const splits: RtrtSplit[] = [];
 
   for (const row of rows) {
-    const label = (row.label ?? row.name ?? '').trim();
+    const label = (row.label ?? row.name ?? row.point ?? '').trim();
+    const point = (row.point ?? '').trim();
     const time = row.etime ?? row.time ?? '';
     const pace = (row.pace ?? '—').trim();
 
-    if (label && time) splits.push({ label, chipTime: time, pace });
+    const isStartRow = /^start$/i.test(label) || /^start$/i.test(point);
+    const isFinishRow = /finish/i.test(label) || /finish/i.test(point);
+
+    // Capture personal start mat crossing — we'll use it for elapsed.
+    if (isStartRow) {
+      const ep = parseFloat(row.epochTime ?? '');
+      if (Number.isFinite(ep) && ep > 0) personalStartEpoch = ep;
+    }
+
+    // Hide START rows from user-visible splits list (not informative).
+    if (label && time && !isStartRow) {
+      splits.push({ label, chipTime: time, pace });
+    }
 
     const d = distToMiles(row.dist, row.units);
-    if (d != null && (maxDistMi == null || d > maxDistMi)) maxDistMi = d;
+    if (d != null && d > 0 && (maxDistMi == null || d > maxDistMi)) maxDistMi = d;
 
     const sec = parseHmsToSec(time);
-    if (sec != null && (maxElapsedSec == null || sec > maxElapsedSec)) maxElapsedSec = sec;
+    if (sec != null && sec > 0 && (maxElapsedSec == null || sec > maxElapsedSec)) {
+      maxElapsedSec = sec;
+    }
 
-    if (/finish/i.test(label) || /finish/i.test(row.loc ?? '')) finished = true;
+    if (isFinishRow) finished = true;
   }
 
-  const pending = data.info?.loc?.[pid]?.pending;
-  const hasPending = !!pending && Object.keys(pending).length > 0;
-  const noResults = data.error?.type === 'no_results';
+  // ── LIVE position from info.loc[pid] — the headline data for "where are
+  // they right now". Only trust this when the runner is actually on course
+  // (i.e. no pending block).
+  if (loc && !hasPending) {
+    const liveMi = parseFloat(loc.emiles ?? '');
+    if (Number.isFinite(liveMi) && liveMi > 0 && (maxDistMi == null || liveMi > maxDistMi)) {
+      maxDistMi = liveMi;
+    }
+
+    // Compute elapsed from personal start mat if recorded, else fall back to
+    // the wave start. Either is more reliable than parsing "00:00:00" from
+    // the START split row.
+    const fallback = personalStartEpoch ?? parseFloat(loc.wavestart ?? '');
+    if (Number.isFinite(fallback) && fallback > 0) {
+      const elapsed = Math.floor(nowSec - fallback);
+      if (elapsed > 0 && (maxElapsedSec == null || elapsed > maxElapsedSec)) {
+        maxElapsedSec = elapsed;
+      }
+    }
+  }
 
   let status: RtrtSnapshot['status'];
   let distMi = maxDistMi;
@@ -253,15 +308,18 @@ export function parseSplitsResponse(
   if (finished) {
     status = 'finished';
     distMi = TOTAL_MI;
-  } else if (rows.length > 0 && (maxDistMi != null || maxElapsedSec != null)) {
-    status = 'running';
-  } else if (hasPending && noResults) {
+  } else if (hasPending) {
     status = 'pre';
     distMi = null;
     elapsedSec = null;
-  } else if (noResults) {
-    // API said no splits but didn't give pending info — could be just before
-    // the wave goes off and the cache hasn't refreshed. Treat as pre, not unknown.
+  } else if (
+    rows.length > 0 ||
+    (maxDistMi != null && maxDistMi > 0) ||
+    (loc && (loc.emiles || loc.pace))
+  ) {
+    status = 'running';
+  } else if (data.error?.type === 'no_results') {
+    // No splits and no live data — race hasn't reached this runner yet.
     status = 'pre';
     distMi = null;
     elapsedSec = null;

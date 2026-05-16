@@ -41,6 +41,38 @@ const FINISHED: any = {
   info: {},
 };
 
+// Real on-course response captured race morning: Catherine has crossed
+// START but hasn't hit the 5K mat yet. Helaine's wave still pending.
+const ON_COURSE_BEFORE_5K: any = {
+  list: [
+    {
+      time: '00:00:00.00', point: 'START', label: 'START',
+      pid: 'RMGBEVSK', bib: '2784', name: 'Catherine Blizzard',
+      epochTime: '1778929371.00', startTime: '7:02:51 am',
+      isStart: '1', course: 'halfmarathon',
+    },
+  ],
+  info: {
+    loc: {
+      RMGBEVSK: {
+        pace: '06:45 min/mile',
+        paceAvg: '06:45 min/mile',
+        emiles: '0.316',
+        mph: '8.89',
+        lpn: 'START',
+        npn: '5K',
+        course: 'halfmarathon',
+        wavestart: '1778929208.55',
+      },
+      RRM2PLD3: {
+        pending: { halfmarathon: { countdown: '0', wavestart: '1778929208.55' } },
+        course: 'halfmarathon',
+        wavestart: '1778929208.55',
+      },
+    },
+  },
+};
+
 const NOISE: any = { info: {} };
 
 describe('parseSplitsResponse', () => {
@@ -91,5 +123,44 @@ describe('parseSplitsResponse', () => {
     const data: any = { list: [{ pid: 'X', label: '10K', time: '14:32:55', dist: '6.2', units: 'mi' }] };
     const p = parseSplitsResponse(data, 'X');
     expect(p.elapsedSec).toBeNull();
+  });
+
+  // ── Real-world live API shape ─────────────────────────────────────────
+  // When a runner is ON course but hasn't hit the next checkpoint yet,
+  // RTRT carries the live position in info.loc[pid] (emiles, pace,
+  // wavestart) and `list` contains only a START row with time "00:00:00.00".
+
+  it('reads live emiles when only START has been crossed (Catherine)', () => {
+    // Pin "now" 30s after she crossed her START mat.
+    const nowSec = 1778929371 + 30;
+    const p = parseSplitsResponse(ON_COURSE_BEFORE_5K, 'RMGBEVSK', nowSec);
+    expect(p.status).toBe('running');
+    expect(p.distMi).toBeCloseTo(0.316, 2);
+    expect(p.elapsedSec).toBe(30);
+  });
+
+  it('hides the START crossing from user-visible splits', () => {
+    const nowSec = 1778929371 + 30;
+    const p = parseSplitsResponse(ON_COURSE_BEFORE_5K, 'RMGBEVSK', nowSec);
+    expect(p.splits.find(s => /start/i.test(s.label))).toBeUndefined();
+  });
+
+  it('keeps a pending runner on pre even when sibling is live (Helaine)', () => {
+    const nowSec = 1778929371 + 30;
+    const p = parseSplitsResponse(ON_COURSE_BEFORE_5K, 'RRM2PLD3', nowSec);
+    expect(p.status).toBe('pre');
+    expect(p.distMi).toBeNull();
+    expect(p.elapsedSec).toBeNull();
+  });
+
+  it('tolerates fractional-second time formats like 00:00:00.00', () => {
+    const data: any = {
+      list: [{ pid: 'X', label: 'START', point: 'START', time: '00:00:00.00', epochTime: '1000' }],
+      info: { loc: { X: { emiles: '0.5', wavestart: '1000', course: 'halfmarathon' } } },
+    };
+    const p = parseSplitsResponse(data, 'X', 1060);
+    expect(p.status).toBe('running');
+    expect(p.distMi).toBeCloseTo(0.5, 2);
+    expect(p.elapsedSec).toBe(60);
   });
 });
