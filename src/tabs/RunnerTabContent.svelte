@@ -67,7 +67,7 @@
           data-tour="runner-settings"
         >⚙</button>
       </div>
-      <div class="hero-sub">RBC Brooklyn Half 2026 · {profile.trackId} · Goal: {formatHMS($goals.goalSec)} ({$goals.goalLabel})</div>
+      <div class="hero-sub">Chicago Marathon 2026 · {profile.trackId} · Goal: {formatHMS($goals.goalSec)} ({$goals.goalLabel})</div>
       {#if profile.wave}
         <div class="hero-wave-row">
           <span class="hero-wave">🏁 {waveLabel(profile, RACE_START)}</span>

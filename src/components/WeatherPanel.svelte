@@ -18,7 +18,7 @@
     <div class="icon-big">{icon.icon}</div>
     <div class="hero-text">
       <div class="desc">{icon.label}</div>
-      <div class="loc">Brooklyn · 7:00 AM ET · May 16</div>
+      <div class="loc">Chicago · 7:30 AM CT · Oct 11</div>
     </div>
     <div class="temp-block">
       <div class="temp-big">{rh ? Math.round(rh.tempF) + '°' : '—'}</div>

@@ -42,7 +42,7 @@ function summarizeWeather(): string {
   if (!r) return "Weather isn't loaded yet — check the Weather tab in a sec.";
   const icon = weatherIcon(r.weatherCode);
   const impact = raceImpact(r);
-  return `Race-morning forecast (7 AM ET): ${icon.icon} ${Math.round(r.tempF)}°F, ${icon.label.toLowerCase()}, ${r.precipPct}% rain, ${Math.round(r.windMph)} mph wind. ${impact.text}.`;
+  return `Race-morning forecast (7:30 AM CT): ${icon.icon} ${Math.round(r.tempF)}°F, ${icon.label.toLowerCase()}, ${r.precipPct}% rain, ${Math.round(r.windMph)} mph wind. ${impact.text}.`;
 }
 
 function summarizeRunners(): string {
@@ -81,7 +81,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(pace|goal|sub.?(\d+|90|2.?\d)|split|target|strategy)\b/i,
     reply: () =>
-      `Catherine's goal is **sub-1:30** — about 6:52/mi flat-equivalent. With Brooklyn's mid-park climb (miles 4–7) the per-mile targets are ~7:05 (mi 1) → 6:50 (mi 3) → 6:55 (mi 5) → 6:55 (mi 7) → 6:50 (mi 10) → 6:30 finish kick.\n\nHelaine's goal is **sub-2:10** — about 9:55/mi flat-equivalent.\n\nEither runner's settings (⚙ on the runner card) lets you tweak any of those splits.`,
+      `Catherine's goal is **sub-3:05** — about 7:03/mi on Chicago's pancake-flat course. The plan: settle through the crowded start (~7:15 mile 1), lock into 7:00–7:05s through halfway (~1:32:20), hold steady through the 18-mile check, survive the 20–24 wall zone, then empty the tank up Mount Roosevelt.\n\nHelaine's goal is **sub-4:00** — about 9:09/mi, even-split with a 2:00:00 halfway.\n\nEither runner's settings (⚙ on the runner card) lets you tweak any of those splits.`,
   },
   // Cheer zones
   {
@@ -114,7 +114,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(course|route|map|elevation|hill|terrain|ocean.?pkwy|prospect|park|finish.?line)\b/i,
     reply: () =>
-      `13.1 miles: **Brooklyn Museum → Grand Army Plaza → Prospect Park (north then south) → Ocean Parkway southbound → Surf Ave → W 10th St → Coney Island Boardwalk finish**. ${TOTAL_GAIN_FT}ft total elevation gain. The hills are mostly miles 3–7 in the park; Ocean Pkwy is a long downhill straight.`,
+      `26.2 miles through 29 neighborhoods: **Grant Park → River North → Lincoln Park → Lakeview (north turnaround ~mile 8.5) → Old Town → West Loop/Greektown (halfway) → Little Italy → Pilsen → Chinatown (mile 21) → Bronzeville → Michigan Ave north → "Mount Roosevelt" → Columbus Dr finish in Grant Park**. Only ${TOTAL_GAIN_FT}ft total gain — the flattest of the World Marathon Majors. The lone hill is the Roosevelt Rd bridge, 400m before the finish.`,
   },
   // Live / RTRT / refresh
   {
@@ -126,7 +126,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(demo|simulat|test|preview|dev(eloper)?)\b/i,
     reply: () =>
-      `Footer → "Developer" → enter the password to unlock the 🛠 race-day simulator in the header. Drag the time slider (6:30 AM → 10:30 AM) or click a preset like "Wave 3 gun" or "Cat finishing". Each runner's position is computed from their own wave/corral start, so Catherine and Helaine show at different mile positions for the same simulated minute — exactly what you'd see on race day.`,
+      `Footer → "Developer" → enter the password to unlock the 🛠 race-day simulator in the header. Drag the time slider (6:30 AM → early afternoon) or click a preset like "Wave 3 gun" or "Cat finishing". Each runner's position is computed from their own wave/corral start, so Catherine and Helaine show at different mile positions for the same simulated minute — exactly what you'd see on race day.`,
   },
   // Add to home screen
   {
@@ -149,43 +149,43 @@ const TOPICS: Topic[] = [
   {
     match: /\b(subway|train|how.?get|directions?|metro|mta|transit|line)\b/i,
     reply: () =>
-      `Start (Brooklyn Museum, 7 AM): take the **2/3 to Grand Army Plaza** or **B/Q to Prospect Park**.\n\nFinish (Coney Island Boardwalk): **D/F/N/Q to Stillwell Ave**.\n\nFor each cheer zone, the spectator list on Family HQ shows the exact subway line.`,
+      `Start + finish (Grant Park): **Red/Orange/Green Line to Roosevelt**, then walk into the park.\n\nClassic spot-hop: Red Line to **Grand** (mile 1.2) → Red/Brown to **Belmont** (mile 8.9) → Pink Line to **18th** (Pilsen, mile 19) → Red Line to **Cermak–Chinatown** (mile 21.4) → Roosevelt for the finish.\n\nFor each cheer zone, the spectator list on Family HQ shows the exact CTA line.`,
   },
   // Bib pickup / expo
   {
     match: /\b(bib|expo|pickup|pre.?race|packet)\b/i,
     reply: () =>
-      `Bib pickup happens at the NYRR RUNCENTER (320 W 57th St, Manhattan) in the days before the race. Check the official RBC Brooklyn Half page on nyrr.org for the exact pickup window — usually Wed–Fri before race day, 11 AM to 7 PM.`,
+      `Bib pickup happens at the **Abbott Health & Fitness Expo at McCormick Place** (2301 S King Dr) on the Thursday–Saturday before race day. No race-day pickup — the runner must collect their own bib with photo ID. Check chicagomarathon.com for exact expo hours.`,
   },
   // After-party
   {
     match: /\b(after.?party|maimonides|beer.?garden|post.?race|food|cele[bb])/i,
     reply: () =>
-      `The official after-party is at **Maimonides Park** right by the finish on the Coney Island Boardwalk. Live music, food, drinks. Don't forget — there's also a Venmo "🍺 Buy them a beer" button on Family HQ that goes straight to Catherine.`,
+      `The official **27th Mile Post-Race Party** is in Grant Park right past the finish — live music, food, and the famous Goose Island 312 beer tent. Don't forget — there's also a Venmo "🍺 Buy them a beer" button on Family HQ that goes straight to Catherine.`,
   },
   // Road closures / parking
   {
     match: /\b(road.?clos|parking|drive|car|street)\b/i,
     reply: () =>
-      `Don't drive race-day. Eastern Pkwy, Ocean Pkwy, and Surf Ave are all closed from ~5 AM to noon. The subway is the only sane way to spot-hop between cheer zones.`,
+      `Don't drive race-day. The Loop, Michigan Ave, and basically every street on the course are closed from ~5 AM to mid-afternoon. The CTA 'L' is the only sane way to spot-hop between cheer zones — get a Ventra day pass.`,
   },
   // What to bring
   {
     match: /\b(bring|gear|sign|water|snack|pack|wear)\b/i,
     reply: () =>
-      `Spectator checklist:\n• Phone fully charged (live tracker uses it heavily)\n• Sunscreen + hat — Ocean Pkwy is exposed\n• A bottle of water for yourself\n• A sign with their name in big letters — they'll see it from 100m out\n• Their post-race jacket (they'll be cold once they stop running)`,
+      `Spectator checklist:\n• Phone fully charged (live tracker uses it heavily — bring a power bank, it's a long morning)\n• Layers — October Chicago mornings start in the 40s\n• A bottle of water + snacks for yourself (you'll be out 4+ hours)\n• A sign with their name in big letters — they'll see it from 100m out\n• Their post-race jacket (they'll be freezing once they stop running)`,
   },
   // Race wake-up time
   {
     match: /\b(wake|alarm|when.*get.?up|early|morning)\b/i,
     reply: () =>
-      `Race goes off at 7:00 AM ET. If you're heading to the start, leave Manhattan/Brooklyn by 5:30 AM. If you're only catching them mid-course (Machate Circle ~7:45 AM, Ocean Pkwy ~8:15 AM), 6:30 AM works.`,
+      `Race goes off at 7:30 AM CT (Wave 1 at 7:35). Runners need to be in their corrals by ~7:00, so they'll leave the hotel around 5:45. Spectators: be on the Red Line by 7:00 to catch them at State & Grand (mile 1.2) — or sleep in and start at Belmont (~8:30 for Wave 1 runners).`,
   },
   // Percentile lookup
   {
     match: /\b(percentile|rank|top.?\d+|where.*finish|how.*compare|field)\b/i,
     reply: () =>
-      `Catherine's sub-90 target lands her in the **top ~3% of the women's field** at the RBC Brooklyn Half. Helaine's sub-1:50 puts her in the **top ~20%**. Open the Stats tab → "Lookup any finish time" to test other times.`,
+      `Catherine's sub-3:05 target lands her in the **top ~3% of the women's field** at Chicago. Helaine's sub-4:00 puts her in the **top ~22% of all women** — and miles ahead of the 5:45 median for her 60–64 age group. Open the Stats tab → "Lookup any finish time" to test other times.`,
   },
   // Tour replay
   {
@@ -215,31 +215,31 @@ const TOPICS: Topic[] = [
   {
     match: /\b(rtrt.?down|not.?work|broken|stuck|frozen|offline|stale)\b/i,
     reply: () =>
-      `If live data freezes: tap the ↻ in the header to force a refresh. If that doesn't help, the tracker has three CORS-proxy fallbacks and exponential-backoff retry, so it usually self-heals within a minute. As a last resort, NYRR's official tracker at rtrt.me/bkh2026 is the source of truth.`,
+      `If live data freezes: tap the ↻ in the header to force a refresh. The client retries with timeouts, so it usually self-heals within a minute. As a last resort, the official Chicago Marathon app / app.rtrt.me tracker is the source of truth.`,
   },
   // Why "Blizzard"
   {
     match: /\b(why.?blizzard|name.?mean|family.?name|surname|last.?name)\b/i,
     reply: () =>
-      `"Blizzard" is the family name — Catherine + Helaine Blizzard, mother and daughter, racing the same Brooklyn Half together. The lightning bolt ⚡ in the app's logo is a small tribute.`,
+      `"Blizzard" is the family name — Catherine + Helaine Blizzard, mother and daughter, racing the same Chicago Marathon together. The lightning bolt ⚡ in the app's logo is a small tribute.`,
   },
-  // Brooklyn Half history
+  // Chicago Marathon history
   {
-    match: /\b(history|years?.?run|how.?old|first.?brooklyn|bkh.?start)\b/i,
+    match: /\b(history|years?.?run|how.?old|first.?chicago|chi.?start)\b/i,
     reply: () =>
-      `The Brooklyn Half first ran in 1981 — NYC's oldest half marathon. RBC took over title sponsorship in 2014. Roughly 28,000 finishers each year, making it the largest half in the US. The course has been Brooklyn-Museum-to-Coney-Island since 2006.`,
+      `The Chicago Marathon first ran in 1977 and is one of the six Abbott World Marathon Majors. ~52,000 finishers make it one of the largest marathons on Earth, and its flat course has produced multiple world records — most recently Kelvin Kiptum's 2:00:35 (2023) and Ruth Chepngetich's 2:09:56 (2024). 2026 is the 48th running.`,
   },
   // Course quirks
   {
     match: /\b(hill|climb|tough.?spot|hard.?part|where.?slow)\b/i,
     reply: () =>
-      `The single hardest stretch is **miles 3 → 7 inside Prospect Park**: ~120ft net gain, twisty roads, false flats. Plan to give 5–10 seconds per mile back here and earn it back on **Ocean Pkwy (miles 7 → 12)** — a 7-mile-long gentle downhill straight. The finish at Coney Island is sea-level and flat.`,
+      `Chicago has no real hills — the hard parts are different: **GPS dies in the Loop's canyons** (mile 1–2, trust the pace not the watch), **the wind** off the lake can own the day, the **quiet stretch miles 16–18** where crowds thin, and **"Mount Roosevelt"** — the course's only climb, cruelly placed 400m before the finish. The wall (miles 20–24) does the rest.`,
   },
   // Sub-90 difficulty
   {
     match: /\b(how.?hard|sub.?90.?mean|fast.?is.?fast|elite|top.?tier)\b/i,
     reply: () =>
-      `Sub-90 at the Brooklyn Half puts Catherine in the **top ~3% of the women's field**. That's elite-club territory — typical sub-90 women have 3:00ish marathon range and ~18:00 5K range. Catherine's 5:46 1600m PR (8th grade!) and Boston 3:06:12 (7:06/mi) put her right in the conversation.`,
+      `Sub-3:05 at Chicago puts Catherine in the **top ~3% of the women's field** — and comfortably under the 3:23 Boston-qualifying standard for her age group. Her Boston 3:06:12 (7:06/mi) on a much harder course says the fitness is there; Chicago's flatness is worth a minute or two on its own.`,
   },
   // 6-Star history
   {
@@ -247,29 +247,29 @@ const TOPICS: Topic[] = [
     reply: () =>
       `The Abbott World Marathon Majors 6-Star is awarded to runners who finish all six: **Boston, NYC, Chicago, Berlin, London, Tokyo**. About 13,000 people total have completed it since the program began in 2006. Helaine is one Tokyo away.`,
   },
-  // Maimonides Park trivia
+  // Grant Park trivia
   {
-    match: /\b(maimonides|coney.?island|park|stadium|brooklyn.?cyclones)\b/i,
+    match: /\b(grant.?park|buckingham|millennium|bean|lakefront|park|stadium)\b/i,
     reply: () =>
-      `Maimonides Park (where the finish line is) is home to the Brooklyn Cyclones, the Mets' Class-A minor league affiliate. From the boardwalk you can see the Cyclone roller coaster, the Wonder Wheel, and (on a clear day) the Verrazzano Bridge. The after-party fills the ballpark concourse.`,
+      `Grant Park — "Chicago's front yard" — hosts both the start and the finish. Buckingham Fountain sits mid-park, The Bean (Cloud Gate) is two blocks north in Millennium Park, and the lakefront trail runs the whole eastern edge. The 27th Mile Post-Race Party fills the south end after the race.`,
   },
   // Why is RTRT live vs Garmin different
   {
     match: /\b(rtrt.?vs|why.?different|garmin.?vs|gps.?off|distance.?off)\b/i,
     reply: () =>
-      `RTRT updates come from timing mats embedded in the course every 5K — they're definitive but discrete. The runner's Garmin records continuously but adds GPS noise (typically 1–2% extra distance on a 13.1). Between mats, this app *interpolates* RTRT position using the runner's recent average pace, which is why the marker glides smoothly.`,
+      `RTRT updates come from timing mats embedded in the course every 5K — they're definitive but discrete. The runner's Garmin records continuously but adds GPS noise (typically 1–2% extra on 26.2, and worse in the Loop's skyscraper canyons). Between mats, this app *interpolates* RTRT position using the runner's recent average pace, which is why the marker glides smoothly.`,
   },
   // Heart rate / training nerdery
   {
     match: /\b(heart.?rate|hr|zone|threshold|vo2|tempo|interval|workout)\b/i,
     reply: () =>
-      `Catherine's Boston 2025 logged an **avg HR of 179 bpm** over 3:06 — likely threshold-plus for her. For Sunday she'll target ~170–175 bpm on the climbs, drop into ~165 on Ocean Pkwy, and kick whatever's left into the finish. Helaine paces more by feel than HR.`,
+      `Catherine's Boston 2025 logged an **avg HR of 179 bpm** over 3:06 — likely threshold-plus for her. Chicago's flatness means steadier effort: target ~168–172 bpm through 20 miles, then whatever it takes. Helaine paces more by feel than HR.`,
   },
   // What to eat / fueling
   {
     match: /\b(fuel|gel|food|eat|nutrition|breakfast|carb|hydrate)\b/i,
     reply: () =>
-      `Standard half-marathon fueling: light breakfast 2–3h pre-race (oatmeal + banana), 1–2 caffeinated gels during (one before mile 4, one before mile 9), sip water at each station (every ~1.5 miles). Avoid anything new on race day.`,
+      `Marathon fueling is a different sport from the half: breakfast 3h pre-race (oatmeal + banana + coffee), then **a gel every 4–5 miles from mile 5** — that's 4–5 gels total, with caffeine in the back half. Water or Gatorade Endurance at every station (every ~1.5 miles). The race is won at the mile-18 fueling decision, not the finish kick. Nothing new on race day.`,
   },
   // Sleep / taper
   {
@@ -281,7 +281,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(if.?rain|if.?hot|if.?warm|warm.?race|hot.?race|cold.?race)\b/i,
     reply: () =>
-      `**Rain**: no real time penalty for the runners — just slick painted lines. Spectators bring a poncho.\n**Heat (>70°F)**: ~10–20 sec/mi slower target, drink at every station, watch for shade on Ocean Pkwy (there isn't much).\n**Cold (<45°F)**: throw-away gloves at the start, perfect racing weather.`,
+      `**Rain**: no real time penalty for the runners — just slick painted lines. Spectators bring a poncho.\n**Heat (>70°F)**: rare in October but it's happened (2007 was brutal) — ~10–20 sec/mi slower target, drink at every station.\n**Wind**: the real Chicago variable. A lake headwind on Michigan Ave (miles 23–26) is soul-crushing — tuck into a group.\n**Cold (<45°F)**: throw-away gloves and layers at the start, perfect racing weather.`,
   },
   // Spectator chants
   {
@@ -293,20 +293,20 @@ const TOPICS: Topic[] = [
   {
     match: /\b(course.?record|fastest|winner|record)\b/i,
     reply: () =>
-      `Brooklyn Half course records:\n• **Men:** Belete Assefa, 1:00:48 (2024)\n• **Women:** Senbere Teferi, 1:08:01 (2024)\nMost RBC Brooklyn Half winners go on to elite NYC Marathon performances.`,
+      `Chicago Marathon course records — both are **world records set right here**:\n• **Men:** Kelvin Kiptum, 2:00:35 (2023)\n• **Women:** Ruth Chepngetich, 2:09:56 (2024)\nFlat course + cool October mornings = the fastest big-city marathon on the calendar.`,
   },
   // Fun fact / random
   {
     match: /\b(fun.?fact|random|trivia|did.?you.?know|cool|interesting)\b/i,
     reply: () => {
       const facts = [
-        `🍕 Brooklyn Half runners reportedly burn ~1,700 calories — roughly **two slices of NY pizza** worth.`,
-        `🏃 The race start line is 200m from the Brooklyn Museum's front steps. The finish is 5m from the Atlantic Ocean. **Sea level to sea level**, 246ft of bumps in between.`,
-        `⏱ At Catherine's sub-90 pace (6:52/mi), she completes a mile in less time than a typical Spotify song.`,
-        `🚇 The N train passes within 100m of the finish line. You could literally hop off the train at the runner.`,
-        `🦄 Helaine has run more marathons (25) than there are subway lines in NYC (24 numbered/lettered services).`,
-        `📐 The course covers 21.0975 km — by USATF certification, the difference between that and a "true" 13.1 miles is **less than the length of your shoe**.`,
-        `🎂 Catherine's birthday is in May 1998. Her first 13.1 was longer ago than she's been an adult.`,
+        `🍕 Marathoners burn ~2,600–3,400 calories over 26.2 — that's an **entire Lou Malnati's deep dish** worth.`,
+        `🌆 The course passes through **29 Chicago neighborhoods** and never climbs more than ~30ft at once. Both current marathon world records were set on it.`,
+        `⏱ At Catherine's sub-3:05 pace (7:03/mi), she completes each of the 26 miles in less time than a typical Spotify song plus its intro.`,
+        `🚇 The Red Line tracks the course at four separate points — spectators can realistically see their runner 4–5 times in one morning.`,
+        `🦄 Helaine has run more marathons (25) than there are CTA 'L' stations inside the Loop (there are 9).`,
+        `📐 The course covers 42.195 km — by World Athletics certification, the blue line painted on the road is the *shortest legal path*. Every turn taken wide adds real distance.`,
+        `🧀 Chicago's wall-zone aid is legendary: Pilsen hands out mariachi energy at mile 19 and Chinatown gives you dragon dancers at 21. Nobody walks through those.`,
         `🏆 Catherine has been undefeated at championships in 5th, 6th, and 8th grade. She skipped 7th grade only because she was in the older varsity division (and still placed top 4).`,
       ];
       return facts[Math.floor(Math.random() * facts.length)];
@@ -316,7 +316,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(marathon.?vs|half.?vs|5k.?vs|10k.?vs|compare.?distance)\b/i,
     reply: () =>
-      `**Distance equivalence rules of thumb** (Riegel formula):\nIf you run a 5K in **X**, expect a half at **X × 4.7** and a marathon at **X × 10**. Catherine's 5:46 1600m would scale to ~3:00 marathon — close to her actual 3:06. Half-marathon should land around 1:25–1:28 for her at peak fitness, which is why sub-90 is realistic.`,
+      `**Distance equivalence rules of thumb** (Riegel formula):\nIf you run a half in **X**, expect a marathon around **X × 2.1**. A ~1:30 half scales to a ~3:09 marathon — and Catherine has already run 3:06:12 at Boston on a much harder course. That's why sub-3:05 at flat Chicago is the right target, with sub-3:00 as the dream-day scenario.`,
   },
   // Helaine's marathon list
   {
@@ -346,7 +346,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(emergency|hurt|injur|medical|911|ambulance|drop.?out)\b/i,
     reply: () =>
-      `If a runner needs help mid-race: medical tents are at miles 3, 7, 9, 11, and the finish — clearly marked. Their bib has a phone number on the back. For non-medical emergencies, NYC 311. For life-threatening, 911.`,
+      `If a runner needs help mid-race: Chicago has **21 aid stations**, each with a medical tent — roughly every 1.5 miles, clearly marked. Their bib has a phone number on the back. For non-medical issues, Chicago 311. For life-threatening, 911.`,
   },
   // Wave start times
   {
@@ -356,7 +356,7 @@ const TOPICS: Topic[] = [
       const lines = ps
         .filter(p => p.wave)
         .map(p => `• ${p.emoji} ${p.name.split(' ')[0]}: ${waveLabel(p, RACE_START)}`);
-      const head = `RBC Brooklyn Half goes off in **four staggered waves**:\n• Wave 1: 7:00 AM\n• Wave 2: 7:25 AM\n• Wave 3: 7:50 AM\n• Wave 4: 8:15 AM\n\nWithin each wave, corrals release ~2 min apart.`;
+      const head = `The Chicago Marathon goes off in **three staggered waves** (all times CT):\n• Pros: 7:30 AM\n• Wave 1: 7:35 AM\n• Wave 2: 8:00 AM\n• Wave 3: 8:35 AM\n\nWithin each wave, corrals release ~2 min apart.`;
       const tail = lines.length ? `\n\n**Our runners:**\n${lines.join('\n')}` : '';
       return head + tail;
     },

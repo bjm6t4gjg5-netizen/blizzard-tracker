@@ -59,23 +59,23 @@ export function buildIcsFile({ profiles, states }: Args): string {
   const lines: string[] = [];
   lines.push('BEGIN:VCALENDAR');
   lines.push('VERSION:2.0');
-  lines.push('PRODID:-//Blizzard Tracker//RBC Brooklyn Half 2026//EN');
+  lines.push('PRODID:-//Blizzard Tracker//Chicago Marathon 2026//EN');
   lines.push('CALSCALE:GREGORIAN');
   lines.push('METHOD:PUBLISH');
   lines.push('X-WR-CALNAME:Blizzard Tracker — race-day spectator plan');
-  lines.push('X-WR-TIMEZONE:America/New_York');
+  lines.push('X-WR-TIMEZONE:America/Chicago');
 
   const stamp = ics(new Date());
 
   // First wave gun
   lines.push('BEGIN:VEVENT');
-  lines.push(`UID:bkh2026-start@blizzard-tracker`);
+  lines.push(`UID:chi2026-start@blizzard-tracker`);
   lines.push(`DTSTAMP:${stamp}`);
   lines.push(`DTSTART:${ics(RACE_START)}`);
   lines.push(`DTEND:${ics(new Date(RACE_START.getTime() + 30 * 60_000))}`);
-  lines.push(`SUMMARY:🏁 RBC Brooklyn Half — Wave 1 start (7:00 AM ET)`);
-  lines.push(`LOCATION:Brooklyn Museum, Eastern Pkwy & Washington Ave`);
-  lines.push(`DESCRIPTION:${escapeText('Wave 1 goes off at 7:00 AM. Waves 2/3/4 follow at 7:25 / 7:50 / 8:15.')}`);
+  lines.push(`SUMMARY:🏁 Chicago Marathon — race start (7:30 AM CT)`);
+  lines.push(`LOCATION:Grant Park, Columbus Dr & Monroe St, Chicago`);
+  lines.push(`DESCRIPTION:${escapeText('Pros go off at 7:30 AM CT. Wave 1 starts 7:35, Wave 2 at 8:00, Wave 3 at 8:35.')}`);
   lines.push('END:VEVENT');
 
   // One "wave start" event per runner (so spectators can see when each runner actually starts)
@@ -83,12 +83,12 @@ export function buildIcsFile({ profiles, states }: Args): string {
     if (!profile.wave) continue;
     const t = runnerStartTime(profile, RACE_START);
     lines.push('BEGIN:VEVENT');
-    lines.push(`UID:bkh2026-start-${profile.id}@blizzard-tracker`);
+    lines.push(`UID:chi2026-start-${profile.id}@blizzard-tracker`);
     lines.push(`DTSTAMP:${stamp}`);
     lines.push(`DTSTART:${ics(t)}`);
     lines.push(`DTEND:${ics(new Date(t.getTime() + 5 * 60_000))}`);
     lines.push(`SUMMARY:${escapeText(`${profile.emoji} ${profile.name.split(' ')[0]} starts — ${waveLabel(profile, RACE_START)}`)}`);
-    lines.push(`LOCATION:Brooklyn Museum`);
+    lines.push(`LOCATION:Grant Park, Chicago`);
     lines.push(`DESCRIPTION:${escapeText(`${profile.name} crosses the start line with ${waveLabel(profile, RACE_START)}.`)}`);
     lines.push('END:VEVENT');
   }
@@ -106,7 +106,7 @@ export function buildIcsFile({ profiles, states }: Args): string {
       const end = new Date(at.getTime() + 5 * 60_000);
       const officialNote = spot.official ? ` (${spot.official} cheer zone)` : '';
       lines.push('BEGIN:VEVENT');
-      lines.push(`UID:bkh2026-${profile.id}-${spot.mi.toFixed(1)}@blizzard-tracker`);
+      lines.push(`UID:chi2026-${profile.id}-${spot.mi.toFixed(1)}@blizzard-tracker`);
       lines.push(`DTSTAMP:${stamp}`);
       lines.push(`DTSTART:${ics(at)}`);
       lines.push(`DTEND:${ics(end)}`);

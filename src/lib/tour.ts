@@ -26,12 +26,12 @@ export const TOUR_STEPS: ReadonlyArray<TourStep> = [
   {
     target: null,
     title: 'Welcome to Blizzard Tracker ⚡',
-    body: 'Your live race-day dashboard for Catherine and Helaine at the 2026 RBC Brooklyn Half. This 60-second tour shows you around. You can re-run it anytime from the ? icon in the header.',
+    body: 'Your live race-day dashboard for Catherine and Helaine at the 2026 Bank of America Chicago Marathon. This 60-second tour shows you around. You can re-run it anytime from the ? icon in the header.',
   },
   {
     target: '[data-tour="countdown"]',
     title: 'Countdown to race start',
-    body: 'Locked to Eastern Time so it stays correct no matter where you watch from. Once the race is live, the panel flips to "🏁 Race underway".',
+    body: 'Locked to Chicago time so it stays correct no matter where you watch from. Once the race is live, the panel flips to "🏁 Race underway".',
   },
   {
     target: '[data-tour="how-doing"]',
@@ -42,7 +42,7 @@ export const TOUR_STEPS: ReadonlyArray<TourStep> = [
   {
     target: '[data-tour="map"]',
     title: 'Real course, real route',
-    body: 'A Garmin trace of the actual 2026 NYRR course — no more hand-drawn lines that zigzag through Brooklyn. Cheer-zone pins, mile markers, and pulsing runner positions all live here.',
+    body: 'The actual Chicago Marathon route through all 29 neighborhoods — Grant Park to Grant Park. Cheer-zone pins, mile markers, and pulsing runner positions all live here.',
     tab: 'family',
     placement: 'top',
   },

@@ -6,6 +6,7 @@
     CHECKPOINTS, SPECTATOR_SPOTS, MILE_MARKERS, pointAtMile,
   } from '../lib/course';
   import type { RunnerProfile } from '../lib/runners';
+  import { TOTAL_MI } from '../lib/time';
   import { profiles, runnerState } from '../lib/stores';
 
   /** Show all spectator pins, mile markers, etc. */
@@ -92,7 +93,7 @@
         iconSize: [28, 28],
         iconAnchor: [14, 28],
       }),
-    }).bindPopup('<b>Start</b><br>Brooklyn Museum').addTo(map);
+    }).bindPopup('<b>Start</b><br>Grant Park, Columbus Dr').addTo(map);
     L.marker(endLL, {
       icon: L.divIcon({
         className: 'flag-marker',
@@ -100,7 +101,7 @@
         iconSize: [28, 28],
         iconAnchor: [14, 28],
       }),
-    }).bindPopup('<b>Finish</b><br>Coney Island Boardwalk').addTo(map);
+    }).bindPopup('<b>Finish</b><br>Grant Park, Columbus Dr').addTo(map);
 
     if (detailed) {
       // Mile markers
@@ -152,7 +153,7 @@
       const stateStore = runnerState(id);
       const unsub = stateStore.subscribe(s => {
         const live = s.status === 'running';
-        const distMi = Math.max(0, Math.min(s.distMi, 13.1));
+        const distMi = Math.max(0, Math.min(s.distMi, TOTAL_MI));
         const target = pointAtMile(distMi);
         marker.setLatLng([target.lat, target.lng]);
         marker.setIcon(buildRunnerIcon(profile, live));

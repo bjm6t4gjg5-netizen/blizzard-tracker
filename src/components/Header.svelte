@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
   import type { Readable } from 'svelte/store';
-  import { RACE_START, CHICAGO_MARATHON_2026, countdownTo } from '../lib/time';
+  import { RACE_START, countdownTo } from '../lib/time';
   import {
     profiles, runnerState, activeTab,
     refreshAll, lastRefreshAt, refreshing, demoTimeMin,
@@ -15,11 +15,10 @@
 
   let appearanceOpen = false;
 
-  /** Format a "minutes-past-7am" value as "h:MM AM/PM" for display. */
+  /** Format a "minutes-past-7:30am-CT" value as "h:MM AM/PM" for display. */
   function fmtTimeOfDay(min: number | null): string {
     if (min === null) return 'Live';
-    const totalMinFrom7 = min; // 0 = 7:00 AM
-    const totalAbsMin = 7 * 60 + totalMinFrom7;
+    const totalAbsMin = 7 * 60 + 30 + min; // 0 = 7:30 AM CT
     let h = Math.floor(totalAbsMin / 60);
     const m = ((totalAbsMin % 60) + 60) % 60;
     const ap = h >= 12 ? 'PM' : 'AM';
@@ -32,25 +31,29 @@
   let simSliderMin = 0;
   $: if ($demoTimeMin !== null) simSliderMin = $demoTimeMin;
 
-  /** Preset jump-points, picked to demonstrate the staggered wave races. */
+  /** Preset jump-points, picked to demonstrate the staggered wave races.
+   *  min = minutes past 7:30 AM CT. Catherine starts ~7:37 (Wave 1 · B),
+   *  Helaine ~8:04 (Wave 2 · C). Goals: 3:05 and 4:00. */
   const SIM_PRESETS: { label: string; min: number; note: string }[] = [
-    { label: 'Pre-race',         min: -10, note: '6:50 AM' },
-    { label: 'Wave 1 gun',       min:   0, note: 'Catherine starts' },
-    { label: 'Cat ~30 min in',   min:  32, note: '7:32 — Cat ~4mi · Helaine pre' },
-    { label: 'Wave 3 gun',       min:  50, note: 'Helaine starts' },
-    { label: 'Cat finishing',    min:  92, note: '8:32 — Cat at finish · Helaine ~5mi' },
-    { label: 'Helaine ~7mi',     min: 130, note: '9:10 — Cat done · Helaine on Ocean Pkwy' },
-    { label: 'Helaine finishing',min: 164, note: '9:44 — both done soon' },
-    { label: 'All done',         min: 180, note: '10:00 AM' },
+    { label: 'Pre-race',         min: -10, note: '7:20 AM' },
+    { label: 'Wave 1 gun',       min:   7, note: '7:37 — Catherine starts' },
+    { label: 'Wave 2 gun',       min:  34, note: '8:04 — Helaine starts' },
+    { label: 'Cat ~10mi',        min:  80, note: '8:50 — Cat ~10mi · Helaine ~5mi' },
+    { label: 'Cat halfway',      min: 100, note: '9:10 — Cat at 13.1 · Helaine ~7mi' },
+    { label: 'The wall (mi 20)', min: 150, note: '10:00 — Cat ~20mi · Helaine ~12.5mi' },
+    { label: 'Cat finishing',    min: 190, note: '10:40 — Cat at finish · Helaine ~17mi' },
+    { label: 'Helaine finishing',min: 272, note: '12:02 — both done soon' },
+    { label: 'All done',         min: 285, note: '12:15 PM' },
   ];
 
   // ────────────────────────────────────────────────────────────
   // Race-phase logic for the header clock
   //
-  // pre-bkh   → counting down to Wave 1 gun (May 16, 7:00 AM ET)
+  // pre-bkh   → counting down to race start (Oct 11, 7:30 AM CT)
   // live      → at least one runner is actively running
-  // chicago   → both runners finished; flip to "Road to Chicago" countdown
+  // chicago   → both runners finished; flip to the celebration banner
   //
+  // (Phase names kept from the Brooklyn build to avoid churning CSS.)
   // The phase is derived from runner-state stores (which also reflect the
   // dev simulator), so dragging the time slider in dev mode flips the
   // header in real time.
@@ -77,9 +80,7 @@
   let phaseStore: Readable<Phase> = buildPhaseStore($profiles);
   $: phaseStore = buildPhaseStore($profiles);
 
-  // Two separate countdowns — the active one is picked by the phase.
   let cd = countdownTo(RACE_START);
-  let cdChicago = countdownTo(CHICAGO_MARATHON_2026);
   let cdHandle: ReturnType<typeof setInterval> | null = null;
   let lastRefreshDisplay = '—';
   let lastRefreshHandle: ReturnType<typeof setInterval> | null = null;
@@ -101,10 +102,8 @@
 
   onMount(() => {
     cd = countdownTo(RACE_START);
-    cdChicago = countdownTo(CHICAGO_MARATHON_2026);
     cdHandle = setInterval(() => {
       cd = countdownTo(RACE_START);
-      cdChicago = countdownTo(CHICAGO_MARATHON_2026);
       livePulse += 1;
     }, 1000);
     const updateRefresh = () => {
@@ -136,7 +135,7 @@
       </svg>
       <div class="brand-text">
         <div class="brand-title">Blizzard Tracker</div>
-        <div class="brand-sub">RBC Brooklyn Half · May 16 · 7:00 AM ET</div>
+        <div class="brand-sub">Chicago Marathon · Oct 11 · 7:30 AM CT</div>
       </div>
     </div>
 
@@ -151,15 +150,13 @@
         <span class="live-dot" aria-hidden="true"></span>
         <div class="cd-live-label">
           <span class="lbl-top">🏁 Race is live</span>
-          <span class="lbl-sub">RBC Brooklyn Half · {pad(cd.hours === 0 ? 0 : 0)}—follow the runner pills →</span>
+          <span class="lbl-sub">Chicago Marathon · follow the runner pills →</span>
         </div>
       {:else if $phaseStore === 'chicago'}
-        <!-- ─── Both done — road to Chicago Marathon ─── -->
+        <!-- ─── Both done — celebration banner ─── -->
         <div class="cd-chicago-label">
-          <span class="chi-eyebrow">🏆 Road to Chicago</span>
-          <span class="chi-time mono">
-            {pad(cdChicago.days)}d {pad(cdChicago.hours)}h {pad(cdChicago.minutes)}m {pad(cdChicago.seconds)}s
-          </span>
+          <span class="chi-eyebrow">🏆 26.2 in the books</span>
+          <span class="chi-time mono">Both Blizzards finished Chicago</span>
         </div>
       {:else}
         <!-- ─── Pre-race countdown to Wave 1 gun ─── -->
@@ -214,21 +211,19 @@
                 <input
                   type="range"
                   min="-30"
-                  max="210"
+                  max="330"
                   step="1"
                   bind:value={simSliderMin}
                   on:input={() => demoTimeMin.set(simSliderMin)}
                 />
                 <div class="slider-ticks">
-                  <span>6:30</span>
                   <span>7:00</span>
-                  <span>7:30</span>
                   <span>8:00</span>
-                  <span>8:30</span>
                   <span>9:00</span>
-                  <span>9:30</span>
                   <span>10:00</span>
-                  <span>10:30</span>
+                  <span>11:00</span>
+                  <span>12:00</span>
+                  <span>1:00</span>
                 </div>
               </div>
 

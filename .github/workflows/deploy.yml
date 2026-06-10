@@ -1,8 +1,16 @@
 name: Deploy to GitHub Pages
 
+# Pushing to either branch redeploys the whole site:
+#   main → site root           https://<user>.github.io/blizzard-tracker/
+#   dev  → /preview/ subpath   https://<user>.github.io/blizzard-tracker/preview/
+#
+# GitHub Pages replaces the entire site on each deploy, so this workflow
+# always builds BOTH branches and composes one artifact. Keep this file
+# identical on main and dev.
+
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -21,16 +29,52 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm install
-      - run: npm run build
+
+      # ── Build main → site root ────────────────────────────────
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+      - name: Build main
+        working-directory: main
+        env:
+          VITE_STRAVA_API_BASE: ${{ vars.VITE_STRAVA_API_BASE }}
+        run: |
+          npm install
+          npm run build
+      - name: Stage main at root
+        run: |
+          mkdir -p site
+          cp -r main/dist/. site/
+
+      # ── Build dev → /preview/ (skipped gracefully if no dev branch) ──
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: dev
+          path: dev
+      - name: Build dev preview
+        continue-on-error: true
+        working-directory: dev
+        env:
+          VITE_STRAVA_API_BASE: ${{ vars.VITE_STRAVA_API_BASE }}
+        run: |
+          npm install
+          npm run build
+      - name: Stage dev at /preview/
+        run: |
+          if [ -d dev/dist ]; then
+            mkdir -p site/preview
+            cp -r dev/dist/. site/preview/
+          fi
+
+      # ── Deploy composed site ──────────────────────────────────
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4

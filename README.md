@@ -1,7 +1,32 @@
-# ⚡ Blizzard Tracker — v2.6
+# ⚡ Blizzard Tracker — v6
 
 Live race-day dashboard for **Catherine** and **Helaine Blizzard** at the
-**RBC Brooklyn Half 2026** (May 16, 7:00 AM ET).
+**Bank of America Chicago Marathon 2026** (Sunday, October 11 — pros 7:30 AM CT,
+Wave 1 at 7:35).
+
+> The RBC Brooklyn Half 2026 build this app was born for now lives in the
+> **Old Races** tab. The Brooklyn course GPX is preserved at
+> `src/lib/course-brooklyn-2026.gpx`.
+
+**New in v6 (Chicago build)**
+
+- Full migration to the 26.2 mi Chicago course: official route GPX, marathon
+  checkpoints (5K mats + half), CTA-based cheer zones, "Mount Roosevelt",
+  marathon pace/fatigue model, Chicago field stats and wave times
+- **Strava training mode** (Training tab, now public): each runner connects
+  Strava once; every recorded practice run then shows up automatically —
+  weekly mileage by workout type, last-5-runs, and a real training-geography
+  heat map. Powered by a tiny Cloudflare Worker (`worker/`) that owns the
+  OAuth tokens. No live mid-run tracking by design — stats appear after each
+  run uploads. Setup: `worker/README.md`
+- **Old Races archive tab** (public) with frozen Brooklyn 2026 snapshot
+- **Preview deploys**: push to `dev` → app appears at `/preview/` on the same
+  GitHub Pages site; `main` stays the public app
+
+**Still TODO before race week** (search the repo for `TODO(race-week)` / `TODO(Leon)`):
+- RTRT event id + both runners' Chicago tracker ids (bibs assigned ~2 weeks out)
+- Confirmed wave/corral assignments and goal times
+- Brooklyn 2026 official chip times in `career.ts` + `OldRacesTab.svelte`
 
 **Feature highlights**
 
@@ -64,9 +89,14 @@ npm test         # 49 unit tests across course, runners, rtrt, format
 
 ## Deploy
 
-Pushed to `main` → GitHub Actions builds and deploys to GitHub Pages.
-The `vite.config.js` uses a relative base (`./`) so the same `dist/`
-works at any path (root or `/blizzard-tracker/`).
+- Push to `main` → GitHub Actions deploys the public app to GitHub Pages.
+- Push to `dev` → the same workflow also publishes that branch at
+  `https://<user>.github.io/blizzard-tracker/preview/` so changes can be
+  tested on real phones before merging to `main`.
+
+The workflow always builds **both** branches and composes one Pages artifact
+(Pages replaces the whole site each deploy). `vite.config.js` uses a relative
+base (`./`) so the same `dist/` works at any path.
 
 ---
 

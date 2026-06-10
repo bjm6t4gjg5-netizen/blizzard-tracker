@@ -10,6 +10,10 @@
   } from '../lib/trainingSample';
 
   export let height = '440px';
+  /** Location sets to plot — default to the bundled sample data; the
+   *  Training tab passes real Strava clusters when connected. */
+  export let catherineLocations: ReadonlyArray<TrainingLocation> = CATHERINE_TRAINING;
+  export let helaineLocations: ReadonlyArray<TrainingLocation> = HELAINE_TRAINING;
 
   let mapEl: HTMLDivElement;
   let map: L.Map | null = null;
@@ -101,12 +105,12 @@
     const mom = profs.find(p => p.id === 'mom');
 
     // Helaine heat first so Catherine's blue layers on top in shared cities.
-    if (mom) heatFor(HELAINE_TRAINING,   GRADIENTS.pink).addTo(map);
-    if (gf)  heatFor(CATHERINE_TRAINING, GRADIENTS.blue).addTo(map);
+    if (mom && helaineLocations.length)   heatFor(helaineLocations,   GRADIENTS.pink).addTo(map);
+    if (gf  && catherineLocations.length) heatFor(catherineLocations, GRADIENTS.blue).addTo(map);
 
     // Pins on top of heat — visible clickable dots.
-    if (mom) plotPins(HELAINE_TRAINING,   mom.color, mom.name.split(' ')[0], map);
-    if (gf)  plotPins(CATHERINE_TRAINING, gf.color,  gf.name.split(' ')[0],  map);
+    if (mom && helaineLocations.length)   plotPins(helaineLocations,   mom.color, mom.name.split(' ')[0], map);
+    if (gf  && catherineLocations.length) plotPins(catherineLocations, gf.color,  gf.name.split(' ')[0],  map);
 
     // ⭐ Big Chicago Marathon marker — the upcoming race
     L.marker([CHICAGO_RACE_LOCATION.lat, CHICAGO_RACE_LOCATION.lng], {

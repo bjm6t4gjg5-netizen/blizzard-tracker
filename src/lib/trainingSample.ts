@@ -77,8 +77,11 @@ export interface WeeklyMileage {
 /** Build a 12-week sample series with a tapered ramp. */
 function sampleWeeks(base: number, jitter: number): WeeklyMileage[] {
   const out: WeeklyMileage[] = [];
-  // Anchor the most-recent week at "today" (race week) and walk back.
-  const ref = new Date('2026-05-10T00:00:00-04:00');
+  // Anchor the most-recent week at the current week's Sunday so the sample
+  // chart always looks current (it's placeholder data until Strava connects).
+  const ref = new Date();
+  ref.setUTCDate(ref.getUTCDate() - ref.getUTCDay());
+  ref.setUTCHours(0, 0, 0, 0);
   for (let i = 11; i >= 0; i--) {
     const d = new Date(ref);
     d.setUTCDate(d.getUTCDate() - i * 7);

@@ -1,7 +1,7 @@
 {
   "name": "Blizzard Racing",
   "short_name": "Blizzard Racing",
-  "description": "Live race-day dashboard for Catherine and Helaine Blizzard at the RBC Brooklyn Half 2026.",
+  "description": "Live race-day dashboard for Catherine and Helaine Blizzard at the Bank of America Chicago Marathon 2026.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

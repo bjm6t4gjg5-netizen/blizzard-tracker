@@ -7,7 +7,7 @@
 // We only cache same-origin GET requests for static assets, and
 // always go to the network for any URL we don't recognise.
 // ============================================================
-const CACHE = 'blizzard-v2';
+const CACHE = 'blizzard-v6-chicago';
 
 // Hostnames whose responses must never enter the cache.
 const NEVER_CACHE_HOSTS = [
@@ -16,6 +16,8 @@ const NEVER_CACHE_HOSTS = [
   'corsproxy.io',
   'api.codetabs.com',
   'api.open-meteo.com',
+  'workers.dev',     // Strava proxy worker — training data must stay fresh
+  'strava.com',
 ];
 
 self.addEventListener('install', (event) => {

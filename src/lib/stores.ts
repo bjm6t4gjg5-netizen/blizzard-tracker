@@ -67,7 +67,7 @@ export const refreshing = writable(false);
 
 /**
  * Time-of-day simulator. When non-null, the value is the number of minutes
- * past Wave 1 gun (7:00 AM ET) the simulator pretends it is. Each runner's
+ * past race start (7:30 AM CT) the simulator pretends it is. Each runner's
  * state is then projected from `simMin - runnerStartOffsetMin(profile)` →
  * elapsed time → mile (via the goal-pace profile).
  *

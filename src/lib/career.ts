@@ -124,8 +124,11 @@ export const CATHERINE_RACES: Race[] = [
   { date: '2025-04-27', name: 'Big Sur Marathon',             location: 'Carmel, CA',      distance: 'Marathon', time: '3:34:30', highlight: 'Boston-to-Big-Sur · 6 days after Boston · 2,182 ft gain', href: 'https://results.svetiming.com/Big-Sur/events/2025/Big-Sur-International-Marathon/results' },
   { date: '2025-09-21', name: 'Berlin Marathon',              location: 'Berlin, Germany', distance: 'Marathon', time: '3:22:43', worldMajor: true, highlight: '5th World Major star · 80°F heat', href: 'https://api.results.scc-events.com/cert/6101?ei=BM&t=BM_2025&l=en&y=2025' },
 
+  // TODO(Leon): add Catherine's official Brooklyn 2026 chip time below.
+  { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: null, notes: 'Result pending — chip time TBD.' },
+
   // ─── Upcoming ───
-  { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: null, notes: 'Sub-1:32 goal — PR attempt.' },
+  { date: '2026-10-11', name: 'Bank of America Chicago Marathon', location: 'Chicago, IL', distance: 'Marathon', time: null, worldMajor: true, notes: 'Sub-3:05 goal — PR attempt on the flattest Major.' },
 ];
 
 // ────────────────────────────────────────────────────────────
@@ -218,6 +221,11 @@ export const HELAINE_RACES: Race[] = [
   HT('2025-09-21', 'Marathon', 'Berlin Marathon',              'Berlin, Germany',        '4:11:18', { worldMajor: true, highlight: '5th World Major star' }),
   H(2025, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
   H(2025, 'Half',     'Too Hot to Handle',                  'Dallas'),
+  // ─── 2026 ───
+  // TODO(Leon): add Helaine's official Brooklyn 2026 chip time below.
+  H(2026, 'Half',     'RBC Brooklyn Half',                  'Brooklyn, NY',           { date: '2026-05-16', notes: 'Result pending — chip time TBD.' }),
+  // ─── Upcoming ───
+  { date: '2026-10-11', name: 'Bank of America Chicago Marathon', location: 'Chicago, IL', distance: 'Marathon', time: null, worldMajor: true, notes: 'Sub-4:00 goal.' },
 ];
 
 export const HELAINE_PRS: PR[] = [

@@ -58,15 +58,15 @@
 
 <div class="hero card">
   <div class="hero-left">
-    <div class="hero-eyebrow">💙 Team Blizzard · RBC Brooklyn Half 2026 ⚡</div>
-    <h1 class="hero-title">Catherine &amp; Helaine race Brooklyn.</h1>
+    <div class="hero-eyebrow">💙 Team Blizzard · Bank of America Chicago Marathon 2026 ⚡</div>
+    <h1 class="hero-title">Catherine &amp; Helaine race Chicago.</h1>
     <p class="hero-sub">
-      Saturday, May 16 · 7:00 AM ET · Brooklyn Museum → Coney Island Boardwalk · 13.1 miles · {TOTAL_GAIN_FT}ft total elevation gain.
+      Sunday, October 11 · 7:30 AM CT · Grant Park → 29 neighborhoods → Grant Park · 26.2 miles · only {TOTAL_GAIN_FT}ft of total elevation gain.
     </p>
     <div class="hero-meta">
-      <span class="pill">🏁 Brooklyn Museum</span>
-      <span class="pill">🏆 Coney Island</span>
-      <span class="pill">⛰ {TOTAL_GAIN_FT}ft</span>
+      <span class="pill">🏁 Grant Park</span>
+      <span class="pill">🏆 Grant Park</span>
+      <span class="pill">⛰ {TOTAL_GAIN_FT}ft · flattest Major</span>
     </div>
   </div>
   <div class="hero-photo-pair">
@@ -88,7 +88,7 @@
   <div class="beer-emoji" aria-hidden="true">🍺</div>
   <div class="beer-text">
     <div class="beer-title">Cheering for Team Blizzard?</div>
-    <div class="beer-sub">Buy Catherine &amp; Helaine a post-race beer at Maimonides Park. Goes to <span class="mono">@Catherine-Blizzard</span> on Venmo — she'll share with mom.</div>
+    <div class="beer-sub">Buy Catherine &amp; Helaine a post-race beer at the 27th Mile Party in Grant Park. Goes to <span class="mono">@Catherine-Blizzard</span> on Venmo — she'll share with mom.</div>
   </div>
   <div class="beer-cta">
     <VenmoButton variant="primary" label="🍺 Venmo a beer" />
@@ -110,7 +110,7 @@
 </div>
 
 <div class="card gap-md">
-  <div class="card-header"><div class="card-title">Elevation profile · {TOTAL_GAIN_FT}ft total · park climb miles 3–7, downhill on Ocean Pkwy</div></div>
+  <div class="card-header"><div class="card-title">Elevation profile · {TOTAL_GAIN_FT}ft total · pancake-flat until "Mount Roosevelt" at mile 25.8</div></div>
   <div class="card-pad">
     <ElevationChart />
   </div>

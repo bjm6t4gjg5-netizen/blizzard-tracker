@@ -7,8 +7,9 @@
 import { load, save } from './storage';
 import { RACE_START } from './time';
 
-const BROOKLYN_LAT = 40.65;
-const BROOKLYN_LNG = -73.97;
+// Grant Park / Loop, Chicago
+const RACE_LAT = 41.88;
+const RACE_LNG = -87.63;
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export interface WeatherHour {
@@ -26,7 +27,7 @@ export interface WeatherHour {
 
 export interface WeatherSnapshot {
   fetchedAt: number;
-  raceMorning: WeatherHour[]; // 5am–11am ET
+  raceMorning: WeatherHour[]; // 5am–2pm CT (marathoners are out there a while)
   raceStartHour: WeatherHour | null;
 }
 
@@ -55,12 +56,12 @@ export async function fetchWeather(): Promise<WeatherSnapshot | null> {
   const endISO = new Date(RACE_START.getTime() + 1 * 86_400_000).toISOString().slice(0, 10);
   const url =
     `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${BROOKLYN_LAT}&longitude=${BROOKLYN_LNG}` +
+    `?latitude=${RACE_LAT}&longitude=${RACE_LNG}` +
     `&hourly=temperature_2m,apparent_temperature,relativehumidity_2m,` +
     `windspeed_10m,winddirection_10m,precipitation_probability,cloudcover,` +
     `dewpoint_2m,weathercode` +
     `&temperature_unit=fahrenheit&windspeed_unit=mph` +
-    `&timezone=America%2FNew_York` +
+    `&timezone=America%2FChicago` +
     `&start_date=${startISO}&end_date=${endISO}`;
 
   try {
@@ -76,13 +77,15 @@ export async function fetchWeather(): Promise<WeatherSnapshot | null> {
 }
 
 function transform(j: OpenMeteoResp): WeatherSnapshot {
-  // Open-Meteo returns local times in "America/New_York" (per the timezone
-  // param above) as ISO without offset, e.g. "2026-05-16T07:00".
+  // Open-Meteo returns local times in "America/Chicago" (per the timezone
+  // param above) as ISO without offset, e.g. "2026-10-11T07:00".
+  // RACE_START is 7:30 CDT (UTC-5) so the UTC date matches the local date.
   const raceDate = RACE_START.toISOString().slice(0, 10);
   const isRaceMorning = (t: string) => {
     if (!t.startsWith(raceDate)) return false;
     const hour = parseInt(t.slice(11, 13), 10);
-    return hour >= 5 && hour <= 11;
+    // 5 AM (gear check) through 2 PM (last finishers) CT.
+    return hour >= 5 && hour <= 14;
   };
 
   const raceMorning: WeatherHour[] = [];

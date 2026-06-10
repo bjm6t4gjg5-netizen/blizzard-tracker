@@ -3,7 +3,7 @@
 </script>
 
 <h2 class="title">Race Day Weather</h2>
-<p class="sub">Brooklyn · May 16, 2026 · 7:00 AM ET start</p>
+<p class="sub">Chicago · October 11, 2026 · 7:30 AM CT start</p>
 <WeatherPanel />
 
 <style>

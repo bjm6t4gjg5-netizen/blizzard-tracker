@@ -5,12 +5,12 @@
   interface TabSpec { id: string; label: string; emoji: string; devOnly?: boolean; }
 
   /** Tabs that only appear when developer mode is unlocked. They render with
-   *  a small orange dot so we know they aren't public. */
-  const DEV_ONLY_TABS = new Set(['old-races', 'training']);
+   *  a small orange dot so we know they aren't public. (Training and Old
+   *  Races graduated to public tabs for the Chicago build.) */
+  const DEV_ONLY_TABS = new Set<string>([]);
 
-  function defaultIds(profs: typeof $profiles, devOn: boolean): string[] {
-    const base = ['family', ...profs.map(p => p.id), 'weather', 'stats'];
-    return devOn ? [...base, 'old-races', 'training'] : base;
+  function defaultIds(profs: typeof $profiles, _devOn: boolean): string[] {
+    return ['family', ...profs.map(p => p.id), 'training', 'weather', 'stats', 'old-races'];
   }
 
   $: orderedIds = (() => {

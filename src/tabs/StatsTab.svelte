@@ -47,7 +47,7 @@
 </script>
 
 <h2 class="title">Race stats &amp; field analysis</h2>
-<p class="sub">Numbers are estimates from RBC Brooklyn Half 2024–2025 public results.</p>
+<p class="sub">Numbers are estimates from Bank of America Chicago Marathon 2024–2025 public results.</p>
 
 <div class="hist-grid gap-md">
   <div class="hist-card"><div class="hist-num" style="color: var(--blue)">{FIELD_HEADLINES.finishers.toLocaleString()}</div><div class="hist-lbl">2025 Finishers</div></div>

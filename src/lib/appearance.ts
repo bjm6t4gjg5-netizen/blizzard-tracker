@@ -24,7 +24,7 @@ export interface AccentPreset {
 export const ACCENT_PRESETS: AccentPreset[] = [
   { key: 'blue',    label: 'iOS Blue',    hue: '#007AFF', hueDeep: '#0040DD', hueSoft: 'rgba(0, 122, 255, 0.10)' },
   { key: 'indigo',  label: 'Indigo',      hue: '#5856D6', hueDeep: '#3F3D9C', hueSoft: 'rgba(88, 86, 214, 0.12)' },
-  { key: 'magenta', label: 'Brooklyn',    hue: '#FF2D55', hueDeep: '#C8002F', hueSoft: 'rgba(255, 45, 85, 0.10)' },
+  { key: 'magenta', label: 'Chicago',    hue: '#FF2D55', hueDeep: '#C8002F', hueSoft: 'rgba(255, 45, 85, 0.10)' },
   { key: 'orange',  label: 'Race-day',    hue: '#FF9500', hueDeep: '#C26B00', hueSoft: 'rgba(255, 149, 0, 0.12)' },
   { key: 'green',   label: 'Park',        hue: '#34C759', hueDeep: '#1F9D4F', hueSoft: 'rgba(52, 199, 89, 0.12)' },
   { key: 'teal',    label: 'Ocean',       hue: '#0AB1B1', hueDeep: '#017A7A', hueSoft: 'rgba(10, 177, 177, 0.12)' },

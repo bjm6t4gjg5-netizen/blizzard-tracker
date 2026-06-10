@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
   import { profiles, runnerState } from '../lib/stores';
-  import { CHICAGO_MARATHON_2026, countdownTo } from '../lib/time';
   import { formatHMS } from '../lib/format';
   import VenmoButton from './VenmoButton.svelte';
 
@@ -17,14 +15,6 @@
     });
   }
   $: rows = snapshot($profiles);
-
-  // Chicago Marathon countdown — ticks every second for the satisfying drift.
-  let cd = countdownTo(CHICAGO_MARATHON_2026);
-  let handle: ReturnType<typeof setInterval> | null = null;
-  onMount(() => { handle = setInterval(() => (cd = countdownTo(CHICAGO_MARATHON_2026)), 1000); });
-  onDestroy(() => { if (handle) clearInterval(handle); });
-
-  function pad(n: number, w = 2): string { return String(n).padStart(w, '0'); }
 </script>
 
 <div class="post">
@@ -35,9 +25,9 @@
       {/each}
     </div>
 
-    <div class="eyebrow">⚡ Race day · May 16, 2026 ⚡</div>
+    <div class="eyebrow">⚡ Race day · October 11, 2026 ⚡</div>
     <h1 class="title">Thank you for watching.</h1>
-    <p class="sub">Catherine and Helaine left it all on Ocean Parkway. Here's how it played out.</p>
+    <p class="sub">Catherine and Helaine left it all on Michigan Avenue. Here's how it played out.</p>
 
     <div class="results">
       {#each rows as r}
@@ -55,21 +45,11 @@
   </div>
 
   <div class="next">
-    <div class="next-eyebrow">🏆 Next up · Bank of America Chicago Marathon</div>
-    <h2 class="next-title">See you in Chicago</h2>
-    <p class="next-sub">Sunday, October 11, 2026 · Grant Park · 7:30 AM CT</p>
+    <div class="next-eyebrow">🏆 World Marathon Majors</div>
+    <h2 class="next-title">26.2 miles. Mother and daughter. Done.</h2>
+    <p class="next-sub">Bank of America Chicago Marathon · Grant Park · October 11, 2026</p>
 
-    <div class="cd">
-      <div class="cd-unit"><div class="cd-num">{pad(cd.days)}</div><div class="cd-lbl">days</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-num">{pad(cd.hours)}</div><div class="cd-lbl">hours</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-num">{pad(cd.minutes)}</div><div class="cd-lbl">minutes</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-num">{pad(cd.seconds)}</div><div class="cd-lbl">seconds</div></div>
-    </div>
-
-    <p class="next-note">Catherine <strong>and</strong> Helaine both race Chicago — mother and daughter back on the start line. Training tracker arrives soon.</p>
+    <p class="next-note">Brooklyn in the spring, Chicago in the fall — what a year for Team Blizzard. Relive past races anytime in the <strong>Old Races</strong> tab. Next start line: TBD. ⚡</p>
   </div>
 </div>
 

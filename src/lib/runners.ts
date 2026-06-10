@@ -28,7 +28,7 @@ export interface RunnerProfile {
   heightIn?: number;
   /** Body weight in pounds. */
   weightLb?: number;
-  /** Start wave: 1, 2, 3, or 4 (RBC Brooklyn Half has four waves). */
+  /** Start wave: 1, 2, or 3 (Chicago Marathon has three main waves). */
   wave?: 1 | 2 | 3 | 4;
   /** Corral letter within the wave: A, B, C, ... */
   corral?: string;
@@ -39,15 +39,16 @@ export interface RunnerProfile {
 // ────────────────────────────────────────────────────────────
 
 /**
- * Official RBC Brooklyn Half 2026 wave-start times.
- * Per Catherine's bib confirmation: waves are 30 minutes apart
- * (was 25 in earlier years).
+ * Official Bank of America Chicago Marathon 2026 wave-start times,
+ * as minutes after RACE_START (7:30 AM CT pro start).
+ * Wave 1: 7:35 · Wave 2: 8:00 · Wave 3: 8:35.
+ * (Wave 4 unused — kept in the type for stored-profile compat.)
  */
 const WAVE_START_OFFSET_MIN: Record<1 | 2 | 3 | 4, number> = {
-  1: 0,    // 7:00 AM ET
-  2: 30,   // 7:30 AM
-  3: 60,   // 8:00 AM
-  4: 90,   // 8:30 AM
+  1: 5,    // 7:35 AM CT
+  2: 30,   // 8:00 AM
+  3: 65,   // 8:35 AM
+  4: 65,   // legacy value, clamps to Wave 3
 };
 
 /** Approximate corral-to-corral funnel delay within a wave (minutes). */
@@ -55,7 +56,7 @@ function corralOffsetMin(corral: string | undefined): number {
   if (!corral) return 0;
   const idx = corral.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
   if (idx < 0 || idx > 25) return 0;
-  // ~2 minutes between adjacent corrals — placeholder until NYRR confirms.
+  // ~2 minutes between adjacent corrals — placeholder until Chicago confirms.
   return idx * 2;
 }
 
@@ -66,21 +67,21 @@ export function runnerStartTime(profile: RunnerProfile, raceStart: Date): Date {
   return new Date(raceStart.getTime() + offsetMin * 60_000);
 }
 
-/** Minutes from Wave 1 gun (7:00 AM ET) when this runner crosses the start. */
+/** Minutes from RACE_START (7:30 AM CT) when this runner crosses the start. */
 export function runnerStartOffsetMin(profile: RunnerProfile): number {
   const wave = (profile.wave ?? 1) as 1 | 2 | 3 | 4;
   return WAVE_START_OFFSET_MIN[wave] + corralOffsetMin(profile.corral);
 }
 
-/** Human-readable wave + corral label (e.g. "Wave 1 · Corral B · 7:02 AM"). */
+/** Human-readable wave + corral label (e.g. "Wave 1 · Corral B · 7:37 AM"). */
 export function waveLabel(profile: RunnerProfile, raceStart: Date): string {
   if (!profile.wave) return '';
   const t = runnerStartTime(profile, raceStart);
   const hours = t.toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York',
+    hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago',
   });
   const corralPart = profile.corral ? ` · Corral ${profile.corral}` : '';
-  return `Wave ${profile.wave}${corralPart} · ${hours} ET`;
+  return `Wave ${profile.wave}${corralPart} · ${hours} CT`;
 }
 
 /** Compute integer age from a YYYY-MM-DD birthday relative to a reference date. */
@@ -159,9 +160,13 @@ export interface RunnerState {
 // ────────────────────────────────────────────────────────────
 
 export const DEFAULT_PROFILES: ReadonlyArray<RunnerProfile> = [
-  // Catherine — born 25 May 1998 (age 28). Wave 1 · Corral B → 7:02 AM start.
+  // TODO(race-week): trackIds below are the old Brooklyn RTRT pids. Replace
+  // with the Chicago bib-based tracker ids once bib numbers are assigned
+  // (usually ~2 weeks before race day, via the Chicago Marathon app / rtrt.me).
+  // Wave/corral are estimates until bib confirmation.
+  // Catherine — born 25 May 1998 (age 28). Wave 1 · Corral B → ~7:37 AM CT start.
   { id: 'gf',  name: 'Catherine Blizzard', trackId: 'RMGBEVSK', emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, corral: 'B' },
-  // Helaine — born 13 Apr 1964 (age 62). Wave 2 · Corral C → 7:34 AM start.
+  // Helaine — born 13 Apr 1964 (age 62). Wave 2 · Corral C → ~8:04 AM CT start.
   // Brand color: Apple Pink (#FF2D55) — visually distinct from Catherine's
   // blue so heat maps + map markers + chart lines never read as the same
   // runner at a glance.
@@ -170,49 +175,53 @@ export const DEFAULT_PROFILES: ReadonlyArray<RunnerProfile> = [
 
 export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
   gf: {
-    // Catherine's stated goal per her email: "absolutely do under a 1:32"
-    // (existing half PR is 1:32:17 at Too Cold to Hold 2023). 1:32 is the
-    // PR-attempt target; sub-90 is a future stretch.
-    goalSec: 92 * 60,
-    goalLabel: 'Sub-1:32',
-    goalMilePaceSec: 7 * 60 + 1,
+    // Catherine's marathon PR is 3:06:12 (Boston, 7:06/mi). Chicago is flat
+    // and fast — default target is a sub-3:05 PR attempt (~7:03/mi).
+    // TODO(Leon): confirm Catherine's actual Chicago goal and adjust.
+    goalSec: 185 * 60,
+    goalLabel: 'Sub-3:05',
+    goalMilePaceSec: 7 * 60 + 3,
     // Note: there's no 'goal' scenario — the canonical goal line is drawn
     // from the editable split targets below. Keeping it as a scenario would
     // duplicate the same line under a different label.
     scenarios: [
-      { key: 'dream',   label: 'Dream Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 6 * 60 + 10, desc: 'Everything clicks, negative split' },
-      { key: 'strong',  label: 'Strong Day',  emoji: '💪', color: '#5856D6', flatPaceSec: 7 * 60 + 0,  desc: 'Solid race, slight fade late' },
-      { key: 'tough',   label: 'Tough Day',   emoji: '😅', color: '#FF9500', flatPaceSec: 7 * 60 + 30, desc: 'Warm/crowded, conservative finish' },
-      { key: 'runwalk', label: 'Run/Walk',    emoji: '🚶', color: '#FF3B30', flatPaceSec: 8 * 60 + 30, desc: 'Backup plan, guaranteed finish' },
+      { key: 'dream',   label: 'Dream Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 6 * 60 + 45, desc: 'Everything clicks — sub-3:00 territory' },
+      { key: 'strong',  label: 'Strong Day',  emoji: '💪', color: '#5856D6', flatPaceSec: 7 * 60 + 5,  desc: 'Solid race, slight fade late' },
+      { key: 'tough',   label: 'Tough Day',   emoji: '😅', color: '#FF9500', flatPaceSec: 7 * 60 + 35, desc: 'Warm/windy, conservative finish' },
+      { key: 'runwalk', label: 'Run/Walk',    emoji: '🚶', color: '#FF3B30', flatPaceSec: 9 * 60 + 0,  desc: 'Backup plan, guaranteed finish' },
     ],
     splitGoals: [
-      // Sub-1:32 (5,520 sec / 13.1 mi ≈ 7:01/mi flat eq.).
-      { label: 'Mile 1',  mi: 1.0,      targetSec:  7 * 60 + 15 },
-      { label: 'Mile 3',  mi: 3.0,      targetSec: 20 * 60 + 55 },
-      { label: 'Mile 5',  mi: 5.0,      targetSec: 35 * 60 + 25 },
-      { label: 'Mile 7',  mi: 7.0,      targetSec: 49 * 60 + 40 },
-      { label: 'Mile 10', mi: 10.0,     targetSec: 70 * 60 + 20 },
-      { label: 'Finish',  mi: TOTAL_MI, targetSec: 92 * 60      },
+      // Sub-3:05 (11,100 sec / 26.2 mi ≈ 7:03/mi flat eq.).
+      { label: 'Mile 1',  mi: 1.0,      targetSec:   7 * 60 + 15 },
+      { label: 'Mile 5',  mi: 5.0,      targetSec:  35 * 60 + 30 },
+      { label: 'Mile 10', mi: 10.0,     targetSec:  70 * 60 + 30 },
+      { label: 'Half',    mi: 13.109,   targetSec:  92 * 60 + 20 },
+      { label: 'Mile 18', mi: 18.0,     targetSec: 126 * 60 + 45 },
+      { label: 'Mile 22', mi: 22.0,     targetSec: 155 * 60      },
+      { label: 'Finish',  mi: TOTAL_MI, targetSec: 185 * 60      },
     ],
   },
   mom: {
-    goalSec: 110 * 60,
-    goalLabel: 'Sub-1:50',
-    goalMilePaceSec: 8 * 60 + 24,
+    // Helaine's default: sub-4:00 (~9:09/mi) — strong age-group target on a
+    // flat course. TODO(Leon): confirm Helaine's actual Chicago goal.
+    goalSec: 240 * 60,
+    goalLabel: 'Sub-4:00',
+    goalMilePaceSec: 9 * 60 + 9,
     // No 'goal' scenario — the editable split targets drive the goal line.
     scenarios: [
-      { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 7 * 60 + 55, desc: 'Everything clicks' },
-      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 8 * 60 + 45, desc: 'Solid race' },
-      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 9 * 60 + 30, desc: 'Warm / conservative' },
-      { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 11 * 60 + 0, desc: 'Backup plan' },
+      { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 8 * 60 + 40,  desc: 'Everything clicks' },
+      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 9 * 60 + 10,  desc: 'Solid race' },
+      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 10 * 60 + 0,  desc: 'Warm / conservative' },
+      { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 11 * 60 + 30, desc: 'Backup plan' },
     ],
     splitGoals: [
-      { label: 'Mile 1',  mi: 1.0,      targetSec:  8 * 60 + 40 },
-      { label: 'Mile 3',  mi: 3.0,      targetSec: 25 * 60 + 30 },
-      { label: 'Mile 5',  mi: 5.0,      targetSec: 42 * 60 + 30 },
-      { label: 'Mile 7',  mi: 7.0,      targetSec: 59 * 60 + 30 },
-      { label: 'Mile 10', mi: 10.0,     targetSec: 84 * 60 + 30 },
-      { label: 'Finish',  mi: TOTAL_MI, targetSec: 110 * 60     },
+      { label: 'Mile 1',  mi: 1.0,      targetSec:   9 * 60 + 20 },
+      { label: 'Mile 5',  mi: 5.0,      targetSec:  46 * 60      },
+      { label: 'Mile 10', mi: 10.0,     targetSec:  91 * 60 + 30 },
+      { label: 'Half',    mi: 13.109,   targetSec: 120 * 60      },
+      { label: 'Mile 18', mi: 18.0,     targetSec: 165 * 60      },
+      { label: 'Mile 22', mi: 22.0,     targetSec: 202 * 60 + 30 },
+      { label: 'Finish',  mi: TOTAL_MI, targetSec: 240 * 60      },
     ],
   },
 };
@@ -292,14 +301,19 @@ function gradeFactor(miStart: number, miEnd: number): number {
   return Math.max(0.85, Math.min(1.25, 1 + adj));
 }
 
-/** Fatigue/freshness multiplier as a function of mile reached. */
+/** Fatigue/freshness multiplier as a function of mile reached.
+ *  Marathon-shaped: crowded start, smooth middle, gradual fade after 30K,
+ *  "the wall" zone miles 20–24, small finishing kick. Expressed as fractions
+ *  of TOTAL_MI so the model survives future race-distance changes. */
 function fatigueFactor(mi: number): number {
-  if (mi < 1) return 1.05;   // crowded start, settling
-  if (mi < 3) return 1.01;
-  if (mi < 8) return 1.00;
-  if (mi < 11) return 1.02;
-  if (mi < 12.5) return 1.04;
-  return 0.98;               // finishing kick
+  const f = mi / TOTAL_MI;
+  if (f < 0.04) return 1.05;  // crowded start, settling (~first mile)
+  if (f < 0.12) return 1.01;
+  if (f < 0.55) return 1.00;  // cruise
+  if (f < 0.72) return 1.01;  // gentle fade past 15mi
+  if (f < 0.84) return 1.03;  // miles ~19–22
+  if (f < 0.95) return 1.05;  // the wall zone
+  return 0.99;                // finishing kick
 }
 
 /** Build a cumulative time profile for a flat-pace plan. */
@@ -347,11 +361,12 @@ export function flatPaceForGoal(goalSec: number): number {
 }
 
 /**
- * Default mile checkpoints the user gets a target time for. We chose 1/3/5/7/10
- * because they're the spots a spectator-coach can actually call out a "go go
- * go!" or "back off a tick" decision at, plus 13.1 for the finish.
+ * Default mile checkpoints the user gets a target time for. Chosen to match
+ * the spots a spectator-coach can actually call out a "go go go!" or "back
+ * off a tick" decision at: early settle (1), rhythm checks (5/10), halfway,
+ * the pre-wall checkpoint (18), the wall (22), and the finish.
  */
-export const DEFAULT_SPLIT_MILES: ReadonlyArray<number> = [1, 3, 5, 7, 10, TOTAL_MI];
+export const DEFAULT_SPLIT_MILES: ReadonlyArray<number> = [1, 5, 10, 13.109, 18, 22, TOTAL_MI];
 
 /** Compute split goals that net to goalSec, using the elevation/fatigue model. */
 export function buildGoalSplits(

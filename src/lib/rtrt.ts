@@ -16,7 +16,14 @@
 // ============================================================
 import { TOTAL_MI } from './time';
 
-const EVENT_ID  = 'NYRR-BROOKLYN-2026';
+/**
+ * TODO(race-week): confirm the 2026 Chicago event slug once RTRT publishes
+ * the tracker (open app.rtrt.me, pick the Chicago Marathon, copy the event
+ * id from the URL / network tab). 2024 was 'CHI-2024', so 'CHI-2026' is the
+ * expected pattern. Catherine + Helaine's trackIds (bib-based pids) also
+ * need updating in runners.ts when bibs are assigned.
+ */
+const EVENT_ID  = 'CHI-2026';
 const APP_ID    = '4d7a9ceb0be65b3cc4948ee9';
 /** Public tracker token (baked into RTRT's webtracker bundle — same token
  *  every browser uses, not a secret). If RTRT rotates it we'll need to
@@ -212,16 +219,19 @@ function parseHmsToSec(s: string | undefined): number | null {
   const sec = m[3] ? +m[3] : +m[2];
   if (!Number.isFinite(h + min + sec)) return null;
   const total = h * 3600 + min * 60 + sec;
-  // Reject obvious wall-clock values (>6h)
-  if (total > 6 * 3600) return null;
+  // Reject obvious wall-clock values (>8h — Chicago's course limit is 6:30,
+  // leave headroom for late waves + walkers)
+  if (total > 8 * 3600) return null;
   return total;
 }
 
 function distToMiles(dist: string | undefined, units: string | undefined): number | null {
   if (!dist) return null;
   const v = parseFloat(dist);
-  if (!Number.isFinite(v) || v < 0 || v > 14) return null;
-  return (units && /km/i.test(units)) ? v * 0.621371 : v;
+  // Accept up to 43 (km) — converted below; reject garbage beyond that.
+  if (!Number.isFinite(v) || v < 0 || v > 43) return null;
+  const mi = (units && /km/i.test(units)) ? v * 0.621371 : v;
+  return mi <= TOTAL_MI + 0.6 ? mi : null;
 }
 
 /**
@@ -340,13 +350,17 @@ export function parseSplitsResponse(
 
 export type DemoStage = 'pre' | 'early' | 'park' | 'ocean' | 'late' | 'finish';
 
+/** Marathon-scale demo stages (~7:05/mi, i.e. a 3:05 marathon).
+ *  Keys kept from the half-marathon era so the dev simulator UI is untouched:
+ *  early = River North, park = Lincoln Park/Lakeview, ocean = Pilsen,
+ *  late = Chinatown/Bronzeville, finish = Grant Park. */
 const DEMO_PROFILES: Record<DemoStage, { mi: number; sec: number; status: RtrtSnapshot['status'] }> = {
-  pre:    { mi: 0.0,  sec: 0,     status: 'pre' },
-  early:  { mi: 3.0,  sec: 1200,  status: 'running' },
-  park:   { mi: 6.2,  sec: 2580,  status: 'running' },
-  ocean:  { mi: 9.3,  sec: 3840,  status: 'running' },
-  late:   { mi: 11.0, sec: 4500,  status: 'running' },
-  finish: { mi: 13.11, sec: 5292, status: 'finished' },
+  pre:    { mi: 0.0,   sec: 0,      status: 'pre' },
+  early:  { mi: 4.0,   sec: 1_700,  status: 'running' },
+  park:   { mi: 9.0,   sec: 3_830,  status: 'running' },
+  ocean:  { mi: 19.0,  sec: 8_080,  status: 'running' },
+  late:   { mi: 23.0,  sec: 9_790,  status: 'running' },
+  finish: { mi: 26.22, sec: 11_100, status: 'finished' },
 };
 
 export function demoSnapshot(

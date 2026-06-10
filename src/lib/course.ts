@@ -1,12 +1,14 @@
 // ============================================================
-// course.ts — Geometry derived from the real RBC Brooklyn Half GPX.
+// course.ts — Geometry derived from the real Chicago Marathon GPX.
 //
-// Single source of truth: src/lib/course.gpx (Garmin Connect trace
-// of the 2025 race). The 2026 route is identical per the NYRR map:
-// Brooklyn Museum start → Grand Army Plaza loop → Prospect Park
-// north + south sections → Ocean Pkwy southbound → Surf Ave →
-// W 10th St → Riegelmann Boardwalk finish.
+// Single source of truth: src/lib/course.gpx (official Bank of
+// America Chicago Marathon route, 2024 trace — course unchanged
+// for 2026). Grant Park start → River North → Lincoln Park →
+// Lakeview turnaround → Old Town → West Loop → Little Italy →
+// Pilsen → Chinatown → Bronzeville → Michigan Ave north →
+// "Mount Roosevelt" → Columbus Dr finish in Grant Park.
 //
+// The previous race's trace is preserved in course-brooklyn-2026.gpx.
 // Every other course-related export below is computed from the
 // parsed track. Hand-coded points are gone.
 // ============================================================
@@ -117,10 +119,9 @@ export const COURSE_CENTER: [number, number] = [
 /**
  * Total elevation gain in feet — sum of positive deltas along the GPX trace.
  *
- * Note: the official NYRR figure for the Brooklyn Half is 246ft. GPS traces
- * tend to under-count gain because Garmin smooths sub-meter wobble, so this
- * value is typically lower than the official one. We expose both: the computed
- * trace gain (for charts), and the official figure (for headline display).
+ * Chicago is famously pancake-flat: the only real "climb" is the Roosevelt Rd
+ * bridge ("Mount Roosevelt") at mile ~25.8. We expose both the computed trace
+ * gain (for charts) and a headline figure (for display).
  */
 export const TRACE_GAIN_FT = (() => {
   let gain = 0;
@@ -131,8 +132,10 @@ export const TRACE_GAIN_FT = (() => {
   return Math.round(gain);
 })();
 
-/** Official NYRR-published total gain. */
-export const TOTAL_GAIN_FT = 246;
+/** Headline total gain — computed from the official route trace (~262ft).
+ *  Chicago publishes no official figure; commonly cited as "~250ft, flattest
+ *  of the World Marathon Majors". */
+export const TOTAL_GAIN_FT = 262;
 
 // ────────────────────────────────────────────────────────────
 // Lookup helpers
@@ -224,9 +227,13 @@ const CHECKPOINT_MILES: ReadonlyArray<{ label: string; mi: number; spectator: bo
   { label: 'Start', mi: 0.0, spectator: true },
   { label: '5K', mi: 3.107, spectator: false },
   { label: '10K', mi: 6.214, spectator: false },
-  { label: '15K', mi: 9.321, spectator: true },
-  { label: '10mi', mi: 10.0, spectator: false },
+  { label: '15K', mi: 9.321, spectator: false },
   { label: '20K', mi: 12.427, spectator: false },
+  { label: 'Half', mi: 13.109, spectator: true },
+  { label: '25K', mi: 15.534, spectator: false },
+  { label: '30K', mi: 18.641, spectator: false },
+  { label: '35K', mi: 21.748, spectator: false },
+  { label: '40K', mi: 24.855, spectator: false },
   { label: 'Finish', mi: TOTAL_MI, spectator: true },
 ];
 
@@ -245,59 +252,71 @@ export interface SpectatorSpot {
   note: string;
   lat: number;
   lng: number;
-  /** Official cheer zone designation, if any. */
-  official?: 'NYRR' | 'New Balance';
+  /** Official cheer zone designation, if any (sponsor / organizer name). */
+  official?: string;
 }
 
 /**
- * Spectator spots from the 2026 NYRR official course map. Coordinates are
- * snapped to the actual course polyline via pointAtMile so pins always sit on
- * the route — no more "marker floating in a backyard" bugs.
+ * Spectator spots along the Chicago Marathon course. Mile values were computed
+ * by projecting each landmark onto the official route polyline; coordinates
+ * are then snapped to the course via pointAtMile so pins always sit on the
+ * route — no more "marker floating in a backyard" bugs. Transit = CTA 'L'.
  */
 const SPECTATOR_DEFS: ReadonlyArray<Omit<SpectatorSpot, 'lat' | 'lng'>> = [
   {
-    mi: 1.5,
-    name: 'Grand Army Plaza',
-    transit: '2/3 to Grand Army Plaza',
-    note: 'Runners loop the arch — easy to spot both legs.',
+    mi: 1.15,
+    name: 'State & Grand (River North)',
+    transit: 'Red Line to Grand',
+    note: 'First big crowd wall after the start — catch them fresh, then hop the Red Line north.',
   },
   {
-    mi: 3.1,
-    name: 'Parkside Ave park entry',
-    transit: 'Q/B to Parkside Ave',
-    note: '5K timing mat — first big crowd zone.',
+    mi: 8.9,
+    name: 'Broadway & Belmont (Lakeview)',
+    transit: 'Red/Brown to Belmont',
+    note: 'Northern turnaround zone — famously loud, costumes and music the whole stretch.',
   },
   {
-    mi: 7.0,
-    name: 'Machate Circle',
-    transit: 'F to 15th St–Prospect Park',
-    note: 'NYRR Member Cheer Zone — official party with music & signs.',
-    official: 'NYRR',
+    mi: 11.2,
+    name: 'Wells & North Ave (Old Town)',
+    transit: 'Brown/Purple to Sedgwick',
+    note: 'Classic Old Town party blocks — bands on every corner before halfway.',
   },
   {
-    mi: 9.3,
-    name: 'Ocean Pkwy / Church Ave',
-    transit: 'Q/B to Church Ave',
-    note: '15K mat — runners are settled into Ocean Pkwy rhythm.',
+    mi: 13.1,
+    name: 'Adams & Halsted (Greektown) · Halfway',
+    transit: 'Blue Line to UIC–Halsted',
+    note: 'Half-marathon mat — easy walk from the Loop, see them at exactly halfway.',
+    official: 'Bank of America',
   },
   {
-    mi: 11.0,
-    name: 'Ocean Pkwy / Avenue W',
-    transit: 'F to Avenue X',
-    note: 'New Balance Cheer Zone — biggest mid-Ocean party.',
-    official: 'New Balance',
+    mi: 17.6,
+    name: 'Taylor & Halsted (Little Italy)',
+    transit: 'Blue Line to Racine',
+    note: 'Quieter stretch where runners need you most — your cheers actually land here.',
   },
   {
-    mi: 12.6,
-    name: 'W 10th St / Surf Ave',
-    transit: 'D/F/N/Q to Coney Island–Stillwell Ave',
-    note: 'Final turn before the boardwalk — runners are flying.',
+    mi: 19.1,
+    name: '18th St (Pilsen)',
+    transit: 'Pink Line to 18th',
+    note: 'Mariachi bands and the loudest neighborhood on the course — mile 19 wall-breaker.',
+  },
+  {
+    mi: 21.35,
+    name: 'Cermak & Wentworth (Chinatown)',
+    transit: 'Red Line to Cermak–Chinatown',
+    note: 'Dragon dancers under the Chinatown gate at mile 21 — iconic late-race boost.',
+  },
+  {
+    mi: 25.83,
+    name: 'Roosevelt & Michigan · "Mount Roosevelt"',
+    transit: 'Red/Orange/Green to Roosevelt',
+    note: "The course's only hill, 400m from the finish — scream them up it.",
   },
   {
     mi: TOTAL_MI,
-    name: 'Coney Island Boardwalk · Finish',
-    transit: 'D/F/N/Q to Stillwell Ave',
-    note: 'Maimonides Park finish + after-party.',
+    name: 'Grant Park · Finish',
+    transit: 'Red/Orange/Green to Roosevelt',
+    note: 'Columbus Dr finish + the 27th Mile Post-Race Party in Grant Park.',
   },
 ];
 

@@ -55,7 +55,7 @@
     <div class="stat">
       <div class="lbl">Distance</div>
       <div class="num">{r.distMi > 0 ? r.distMi.toFixed(2) : '—'}</div>
-      <div class="unit">of 13.1 mi</div>
+      <div class="unit">of 26.2 mi</div>
     </div>
     <div class="stat">
       <div class="lbl">Elapsed</div>

@@ -18,7 +18,7 @@ describe('buildPaceProfile', () => {
     const ft = fast[fast.length - 1].sec;
     const st = slow[slow.length - 1].sec;
     expect(ft).toBeLessThan(st);
-    expect(ft).toBeGreaterThan(13.0 * 360 - 60);
+    expect(ft).toBeGreaterThan(26.0 * 360 - 60);
   });
   it('cumulative time strictly increasing', () => {
     const p = buildPaceProfile(420);
@@ -29,18 +29,18 @@ describe('buildPaceProfile', () => {
 });
 
 describe('flatPaceForGoal', () => {
-  it('Sub-90 needs ~6:50/mi flat-equivalent', () => {
-    const p = flatPaceForGoal(90 * 60);
-    expect(p).toBeGreaterThan(390);
-    expect(p).toBeLessThan(425);
+  it('Sub-3:05 needs ~6:55–7:05/mi flat-equivalent', () => {
+    const p = flatPaceForGoal(185 * 60);
+    expect(p).toBeGreaterThan(395);
+    expect(p).toBeLessThan(430);
   });
-  it('Sub-2:10 needs ~9:55/mi flat-equivalent', () => {
-    const p = flatPaceForGoal(130 * 60);
-    expect(p).toBeGreaterThan(580);
-    expect(p).toBeLessThan(605);
+  it('Sub-4:00 needs ~9:00/mi flat-equivalent', () => {
+    const p = flatPaceForGoal(240 * 60);
+    expect(p).toBeGreaterThan(515);
+    expect(p).toBeLessThan(555);
   });
   it('total time of computed profile lands within 5sec of the goal', () => {
-    for (const goalSec of [4800, 5400, 6300, 7200, 9000]) {
+    for (const goalSec of [11_100, 12_600, 14_400, 16_200, 18_000]) {
       const flat = flatPaceForGoal(goalSec);
       const total = buildPaceProfile(flat).at(-1)!.sec;
       expect(Math.abs(total - goalSec)).toBeLessThan(5);
@@ -49,17 +49,19 @@ describe('flatPaceForGoal', () => {
 });
 
 describe('buildGoalSplits', () => {
-  it('Sub-90 splits land where Catherine plans (mile 3 + finish)', () => {
-    const splits = buildGoalSplits(90 * 60);
-    const mile3 = splits.find(s => s.label === 'Mile 3')!;
+  it('Sub-3:05 splits land where Catherine plans (mile 5 + finish)', () => {
+    const splits = buildGoalSplits(185 * 60);
+    const mile5 = splits.find(s => s.label === 'Mile 5')!;
     const finish = splits.find(s => s.label === 'Finish')!;
-    expect(mile3.targetSec).toBeGreaterThan(19 * 60);
-    expect(mile3.targetSec).toBeLessThan(22 * 60);
-    expect(finish.targetSec).toBe(90 * 60);
+    expect(mile5.targetSec).toBeGreaterThan(33 * 60);
+    expect(mile5.targetSec).toBeLessThan(38 * 60);
+    expect(finish.targetSec).toBe(185 * 60);
   });
   it('returns the requested split miles in order', () => {
-    const splits = buildGoalSplits(90 * 60);
-    expect(splits.map(s => s.mi)).toEqual([1, 3, 5, 7, 10, expect.closeTo(13.1, 1)]);
+    const splits = buildGoalSplits(185 * 60);
+    expect(splits.map(s => s.mi)).toEqual([
+      1, 5, 10, expect.closeTo(13.1, 1), 18, 22, expect.closeTo(26.2, 1),
+    ]);
   });
 });
 
@@ -76,29 +78,29 @@ describe('computeEta', () => {
   it('finished returns elapsedSec', () => {
     const s = makeRunnerState(DEFAULT_PROFILES[0]);
     s.status = 'finished';
-    s.distMi = 13.1;
-    s.elapsedSec = 5400;
+    s.distMi = 26.22;
+    s.elapsedSec = 11_100;
     const r = computeEta(s);
-    expect(r.etaSec).toBe(5400);
+    expect(r.etaSec).toBe(11_100);
     expect(r.confidence).toBe(100);
   });
 
-  it('mid-race ETA is sane: 6:50 pace at mile 6 → ~90min finish', () => {
+  it('mid-race ETA is sane: 7:05 pace at mile 10 → ~3:00–3:15 finish', () => {
     const s = makeRunnerState(DEFAULT_PROFILES[0]);
-    s.distMi = 6.214; // 10K
-    s.elapsedSec = 6.214 * 410; // ~6:50/mi
+    s.distMi = 10;
+    s.elapsedSec = 10 * 425; // ~7:05/mi
     s.status = 'running';
     const r = computeEta(s);
-    expect(r.etaSec).toBeGreaterThan(85 * 60);
-    expect(r.etaSec).toBeLessThan(95 * 60);
+    expect(r.etaSec).toBeGreaterThan(178 * 60);
+    expect(r.etaSec).toBeLessThan(196 * 60);
     expect(r.confidence).toBeGreaterThan(40);
   });
 
   it('confidence rises with progress', () => {
     const s1 = makeRunnerState(DEFAULT_PROFILES[0]);
-    s1.distMi = 2; s1.elapsedSec = 13 * 60; s1.status = 'running';
+    s1.distMi = 2; s1.elapsedSec = 14 * 60; s1.status = 'running';
     const s2 = makeRunnerState(DEFAULT_PROFILES[0]);
-    s2.distMi = 10; s2.elapsedSec = 65 * 60; s2.status = 'running';
+    s2.distMi = 20; s2.elapsedSec = 142 * 60; s2.status = 'running';
     expect(computeEta(s2).confidence).toBeGreaterThan(computeEta(s1).confidence);
   });
 });

@@ -1,32 +1,30 @@
 // ============================================================
 // stats.ts — Field stats: percentiles, age groups, demographics
 //
-// Numbers are estimates derived from RBC Brooklyn Half 2024 / 2025
-// public results. Marked "est." in the UI.
+// Numbers are estimates derived from Bank of America Chicago
+// Marathon 2024 / 2025 public results. Marked "est." in the UI.
 // ============================================================
 
-/** Overall RBC Brooklyn Half field. [finishSeconds, percentOfFieldAtOrUnder]. */
+/** Overall Chicago Marathon field. [finishSeconds, percentOfFieldAtOrUnder]. */
 export const FIELD_CDF: ReadonlyArray<[number, number]> = [
-  [4_800, 1], [5_400, 3], [5_700, 6], [6_000, 11], [6_300, 18],
-  [6_600, 26], [6_900, 35], [7_200, 45], [7_500, 54], [7_800, 62],
-  [8_100, 69], [8_400, 75], [8_700, 80], [9_000, 85], [9_600, 90],
-  [10_200, 94], [10_800, 97], [11_400, 99],
+  [9_600, 1], [10_800, 5], [11_400, 9], [12_000, 13], [12_600, 18],
+  [13_200, 24], [13_800, 31], [14_400, 39], [15_000, 46], [15_600, 52],
+  [16_200, 58], [17_100, 66], [18_000, 74], [18_900, 80], [19_800, 85],
+  [21_600, 93], [23_400, 97], [25_200, 99],
 ];
 
-/** Women-only sub-population. Lifted a few minutes slower at each rank. */
+/** Women-only sub-population. Shifted ~20–25 min slower at each rank. */
 export const WOMEN_FIELD_CDF: ReadonlyArray<[number, number]> = [
-  [5_400, 1], [5_700, 2], [6_000, 4], [6_300, 8], [6_600, 13],
-  [6_900, 19], [7_200, 27], [7_500, 36], [7_800, 45], [8_100, 54],
-  [8_400, 62], [8_700, 70], [9_000, 77], [9_300, 82], [9_900, 89],
-  [10_500, 93], [11_100, 96], [11_700, 98],
+  [10_800, 2], [11_700, 4], [12_600, 8], [13_500, 14], [14_400, 22],
+  [15_300, 31], [16_200, 41], [17_100, 51], [18_000, 61], [18_900, 70],
+  [19_800, 77], [21_600, 89], [23_400, 95], [25_200, 98],
 ];
 
-/** Men-only sub-population. ~10–15 min faster than women at each percentile. */
+/** Men-only sub-population. ~20–30 min faster than women at each percentile. */
 export const MEN_FIELD_CDF: ReadonlyArray<[number, number]> = [
-  [4_500, 1], [5_100, 3], [5_400, 7], [5_700, 13], [6_000, 22],
-  [6_300, 32], [6_600, 43], [6_900, 54], [7_200, 64], [7_500, 73],
-  [7_800, 80], [8_100, 86], [8_400, 90], [8_700, 93], [9_300, 96],
-  [9_900, 98], [10_500, 99],
+  [10_200, 3], [10_800, 7], [11_400, 12], [12_000, 18], [12_600, 25],
+  [13_500, 36], [14_400, 47], [15_300, 57], [16_200, 65], [17_100, 73],
+  [18_000, 80], [19_800, 89], [21_600, 95], [23_400, 98],
 ];
 
 /**
@@ -58,38 +56,38 @@ export interface AgeGroupBand {
 }
 
 export const WOMEN_AGE_GROUPS: ReadonlyArray<AgeGroupBand> = [
-  { range: '18–24', median: 7620,  label: '2:07:00' },
-  { range: '25–29', median: 7800,  label: '2:10:00' },
-  { range: '30–34', median: 8040,  label: '2:14:00' },
-  { range: '35–39', median: 8280,  label: '2:18:00' },
-  { range: '40–44', median: 8460,  label: '2:21:00' },
-  { range: '45–49', median: 8700,  label: '2:25:00' },
-  { range: '50–54', median: 9120,  label: '2:32:00' },
-  { range: '55–59', median: 9540,  label: '2:39:00' },
-  { range: '60–64', median: 10260, label: '2:51:00' },
-  { range: '65+',   median: 11400, label: '3:10:00' },
+  { range: '18–24', median: 16_500, label: '4:35:00' },
+  { range: '25–29', median: 16_680, label: '4:38:00' },
+  { range: '30–34', median: 16_800, label: '4:40:00' },
+  { range: '35–39', median: 17_100, label: '4:45:00' },
+  { range: '40–44', median: 17_400, label: '4:50:00' },
+  { range: '45–49', median: 17_880, label: '4:58:00' },
+  { range: '50–54', median: 18_600, label: '5:10:00' },
+  { range: '55–59', median: 19_500, label: '5:25:00' },
+  { range: '60–64', median: 20_700, label: '5:45:00' },
+  { range: '65+',   median: 22_200, label: '6:10:00' },
 ];
 
 export const MEN_AGE_GROUPS: ReadonlyArray<AgeGroupBand> = [
-  { range: '18–24', median: 6720,  label: '1:52:00' },
-  { range: '25–29', median: 6780,  label: '1:53:00' },
-  { range: '30–34', median: 6900,  label: '1:55:00' },
-  { range: '35–39', median: 7080,  label: '1:58:00' },
-  { range: '40–44', median: 7260,  label: '2:01:00' },
-  { range: '45–49', median: 7500,  label: '2:05:00' },
-  { range: '50–54', median: 7800,  label: '2:10:00' },
-  { range: '55–59', median: 8220,  label: '2:17:00' },
-  { range: '60–64', median: 8820,  label: '2:27:00' },
-  { range: '65+',   median: 9720,  label: '2:42:00' },
+  { range: '18–24', median: 15_000, label: '4:10:00' },
+  { range: '25–29', median: 15_000, label: '4:10:00' },
+  { range: '30–34', median: 15_120, label: '4:12:00' },
+  { range: '35–39', median: 15_300, label: '4:15:00' },
+  { range: '40–44', median: 15_600, label: '4:20:00' },
+  { range: '45–49', median: 16_080, label: '4:28:00' },
+  { range: '50–54', median: 16_800, label: '4:40:00' },
+  { range: '55–59', median: 17_700, label: '4:55:00' },
+  { range: '60–64', median: 18_900, label: '5:15:00' },
+  { range: '65+',   median: 20_400, label: '5:40:00' },
 ];
 
 export const FIELD_HEADLINES = {
-  finishers: 28_500,
-  overallMedianSec: 8040,   // ~2:14:00
-  womensWinnerSec: 4537,    // 1:15:37
-  womensMedianSec: 8400,    // ~2:20:00
-  elevationPenaltyPct: 1.9,
-  typicalRaceTempF: 62,
+  finishers: 52_000,
+  overallMedianSec: 16_140,  // ~4:29:00
+  womensWinnerSec: 7_796,    // 2:09:56 — Ruth Chepngetich's 2024 world record
+  womensMedianSec: 17_100,   // ~4:45:00
+  elevationPenaltyPct: 0.3,  // flattest of the Majors
+  typicalRaceTempF: 55,      // mid-October Chicago morning
 };
 
 /** Compute the runner's age in years on race day from a YYYY-MM-DD birthday. */
@@ -120,14 +118,14 @@ export function ageGroupFor(age: number, gender: 'F' | 'M' = 'F'): AgeGroupBand 
 
 /** Histogram bins for the finish-time distribution chart. */
 export const DISTRIBUTION_BINS: ReadonlyArray<{ label: string; centerSec: number; share: number }> = [
-  { label: '<1:30', centerSec: 5_100,  share: 0.06 },
-  { label: '1:30',  centerSec: 5_700,  share: 0.05 },
-  { label: '1:40',  centerSec: 6_300,  share: 0.07 },
-  { label: '1:50',  centerSec: 6_900,  share: 0.10 },
-  { label: '2:00',  centerSec: 7_500,  share: 0.14 },
-  { label: '2:10',  centerSec: 8_100,  share: 0.16 },
-  { label: '2:20',  centerSec: 8_700,  share: 0.13 },
-  { label: '2:30',  centerSec: 9_300,  share: 0.10 },
-  { label: '2:45',  centerSec: 10_200, share: 0.09 },
-  { label: '3:00+', centerSec: 11_400, share: 0.10 },
+  { label: '<3:00', centerSec: 10_500, share: 0.05 },
+  { label: '3:00',  centerSec: 11_400, share: 0.05 },
+  { label: '3:20',  centerSec: 12_600, share: 0.08 },
+  { label: '3:40',  centerSec: 13_800, share: 0.10 },
+  { label: '4:00',  centerSec: 15_000, share: 0.13 },
+  { label: '4:20',  centerSec: 16_200, share: 0.13 },
+  { label: '4:40',  centerSec: 17_400, share: 0.13 },
+  { label: '5:00',  centerSec: 18_600, share: 0.12 },
+  { label: '5:30',  centerSec: 20_400, share: 0.11 },
+  { label: '6:00+', centerSec: 22_800, share: 0.10 },
 ];

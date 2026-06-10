@@ -29,14 +29,15 @@
   let mounted = false;
 
   onMount(() => {
-    // ?sim=<minutes-past-7AM> — only honored when developer mode is unlocked,
-    // so casual visitors can't drop into fake race state. e.g., ?sim=30 jumps
-    // to 7:30 AM (Catherine ~4mi, Helaine pre-race).
+    // ?sim=<minutes-past-7:30AM-CT> — only honored when developer mode is
+    // unlocked, so casual visitors can't drop into fake race state. e.g.,
+    // ?sim=60 jumps to 8:30 AM (Catherine ~7mi in, Helaine just started).
+    // Range extends to 420 (2:30 PM) — marathons take a while.
     const params = new URLSearchParams(location.search);
     const sim = params.get('sim');
     if (sim != null && get(devUnlocked)) {
       const n = parseInt(sim, 10);
-      if (Number.isFinite(n) && n >= -60 && n <= 240) demoTimeMin.set(n);
+      if (Number.isFinite(n) && n >= -60 && n <= 420) demoTimeMin.set(n);
     }
 
     // Touch every runner state store so they exist before any tab renders.
@@ -75,14 +76,12 @@
       {#if mounted && $activeTab === 'stats'}<StatsTab />{/if}
     </div>
 
-    {#if $devUnlocked}
-      <div class="pane" class:active={$activeTab === 'old-races'}>
-        {#if mounted && $activeTab === 'old-races'}<OldRacesTab />{/if}
-      </div>
-      <div class="pane" class:active={$activeTab === 'training'}>
-        {#if mounted && $activeTab === 'training'}<TrainingTab />{/if}
-      </div>
-    {/if}
+    <div class="pane" class:active={$activeTab === 'old-races'}>
+      {#if mounted && $activeTab === 'old-races'}<OldRacesTab />{/if}
+    </div>
+    <div class="pane" class:active={$activeTab === 'training'}>
+      {#if mounted && $activeTab === 'training'}<TrainingTab />{/if}
+    </div>
   </div>
 </main>
 
