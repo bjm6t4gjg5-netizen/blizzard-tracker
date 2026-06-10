@@ -3,16 +3,31 @@
 // ============================================================
 
 /**
- * Versioned key prefix. Bumping this number invalidates every persisted
- * setting (goals, profiles, tour-seen, theme, etc.) so a schema change
- * doesn't leave stale data masking the new defaults.
+ * Versioned key prefix. Bumping this invalidates every persisted setting
+ * (goals, profiles, pace history, tour-seen, theme, etc.) so a schema or
+ * RACE change doesn't leave stale data masking the new defaults.
  *
  * v3: Helaine sub-1:50 goal + wave/corral fields
  * v4: Catherine goal Sub-1:32, "goal" scenario removed (canonical goal line
  *     now drawn from editable mile splits), Helaine wave 2 Corral C,
  *     Helaine DOB 1964-04-13, height 5'7", weight 120 lb.
+ * v5 (chi2026): Chicago Marathon build. Critically, this orphans Brooklyn's
+ *     persisted paceHistory/goals/profiles — without the bump, the old
+ *     13.1mi race trace renders mid-course on the Chicago pace chart.
+ *     Bump again (or change the race slug) for every future race.
  */
-const PREFIX = 'blizzard:v4:';
+const PREFIX = 'blizzard:v5:chi2026:';
+
+// One-time tidy-up: drop orphaned v4 keys so they don't linger forever.
+try {
+  if (typeof localStorage !== 'undefined') {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith('blizzard:v4:') || k.startsWith('blizzard:v3:')) {
+        localStorage.removeItem(k);
+      }
+    }
+  }
+} catch { /* private browsing etc. */ }
 
 /** Read a value, validating the schema. Returns fallback on any error or version mismatch. */
 export function load<T>(key: string, fallback: T): T {

@@ -6,8 +6,6 @@
    * tab stays correct no matter which race the live dashboard currently
    * points at. The live dashboard (Family HQ, runner tabs, map) is always
    * about the CURRENT race — history lives here.
-   *
-   * TODO(Leon): fill in the official Brooklyn 2026 chip times below.
    */
   interface ArchivedResult {
     emoji: string;
@@ -41,8 +39,8 @@
       course: 'Brooklyn Museum → Grand Army Plaza → Prospect Park → Ocean Pkwy → Coney Island Boardwalk',
       summary: 'The race this tracker was originally built for — mother and daughter on the same start line, 246ft of bumps, finish by the Atlantic.',
       results: [
-        { emoji: '💙', name: 'Catherine Blizzard', color: '#007AFF', goal: 'Sub-1:32 (PR attempt)', time: null },
-        { emoji: '⚡', name: 'Helaine Blizzard',   color: '#FF2D55', goal: 'Sub-1:50',             time: null },
+        { emoji: '💙', name: 'Catherine Blizzard', color: '#007AFF', goal: 'Sub-1:32 (PR attempt)', time: '1:30:28', note: 'Half PR · 6:54/mi — goal beaten by 1:32' },
+        { emoji: '⚡', name: 'Helaine Blizzard',   color: '#FF2D55', goal: 'Sub-1:50',             time: '1:50:03', note: '8:24/mi at 62 — 3 seconds off the goal' },
       ],
       resultsHref: 'https://results.nyrr.org/',
     },

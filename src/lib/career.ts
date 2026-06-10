@@ -57,7 +57,7 @@ export interface CareerData {
 
 export const CATHERINE_PRS: PR[] = [
   { event: 'Marathon',      mark: '3:07:36',   paceLabel: '7:09 / mi',    date: '2025-04-21', meet: '129th Boston Marathon',     isAdult: true, href: 'https://www.baa.org/races/boston-marathon/results/?runner=6425' },
-  { event: 'Half marathon', mark: '1:32:17',   paceLabel: '7:03 / mi',    date: '2023-01-28', meet: 'Too Cold to Hold (Dallas)', isAdult: true, href: 'https://results.raceroster.com/v3/events/r67hrfknpckbs57q/race/143514' },
+  { event: 'Half marathon', mark: '1:30:28',   paceLabel: '6:54 / mi',    date: '2026-05-16', meet: 'RBC Brooklyn Half 2026',    isAdult: true },
   { event: '1600m',         mark: '5:46.22',   paceLabel: '5:48 / mi',    date: '2012-05-12', meet: 'DPL Varsity City Meet' },
   { event: '800m',          mark: '2:30.62',   paceLabel: '5:03 / mi',    date: '2012-05-12', meet: 'DPL Varsity City Meet' },
   { event: '400m',          mark: '1:04.78',   paceLabel: '6.48/100m',    date: '2012-05-12', meet: 'DPL Varsity City Meet' },
@@ -124,8 +124,7 @@ export const CATHERINE_RACES: Race[] = [
   { date: '2025-04-27', name: 'Big Sur Marathon',             location: 'Carmel, CA',      distance: 'Marathon', time: '3:34:30', highlight: 'Boston-to-Big-Sur · 6 days after Boston · 2,182 ft gain', href: 'https://results.svetiming.com/Big-Sur/events/2025/Big-Sur-International-Marathon/results' },
   { date: '2025-09-21', name: 'Berlin Marathon',              location: 'Berlin, Germany', distance: 'Marathon', time: '3:22:43', worldMajor: true, highlight: '5th World Major star · 80°F heat', href: 'https://api.results.scc-events.com/cert/6101?ei=BM&t=BM_2025&l=en&y=2025' },
 
-  // TODO(Leon): add Catherine's official Brooklyn 2026 chip time below.
-  { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: null, notes: 'Result pending — chip time TBD.' },
+  { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: '1:30:28', highlight: 'Half PR · 6:54/mi', notes: 'Sub-1:32 goal smashed by 1:32.' },
 
   // ─── Upcoming ───
   { date: '2026-10-11', name: 'Bank of America Chicago Marathon', location: 'Chicago, IL', distance: 'Marathon', time: null, worldMajor: true, notes: 'Sub-3:05 goal — PR attempt on the flattest Major.' },
@@ -222,15 +221,14 @@ export const HELAINE_RACES: Race[] = [
   H(2025, 'Half',     'BMW Dallas Half Marathon',           'Dallas'),
   H(2025, 'Half',     'Too Hot to Handle',                  'Dallas'),
   // ─── 2026 ───
-  // TODO(Leon): add Helaine's official Brooklyn 2026 chip time below.
-  H(2026, 'Half',     'RBC Brooklyn Half',                  'Brooklyn, NY',           { date: '2026-05-16', notes: 'Result pending — chip time TBD.' }),
+  HT('2026-05-16', 'Half',     'RBC Brooklyn Half',          'Brooklyn, NY',           '1:50:03', { highlight: '8:24/mi at 62 — 3 seconds off sub-1:50' }),
   // ─── Upcoming ───
   { date: '2026-10-11', name: 'Bank of America Chicago Marathon', location: 'Chicago, IL', distance: 'Marathon', time: null, worldMajor: true, notes: 'Sub-4:00 goal.' },
 ];
 
 export const HELAINE_PRS: PR[] = [
   { event: 'Marathon',      mark: '3:40:41', paceLabel: '8:25 / mi',  date: '2018-10-28', meet: 'Marine Corps Marathon', isAdult: true },
-  { event: 'Half marathon', mark: '1:50:00', paceLabel: '~8:24 / mi', date: '2026-05-16', meet: 'BKH 2026 (goal)',        isAdult: true },
+  { event: 'Half marathon', mark: '1:50:03', paceLabel: '8:24 / mi',  date: '2026-05-16', meet: 'RBC Brooklyn Half 2026', isAdult: true },
 ];
 
 // ────────────────────────────────────────────────────────────
@@ -311,7 +309,7 @@ export const CATHERINE_SUMMARY = summarize(CATHERINE_RACES);
 export const HELAINE_SUMMARY   = summarize(HELAINE_RACES);
 
 export function careerFor(runnerId: string): CareerData | null {
-  if (runnerId === 'gf')  return { runnerId, bio: 'Saint Rita Spartan (2008-2012). Undefeated XC champion 5th/6th/8th grade. DPL Varsity City Meet MVP 2012. 5 marathons (3:07:36 PR at Boston 2025), 5 half marathons (1:32:17 PR).', prs: CATHERINE_PRS, races: CATHERINE_RACES };
-  if (runnerId === 'mom') return { runnerId, bio: '23 marathons since 2006 — 3:40:41 PR at Marine Corps 2018. 5 of 6 World Marathon Major stars (Boston ×3, NYC ×3, Chicago, London, Berlin). Tokyo remains.',     prs: HELAINE_PRS,   races: HELAINE_RACES };
+  if (runnerId === 'gf')  return { runnerId, bio: 'Saint Rita Spartan (2008-2012). Undefeated XC champion 5th/6th/8th grade. DPL Varsity City Meet MVP 2012. 5 marathons (3:07:36 PR at Boston 2025), 6 half marathons (1:30:28 PR at Brooklyn 2026).', prs: CATHERINE_PRS, races: CATHERINE_RACES };
+  if (runnerId === 'mom') return { runnerId, bio: '23 marathons since 2006 — 3:40:41 PR at Marine Corps 2018. 1:50:03 half at 62 (Brooklyn 2026). 5 of 6 World Marathon Major stars (Boston ×3, NYC ×3, Chicago, London, Berlin). Tokyo remains.',     prs: HELAINE_PRS,   races: HELAINE_RACES };
   return null;
 }

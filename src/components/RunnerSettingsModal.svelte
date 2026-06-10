@@ -2,7 +2,8 @@
   import { runnerSettingsFor, profiles, goalsStore, updateRunner, notify } from '../lib/stores';
   import { parseGoalTime, formatHMS, formatHMSFull } from '../lib/format';
   import { buildGoalSplits, ageFromDob, type SplitGoal } from '../lib/runners';
-  import { RACE_START } from '../lib/time';
+  import { RACE_START, TOTAL_MI } from '../lib/time';
+  import { stravaConfigured, stravaConnectUrl, type AthleteKey } from '../lib/strava';
   import EmojiPicker from './EmojiPicker.svelte';
 
   $: editingId = $runnerSettingsFor;
@@ -21,6 +22,7 @@
   let weightLbStr = '';
   let wave: number | '' = '';
   let corral = '';
+  let stravaUrl = '';
   let goalTimeStr = '';
   let goalLabel = '';
   /** Editable per-mile checkpoint targets. Stored as string for the input,
@@ -47,6 +49,7 @@
       weightLbStr = profile.weightLb != null ? String(profile.weightLb) : '';
       wave = profile.wave ?? '';
       corral = profile.corral ?? '';
+      stravaUrl = profile.stravaUrl ?? '';
       goalTimeStr = formatHMS(g.goalSec);
       goalLabel = g.goalLabel;
       splits = g.splitGoals.map(s => ({
@@ -61,6 +64,12 @@
   // Live-compute the runner's age on race day from the DOB picker, so the
   // user sees "Age 28 on race day" while they're editing.
   $: ageOnRace = ageFromDob(dob, RACE_START);
+
+  // Strava connect link — only the two anchor runners have worker slots.
+  $: connectHref =
+    profile && stravaConfigured() && (profile.id === 'gf' || profile.id === 'mom')
+      ? stravaConnectUrl(profile.id as AthleteKey)
+      : null;
 
   function close() {
     runnerSettingsFor.set(null);
@@ -79,8 +88,8 @@
       if (!profile || !goals) return;
 
       const newGoalSec = parseGoalTime(goalTimeStr);
-      if (newGoalSec == null || newGoalSec < 60 * 30 || newGoalSec > 60 * 360) {
-        error = 'Goal time should be in H:MM:SS, between 30 min and 6 hours.';
+      if (newGoalSec == null || newGoalSec < 60 * 120 || newGoalSec > 60 * 480) {
+        error = 'Goal time should be in H:MM:SS, between 2 and 8 hours (it\'s a marathon!).';
         return;
       }
 
@@ -162,6 +171,13 @@
         return;
       }
 
+      // Strava profile URL — optional, must be http(s) if present.
+      const stravaOut = stravaUrl.trim() || undefined;
+      if (stravaOut && !/^https?:\/\//i.test(stravaOut)) {
+        error = 'Strava link should be a full URL (https://…).';
+        return;
+      }
+
       // Persist profile fields
       const profilePatch: Partial<Parameters<typeof updateRunner>[1]> = {
         emoji: (emoji ?? '').trim().slice(0, 4) || profile.emoji,
@@ -172,6 +188,7 @@
         weightLb: weightOut,
         wave: waveOut,
         corral: corralOut,
+        stravaUrl: stravaOut,
       };
       if (!profile.fixed) {
         profilePatch.name = name.trim() || profile.name;
@@ -184,7 +201,7 @@
         ...g,
         goalSec: newGoalSec,
         goalLabel: goalLabel.trim() || g.goalLabel,
-        goalMilePaceSec: Math.round(newGoalSec / 13.1094),
+        goalMilePaceSec: Math.round(newGoalSec / TOTAL_MI),
         splitGoals: parsedSplits,
       }));
 
@@ -227,7 +244,7 @@
             <label class="form-label" for="rs-dob">Date of birth</label>
             <input id="rs-dob" class="form-input" type="date" bind:value={dob} />
             {#if ageOnRace != null}
-              <div class="form-hint mono">Age {ageOnRace} on race day · May 16, 2026</div>
+              <div class="form-hint mono">Age {ageOnRace} on race day · Oct 11, 2026</div>
             {/if}
           </div>
           <div class="form-group">
@@ -259,16 +276,15 @@
 
       <div class="section">
         <div class="sec-title">Start wave</div>
-        <p class="sec-sub">Each wave goes off at a different time. Pick the wave + corral from the runner's RBC bib confirmation. <b>Wave 1 = 7:00 AM · Wave 2 = 7:30 AM · Wave 3 = 8:00 AM · Wave 4 = 8:30 AM</b>. Calendar export and arrival ETAs use this.</p>
+        <p class="sec-sub">Each wave goes off at a different time. Pick the wave + corral from the runner's Chicago bib confirmation (assigned ~2 weeks out). <b>Wave 1 = 7:35 AM · Wave 2 = 8:00 AM · Wave 3 = 8:35 AM CT</b>. Calendar export and arrival ETAs use this.</p>
         <div class="grid">
           <div class="form-group">
             <label class="form-label" for="rs-wave">Wave</label>
             <select id="rs-wave" class="form-input" bind:value={wave}>
               <option value="">—</option>
-              <option value={1}>1 · 7:00 AM</option>
-              <option value={2}>2 · 7:25 AM</option>
-              <option value={3}>3 · 7:50 AM</option>
-              <option value={4}>4 · 8:15 AM</option>
+              <option value={1}>1 · 7:35 AM CT</option>
+              <option value={2}>2 · 8:00 AM CT</option>
+              <option value={3}>3 · 8:35 AM CT</option>
             </select>
           </div>
           <div class="form-group">
@@ -277,6 +293,25 @@
               <option value="">—</option>
               {#each ['A','B','C','D','E','F'] as c}<option value={c}>{c}</option>{/each}
             </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-title">Strava</div>
+        <p class="sec-sub">The profile link shows up in the Training tab. "Connect" grants the app read access to this runner's activities — that's what makes the training charts live.</p>
+        <div class="grid">
+          <div class="form-group g-2">
+            <label class="form-label" for="rs-strava">Strava profile link</label>
+            <input id="rs-strava" class="form-input" bind:value={stravaUrl} placeholder="https://www.strava.com/athletes/…" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rs-strava-connect">Activity access</label>
+            {#if connectHref}
+              <a id="rs-strava-connect" class="btn btn-strava" href={connectHref} target="_blank" rel="noopener">Connect ↗</a>
+            {:else}
+              <div class="form-hint">Deploy the worker first — see <code>worker/README.md</code></div>
+            {/if}
           </div>
         </div>
       </div>
@@ -437,6 +472,18 @@
   }
   .actions { display: flex; gap: 8px; margin-top: 14px; }
   .actions .btn { flex: 1; }
+
+  .btn-strava {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #FC4C02; /* Strava orange */
+    color: white;
+    text-decoration: none;
+    height: 38px;
+    width: 100%;
+  }
+  .btn-strava:hover { filter: brightness(1.08); }
 
   @media (max-width: 600px) {
     .grid { grid-template-columns: 1fr 1fr; }

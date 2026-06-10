@@ -316,7 +316,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(marathon.?vs|half.?vs|5k.?vs|10k.?vs|compare.?distance)\b/i,
     reply: () =>
-      `**Distance equivalence rules of thumb** (Riegel formula):\nIf you run a half in **X**, expect a marathon around **X × 2.1**. A ~1:30 half scales to a ~3:09 marathon — and Catherine has already run 3:06:12 at Boston on a much harder course. That's why sub-3:05 at flat Chicago is the right target, with sub-3:00 as the dream-day scenario.`,
+      `**Distance equivalence rules of thumb** (Riegel formula):\nIf you run a half in **X**, expect a marathon around **X × 2.1**. Catherine's 1:30:28 half PR (Brooklyn 2026) scales to a ~3:10 marathon — and she's already run 3:07:36 at Boston on a much harder course. That's why sub-3:05 at flat Chicago is the right target, with sub-3:00 as the dream-day scenario.`,
   },
   // Helaine's marathon list
   {
@@ -328,7 +328,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(catherine.?pr|her.?best|her.?fastest|fastest.?time)\b/i,
     reply: () =>
-      `Catherine's official PRs:\n• Marathon: **3:06:12** (Boston 2025, 7:06/mi)\n• 1600m: **5:46** (8th grade, City Meet)\n• 800m: **2:30** (8th grade)\n• XC 2-mile: **12:49** (8th grade championship)\n• 100m hurdles: **20.62** (7th grade)\n• Long jump: **13'06"** (8th grade)`,
+      `Catherine's official PRs:\n• Marathon: **3:07:36** (Boston 2025, 7:09/mi)\n• Half: **1:30:28** (Brooklyn 2026, 6:54/mi)\n• 1600m: **5:46** (8th grade, City Meet)\n• 800m: **2:30** (8th grade)\n• XC 2-mile: **12:49** (8th grade championship)\n• 100m hurdles: **20.62** (7th grade)\n• Long jump: **13'06"** (8th grade)`,
   },
   // App architecture / nerd questions
   {

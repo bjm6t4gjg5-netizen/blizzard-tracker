@@ -1,12 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { profiles } from '../lib/stores';
-  import {
-    CATHERINE_WEEKLY, HELAINE_WEEKLY,
-    CATHERINE_RUNS, HELAINE_RUNS,
-    CATHERINE_TRAINING, HELAINE_TRAINING,
-    type RecentRun, type WeeklyMileage, type TrainingLocation,
-  } from '../lib/trainingSample';
+  import type { RecentRun, TrainingLocation } from '../lib/trainingSample';
   import {
     fetchTrainingSummary, stravaConfigured, stravaConnectUrl,
     type TrainingSummary,
@@ -17,7 +12,7 @@
   $: gf  = $profiles.find(p => p.id === 'gf');
   $: mom = $profiles.find(p => p.id === 'mom');
 
-  // ── Live Strava data (null → sample fallback) ──────────────
+  // ── Live Strava data only — no sample/placeholder data. ────
   let gfLive: TrainingSummary | null = null;
   let momLive: TrainingSummary | null = null;
   let loaded = false;
@@ -34,24 +29,17 @@
     loaded = true;
   });
 
-  let gfWeekly: WeeklyMileage[];
-  let momWeekly: WeeklyMileage[];
-  let gfRuns: ReadonlyArray<RecentRun>;
-  let momRuns: ReadonlyArray<RecentRun>;
-  let gfLocs: ReadonlyArray<TrainingLocation>;
-  let momLocs: ReadonlyArray<TrainingLocation>;
-  $: gfWeekly  = gfLive?.weekly  ?? [...CATHERINE_WEEKLY];
-  $: momWeekly = momLive?.weekly ?? [...HELAINE_WEEKLY];
-  $: gfRuns    = gfLive?.recent  ?? CATHERINE_RUNS;
-  $: momRuns   = momLive?.recent ?? HELAINE_RUNS;
-  $: gfLocs    = gfLive?.locations?.length  ? gfLive.locations  : CATHERINE_TRAINING;
-  $: momLocs   = momLive?.locations?.length ? momLive.locations : HELAINE_TRAINING;
+  const EMPTY_LOCS: ReadonlyArray<TrainingLocation> = [];
+  let gfLocs: ReadonlyArray<TrainingLocation> = EMPTY_LOCS;
+  let momLocs: ReadonlyArray<TrainingLocation> = EMPTY_LOCS;
+  $: gfLocs  = gfLive?.locations  ?? EMPTY_LOCS;
+  $: momLocs = momLive?.locations ?? EMPTY_LOCS;
   $: anyLive = !!(gfLive || momLive);
   /** Key forces the Leaflet map to rebuild when live data lands. */
   $: mapKey = `${gfLive ? 'g1' : 'g0'}-${momLive ? 'm1' : 'm0'}`;
 
   function liveBadge(s: TrainingSummary | null): string {
-    if (!s?.fetchedAt) return 'sample data';
+    if (!s?.fetchedAt) return 'not connected';
     const min = Math.round((Date.now() - s.fetchedAt) / 60_000);
     return min <= 1 ? 'live · just synced' : `live · synced ${min}m ago`;
   }
@@ -84,127 +72,125 @@
       {#if anyLive}
         Every run Catherine and Helaine record syncs Garmin → Strava → here, minutes after they finish.
       {:else if configured}
-        Strava is configured but {loaded ? 'no runner has connected yet — sample data below.' : 'loading…'}
+        {loaded ? 'Strava is set up — each runner just needs to tap Connect below.' : 'Loading training data…'}
       {:else}
-        Sample data below — connect Strava to make this live (see <code>worker/README.md</code>).
+        Live training data needs the Strava worker deployed once — see <code>worker/README.md</code>. No placeholder data here: what you see is real or nothing.
       {/if}
     </p>
   </div>
 </div>
 
-<!-- Strava connection status -->
-<div class="card gap-md">
-  <div class="card-header"><div class="card-title">🔗 Strava</div></div>
-  <div class="card-pad strava-row">
-    {#if gf}
-      <div class="athlete-chip" style="--pc: {gf.color}">
-        <span class="chip-name">{gf.emoji} {gf.name.split(' ')[0]}</span>
-        {#if gfLive}
-          <span class="chip-state ok">{liveBadge(gfLive)}</span>
-        {:else if configured}
-          <a class="chip-cta" href={stravaConnectUrl('gf')} target="_blank" rel="noopener">Connect Strava →</a>
-        {:else}
-          <span class="chip-state">{liveBadge(null)}</span>
-        {/if}
-      </div>
-    {/if}
-    {#if mom}
-      <div class="athlete-chip" style="--pc: {mom.color}">
-        <span class="chip-name">{mom.emoji} {mom.name.split(' ')[0]}</span>
-        {#if momLive}
-          <span class="chip-state ok">{liveBadge(momLive)}</span>
-        {:else if configured}
-          <a class="chip-cta" href={stravaConnectUrl('mom')} target="_blank" rel="noopener">Connect Strava →</a>
-        {:else}
-          <span class="chip-state">{liveBadge(null)}</span>
-        {/if}
-      </div>
-    {/if}
-  </div>
-</div>
-
-<!-- Training-geography heat map -->
-<div class="card gap-md">
-  <div class="card-header">
-    <div class="card-title">🌍 Training geography</div>
-    <div class="legend">
-      {#if gf}<span><span class="dot" style="background:{gf.color}"></span>{gf.name.split(' ')[0]}</span>{/if}
-      {#if mom}<span><span class="dot" style="background:{mom.color}"></span>{mom.name.split(' ')[0]}</span>{/if}
-      <span><span class="dot dot-chi"></span>Race day: Chicago 🏆</span>
-    </div>
-  </div>
-  <div class="card-pad">
-    {#key mapKey}
-      <TrainingMap height="440px" catherineLocations={gfLocs} helaineLocations={momLocs} />
-    {/key}
-  </div>
-</div>
-
-<!-- Weekly mileage -->
+<!-- Per-runner Strava connection -->
 <div class="grid-2 gap-md">
-  {#if gf}
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">{gf.emoji} {gf.name.split(' ')[0]} · weekly mileage</div>
-        <div class="src-badge" class:live={!!gfLive}>{liveBadge(gfLive)}</div>
-      </div>
-      <div class="card-pad"><TrainingMileageChart weeks={gfWeekly} color={gf.color} /></div>
-    </div>
-  {/if}
-  {#if mom}
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">{mom.emoji} {mom.name.split(' ')[0]} · weekly mileage</div>
-        <div class="src-badge" class:live={!!momLive}>{liveBadge(momLive)}</div>
-      </div>
-      <div class="card-pad"><TrainingMileageChart weeks={momWeekly} color={mom.color} /></div>
-    </div>
-  {/if}
-</div>
-
-<!-- Recent runs -->
-<div class="grid-2 gap-md">
-  {#if gf}
-    <div class="card">
-      <div class="card-header"><div class="card-title">{gf.emoji} {gf.name.split(' ')[0]} · last 5 runs</div></div>
-      <div class="runs">
-        {#each gfRuns as r}
-          <div class="run">
-            <span class="r-type {typeTone(r.type)}">{r.type}</span>
-            <div class="r-main">
-              <div class="r-top">
-                <span class="r-dist mono">{r.distanceMi.toFixed(1)} mi</span>
-                <span class="r-pace mono">· {pace(r.paceSecPerMile)}</span>
-                {#if r.hrAvg}<span class="r-hr mono">· {r.hrAvg} bpm</span>{/if}
-              </div>
-              <div class="r-meta">{fmtDate(r.date)}{r.city ? ` · ${r.city}` : ''}{r.notes ? ` · ${r.notes}` : ''}</div>
+  {#each [gf, mom] as p, i}
+    {#if p}
+      {@const live = i === 0 ? gfLive : momLive}
+      <div class="card athlete-card" style="--pc: {p.color}">
+        <div class="card-pad athlete-row">
+          <div class="athlete-id">
+            <span class="a-emoji">{p.emoji}</span>
+            <div>
+              <div class="a-name">{p.name.split(' ')[0]}</div>
+              <div class="a-state" class:ok={!!live}>{liveBadge(live)}</div>
             </div>
           </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
-  {#if mom}
-    <div class="card">
-      <div class="card-header"><div class="card-title">{mom.emoji} {mom.name.split(' ')[0]} · last 5 runs</div></div>
-      <div class="runs">
-        {#each momRuns as r}
-          <div class="run">
-            <span class="r-type {typeTone(r.type)}">{r.type}</span>
-            <div class="r-main">
-              <div class="r-top">
-                <span class="r-dist mono">{r.distanceMi.toFixed(1)} mi</span>
-                <span class="r-pace mono">· {pace(r.paceSecPerMile)}</span>
-                {#if r.hrAvg}<span class="r-hr mono">· {r.hrAvg} bpm</span>{/if}
-              </div>
-              <div class="r-meta">{fmtDate(r.date)}{r.city ? ` · ${r.city}` : ''}{r.notes ? ` · ${r.notes}` : ''}</div>
-            </div>
+          <div class="athlete-actions">
+            {#if p.stravaUrl}
+              <a class="a-link" href={p.stravaUrl} target="_blank" rel="noopener">View profile ↗</a>
+            {/if}
+            {#if !live && configured && (p.id === 'gf' || p.id === 'mom')}
+              <a class="a-connect" href={stravaConnectUrl(p.id)} target="_blank" rel="noopener">Connect Strava</a>
+            {/if}
           </div>
-        {/each}
+        </div>
+      </div>
+    {/if}
+  {/each}
+</div>
+
+{#if anyLive}
+  <!-- Training-geography heat map -->
+  <div class="card gap-md">
+    <div class="card-header">
+      <div class="card-title">🌍 Training geography</div>
+      <div class="legend">
+        {#if gfLive && gf}<span><span class="dot" style="background:{gf.color}"></span>{gf.name.split(' ')[0]}</span>{/if}
+        {#if momLive && mom}<span><span class="dot" style="background:{mom.color}"></span>{mom.name.split(' ')[0]}</span>{/if}
+        <span><span class="dot dot-chi"></span>Race day: Chicago 🏆</span>
       </div>
     </div>
-  {/if}
-</div>
+    <div class="card-pad">
+      {#key mapKey}
+        <TrainingMap height="440px" catherineLocations={gfLocs} helaineLocations={momLocs} />
+      {/key}
+    </div>
+  </div>
+
+  <!-- Weekly mileage -->
+  <div class="grid-2 gap-md">
+    {#if gf && gfLive?.weekly}
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">{gf.emoji} {gf.name.split(' ')[0]} · weekly mileage</div>
+          <div class="src-badge live">{liveBadge(gfLive)}</div>
+        </div>
+        <div class="card-pad"><TrainingMileageChart weeks={gfLive.weekly} color={gf.color} /></div>
+      </div>
+    {/if}
+    {#if mom && momLive?.weekly}
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">{mom.emoji} {mom.name.split(' ')[0]} · weekly mileage</div>
+          <div class="src-badge live">{liveBadge(momLive)}</div>
+        </div>
+        <div class="card-pad"><TrainingMileageChart weeks={momLive.weekly} color={mom.color} /></div>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Recent runs -->
+  <div class="grid-2 gap-md">
+    {#each [{ p: gf, live: gfLive }, { p: mom, live: momLive }] as entry}
+      {#if entry.p && entry.live?.recent?.length}
+        <div class="card">
+          <div class="card-header"><div class="card-title">{entry.p.emoji} {entry.p.name.split(' ')[0]} · last {entry.live.recent.length} runs</div></div>
+          <div class="runs">
+            {#each entry.live.recent as r}
+              <div class="run">
+                <span class="r-type {typeTone(r.type)}">{r.type}</span>
+                <div class="r-main">
+                  <div class="r-top">
+                    <span class="r-dist mono">{r.distanceMi.toFixed(1)} mi</span>
+                    <span class="r-pace mono">· {pace(r.paceSecPerMile)}</span>
+                    {#if r.hrAvg}<span class="r-hr mono">· {r.hrAvg} bpm</span>{/if}
+                  </div>
+                  <div class="r-meta">{fmtDate(r.date)}{r.city ? ` · ${r.city}` : ''}{r.notes ? ` · ${r.notes}` : ''}</div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
+    {/each}
+  </div>
+{:else if loaded}
+  <!-- No data yet — honest empty state, no fake charts. -->
+  <div class="card card-pad empty">
+    <div class="empty-emoji">🏃‍♀️📡</div>
+    <div class="empty-title">No training data yet</div>
+    <p class="empty-sub">
+      {#if configured}
+        Once Catherine and Helaine tap <strong>Connect Strava</strong> above, their weekly
+        mileage, recent runs, and a training-geography heat map appear here — updated
+        automatically after every run they record.
+      {:else}
+        One-time setup: deploy the tiny Strava worker (<code>worker/README.md</code>, ~15 min,
+        free), then each runner taps Connect. After that, every recorded practice run
+        shows up here automatically.
+      {/if}
+    </p>
+  </div>
+{/if}
 
 <style>
   .head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--gap-md); }
@@ -212,27 +198,26 @@
   .sub { color: var(--text-tertiary); font-size: 13px; margin: 0 0 var(--gap-md); }
   .sub code { background: var(--surface-2); padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
 
-  .strava-row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .athlete-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid var(--separator-soft);
-    border-left: 3px solid var(--pc);
-    border-radius: var(--radius-sm);
-    padding: 8px 12px;
-    background: var(--surface);
-  }
-  .chip-name { font-weight: 700; font-size: 13px; }
-  .chip-state { font-size: 11.5px; color: var(--text-tertiary); }
-  .chip-state.ok { color: var(--green); font-weight: 600; }
-  .chip-cta {
+  .athlete-card { border-left: 3px solid var(--pc); }
+  .athlete-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .athlete-id { display: flex; align-items: center; gap: 10px; }
+  .a-emoji { font-size: 22px; }
+  .a-name { font-weight: 700; font-size: 14px; }
+  .a-state { font-size: 11.5px; color: var(--text-tertiary); }
+  .a-state.ok { color: var(--green); font-weight: 600; }
+  .athlete-actions { display: flex; align-items: center; gap: 12px; }
+  .a-link { font-size: 12px; color: var(--blue); text-decoration: none; }
+  .a-link:hover { text-decoration: underline; }
+  .a-connect {
     font-size: 12px;
     font-weight: 700;
-    color: #FC4C02; /* Strava orange */
+    color: white;
+    background: #FC4C02; /* Strava orange */
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
     text-decoration: none;
   }
-  .chip-cta:hover { text-decoration: underline; }
+  .a-connect:hover { filter: brightness(1.08); }
 
   .src-badge {
     font-size: 10.5px;
@@ -258,6 +243,12 @@
   .dot-chi { background: linear-gradient(135deg, #FF9500, #FF3B30); }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+
+  .empty { text-align: center; padding: 42px 24px; }
+  .empty-emoji { font-size: 34px; }
+  .empty-title { font-weight: 700; font-size: 17px; margin: 8px 0 4px; }
+  .empty-sub { font-size: 13px; color: var(--text-tertiary); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+  .empty-sub code { background: var(--surface-2); padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
 
   .runs { display: flex; flex-direction: column; }
   .run {

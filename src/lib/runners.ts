@@ -32,6 +32,8 @@ export interface RunnerProfile {
   wave?: 1 | 2 | 3 | 4;
   /** Corral letter within the wave: A, B, C, ... */
   corral?: string;
+  /** Link to the runner's public Strava profile (shown in the Training tab). */
+  stravaUrl?: string;
 }
 
 // ────────────────────────────────────────────────────────────
@@ -165,7 +167,7 @@ export const DEFAULT_PROFILES: ReadonlyArray<RunnerProfile> = [
   // (usually ~2 weeks before race day, via the Chicago Marathon app / rtrt.me).
   // Wave/corral are estimates until bib confirmation.
   // Catherine — born 25 May 1998 (age 28). Wave 1 · Corral B → ~7:37 AM CT start.
-  { id: 'gf',  name: 'Catherine Blizzard', trackId: 'RMGBEVSK', emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, corral: 'B' },
+  { id: 'gf',  name: 'Catherine Blizzard', trackId: 'RMGBEVSK', emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, corral: 'B', stravaUrl: 'https://strava.app.link/9FmbkvYZQ3b' },
   // Helaine — born 13 Apr 1964 (age 62). Wave 2 · Corral C → ~8:04 AM CT start.
   // Brand color: Apple Pink (#FF2D55) — visually distinct from Catherine's
   // blue so heat maps + map markers + chart lines never read as the same

@@ -5,15 +5,15 @@
   import { get } from 'svelte/store';
   import { profiles } from '../lib/stores';
   import {
-    CATHERINE_TRAINING, HELAINE_TRAINING, CHICAGO_RACE_LOCATION,
+    CHICAGO_RACE_LOCATION,
     type TrainingLocation,
   } from '../lib/trainingSample';
 
   export let height = '440px';
-  /** Location sets to plot — default to the bundled sample data; the
-   *  Training tab passes real Strava clusters when connected. */
-  export let catherineLocations: ReadonlyArray<TrainingLocation> = CATHERINE_TRAINING;
-  export let helaineLocations: ReadonlyArray<TrainingLocation> = HELAINE_TRAINING;
+  /** Location sets to plot — real Strava clusters passed in by the Training
+   *  tab. Defaults are empty: no placeholder data renders, ever. */
+  export let catherineLocations: ReadonlyArray<TrainingLocation> = [];
+  export let helaineLocations: ReadonlyArray<TrainingLocation> = [];
 
   let mapEl: HTMLDivElement;
   let map: L.Map | null = null;
