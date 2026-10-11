@@ -228,8 +228,13 @@ export function resultsProxyBase(): string | null {
     if (ls) return ls.replace(/\/+$/, '');
   } catch { /* ignore */ }
   const env = (import.meta as any).env?.VITE_RESULTS_PROXY as string | undefined;
-  return env ? env.replace(/\/+$/, '') : null;
+  if (env) return env.replace(/\/+$/, '');
+  return defaultRelay ? defaultRelay.replace(/\/+$/, '') : null;
 }
+
+let defaultRelay: string | null = null;
+/** Set by the provider dispatcher from races.ts. */
+export function setDefaultRelay(url: string | null | undefined): void { defaultRelay = url ?? null; }
 
 async function getText(url: string): Promise<string> {
   const ctrl = new AbortController();

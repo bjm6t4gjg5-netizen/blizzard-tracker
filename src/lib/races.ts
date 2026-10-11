@@ -15,7 +15,7 @@
 
 export type TrackingProvider =
   /** mika:timing results sites (Chicago, Berlin, Boston, …). */
-  | { type: 'mika'; base: string; event: string; label: string; publicUrl: string }
+  | { type: 'mika'; base: string; event: string; label: string; publicUrl: string; relay?: string }
   /** RTRT.me JSON API (NYRR races, many US events). */
   | { type: 'rtrt'; eventId: string; label: string; publicUrl: string }
   /** No live feed — the app projects position from goal pace. */
@@ -108,6 +108,9 @@ export const CURRENT_RACE: CurrentRace = {
     event: 'MAR',
     label: 'Official results · mika:timing',
     publicUrl: 'https://results.chicagomarathon.com/2026/',
+    // CORS relay (worker-results/). VITE_RESULTS_PROXY or
+    // localStorage.resultsProxy override this.
+    relay: 'https://blizzard-results.leonschulte.workers.dev',
   },
   bibs: {
     gf: '15749',  // Catherine — from results.chicagomarathon.com/2026

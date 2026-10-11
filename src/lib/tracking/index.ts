@@ -6,7 +6,9 @@
 // ============================================================
 import { CURRENT_RACE } from '../races';
 import { fetchRunner as fetchRtrt, type RtrtSnapshot } from '../rtrt';
-import { fetchMikaRunner, publicRunnerUrl } from './mika';
+import { fetchMikaRunner, publicRunnerUrl, setDefaultRelay } from './mika';
+
+if (CURRENT_RACE.tracking.type === 'mika') setDefaultRelay(CURRENT_RACE.tracking.relay);
 
 export interface LiveContext {
   /** Runner's goal pace (s/mi) — used to extrapolate between timing mats. */
