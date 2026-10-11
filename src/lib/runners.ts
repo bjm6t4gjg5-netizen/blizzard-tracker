@@ -476,6 +476,10 @@ export function applySnapshot(state: RunnerState, snap: RtrtSnapshot): RunnerSta
   let newElapsed: number;
   if (snap.status === 'finished' && apiElapsed != null) {
     newElapsed = apiElapsed;
+  } else if (apiElapsed != null && state.status === 'finished') {
+    // Recovering from a wrong "finished" (e.g. projected Finish row read as
+    // real on race morning): trust the live clock, not the stale finish.
+    newElapsed = apiElapsed;
   } else if (apiElapsed != null) {
     newElapsed = Math.max(state.elapsedSec, apiElapsed);
   } else {
@@ -484,6 +488,12 @@ export function applySnapshot(state: RunnerState, snap: RtrtSnapshot): RunnerSta
 
   // Append to pace history only if we actually moved (avoids spamming dupes).
   let history = state.paceHistory;
+  // Drop any recorded points beyond the latest REAL mat (self-heals traces
+  // polluted by projected splits, which may be persisted in localStorage).
+  if (snap.anchor && snap.status !== 'finished') {
+    const maxMi = snap.anchor.mi + 0.01;
+    if (history.some(h => h.mi > maxMi)) history = history.filter(h => h.mi <= maxMi);
+  }
   // Only record REAL measurements — extrapolated/projected positions would
   // fake a perfectly even pace line on the pace chart.
   const point = snap.anchor

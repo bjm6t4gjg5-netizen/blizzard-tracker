@@ -138,17 +138,23 @@ export function parseMikaDetail(html: string, opts: MikaParseOptions): MikaParse
   const splitsBox = html.match(/box-splits[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/);
   const rows: MikaSplitRow[] = [];
   if (splitsBox) {
-    const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+    const rowRe = /<tr([^>]*)>([\s\S]*?)<\/tr>/g;
     let r: RegExpExecArray | null;
     while ((r = rowRe.exec(splitsBox[1]))) {
-      const cells = r[1];
-      const label = stripTags(cells.match(/<th[^>]*class="[^"]*\bdesc\b[^"]*"[^>]*>([\s\S]*?)<\/th>/)?.[1] ?? '');
+      const attrs = r[1];
+      const cells = r[2];
+      const rawLabel = stripTags(cells.match(/<th[^>]*class="[^"]*\bdesc\b[^"]*"[^>]*>([\s\S]*?)<\/th>/)?.[1] ?? '');
+      // Mid-race the site pre-fills every FUTURE mat (incl. Finish) with a
+      // projected time, marked class="estimated" and a "*" on the label.
+      // Those are NOT real crossings — treat as not reached.
+      const projected = /\bestimated\b/.test(attrs) || rawLabel.includes('*');
+      const label = rawLabel.replace(/\*/g, '').trim();
       if (!label) continue;
       const mi = splitLabelToMiles(label, opts.totalMi);
       if (mi == null) continue;
       const timeRaw = stripTags(cells.match(/<td[^>]*class="time"[^>]*>([\s\S]*?)<\/td>/)?.[1] ?? '');
       const paceRaw = stripTags(cells.match(/<td[^>]*class="min_mile[^"]*"[^>]*>([\s\S]*?)<\/td>/)?.[1] ?? '');
-      const sec = hmsToSec(timeRaw);
+      const sec = projected ? null : hmsToSec(timeRaw);
       rows.push({ label, mi, sec, pace: sec && paceRaw && paceRaw !== '00:00' ? `${paceRaw} /mi` : '—' });
     }
   }

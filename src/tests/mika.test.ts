@@ -86,6 +86,30 @@ describe('parseMikaDetail', () => {
     expect(p.predictedFinishSec).toBe(2 * 3600 + 59 * 60 + 30);
   });
 
+  it('LIVE BUG: future mats pre-filled as "estimated" (incl. Finish) are not crossings', () => {
+    // Exact row shapes captured from Catherine's page at ~8:10 CT race day.
+    const row = (cls: string, label: string, t: string) =>
+      `<tr class="${cls}" > <th class="desc" >${label}</th> <td class="time_day">x</td> <td class="time">${t}</td> <td class="diff">-</td> <td class="min_mile right opt colgroup-splits colgroup-splits-imperial">06:58</td> </tr>`;
+    const html = `<div class="detail-box box-other"><table><tbody><tr class=" f-starttime_net"><th class="desc">Start Time</th><td class="f-starttime_net last">07:41:57</td></tr></tbody></table></div>
+<div class="detail-box box-totals"><table><tbody><tr><th class="desc">Finish Time</th><td class="f-time_finish_netto last">&ndash;</td></tr></tbody></table></div>
+<div class="detail-box box-state"><table><tbody><tr><th class="desc">Race Status</th><td class="f-__race_status last">Started</td></tr><tr><th class="desc">Last Split</th><td class="f-__last_split_name last">05K</td></tr><tr><th class="desc">Pred. Finish</th><td class="f-__estimated_finish last">03:02:25</td></tr></tbody></table></div>
+<div class="detail-box box-splits"><table><thead><tr><th>Split</th></tr></thead><tbody>
+${row(' f-time_05 highlight', '05K', '00:21:37')}
+${row('list-highlight f-time_10 estimated text-muted', '10K <strong>*</strong>', '00:43:14')}
+${row(' f-time_52 estimated text-muted', 'HALF <strong>*</strong>', '01:31:13')}
+${row(' f-time_finish_netto estimated text-muted', 'Finish <strong>*</strong>', '03:02:25')}
+</tbody></table></div>`;
+    const nowMs = Date.parse('2026-10-11T13:10:00Z'); // 8:10 CT, 28:03 elapsed
+    const p = parseMikaDetail(html, { ...OPTS, nowMs });
+    expect(p.status).toBe('running');
+    expect(p.elapsedSec).toBe(28 * 60 + 3);
+    expect(p.splits.map(s => s.label)).toEqual(['05K']);
+    expect(p.rows.find(r => r.label === 'Finish')!.sec).toBeNull();
+    expect(p.distMi!).toBeGreaterThan(3.1);
+    expect(p.distMi!).toBeLessThan(6.2);
+    expect(p.predictedFinishSec).toBe(3 * 3600 + 2 * 60 + 25);
+  });
+
   it('never projects past the next timing mat', () => {
     // Two hours after HALF with no new split → capped just before 25K.
     const nowMs = Date.parse('2026-10-11T16:10:12Z');
@@ -138,5 +162,20 @@ describe('race registry', () => {
     }
     expect(DEFAULT_GOALS.gf.goalSec).toBeLessThan(3 * 3600);
     expect(DEFAULT_GOALS.mom.goalSec).toBeLessThan(3 * 3600 + 40 * 60 + 41);
+  });
+});
+
+import { applySnapshot, makeRunnerState } from '../lib/runners';
+describe('recovery from a false finish', () => {
+  it('finished → running snapshot restores live elapsed and trims bogus trace', () => {
+    const s0 = makeRunnerState(DEFAULT_PROFILES[0]);
+    const bad = { ...s0, status: 'finished' as const, distMi: 26.2188, elapsedSec: 10945,
+      paceHistory: [{ mi: 3.107, elapsedSec: 1297 }, { mi: 26.2188, elapsedSec: 10945 }] };
+    const fixed = applySnapshot(bad, { status: 'running', distMi: 4.0, elapsedSec: 1700, splits: [],
+      fetchedAt: 0, source: 'mika·est', anchor: { mi: 3.107, elapsedSec: 1297 } });
+    expect(fixed.status).toBe('running');
+    expect(fixed.elapsedSec).toBe(1700);
+    expect(fixed.distMi).toBeCloseTo(4.0);
+    expect(fixed.paceHistory.map(h => h.mi)).toEqual([3.107]);
   });
 });
