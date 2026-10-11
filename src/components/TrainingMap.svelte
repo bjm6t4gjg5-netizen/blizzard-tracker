@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import L from 'leaflet';
+  import { addBaseTiles } from '../lib/tiles';
   import 'leaflet.heat';
   import { get } from 'svelte/store';
   import { profiles } from '../lib/stores';
@@ -95,10 +96,7 @@
       preferCanvas: false,        // SVG renderer plays nicer with heat overlays
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 12,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(map);
+    addBaseTiles(map);
 
     const profs = get(profiles);
     const gf  = profs.find(p => p.id === 'gf');

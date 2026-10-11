@@ -16,6 +16,40 @@
   let canvas: HTMLCanvasElement;
   let chart: Chart | null = null;
 
+  /**
+   * 'delta' (default): y = seconds AHEAD of the goal split plan at that mile
+   *   (above 0 = ahead, below = behind). Goal is the flat zero line, so a
+   *   20-second swing is clearly visible — on an elapsed-minutes axis the
+   *   lines all sit on top of each other.
+   * 'elapsed': the classic elapsed-minutes-vs-mile view.
+   */
+  let mode: 'delta' | 'elapsed' = 'delta';
+
+  /** Goal elapsed seconds at any mile, linear between split anchors. */
+  function goalSecAt(mi: number): number {
+    const anchors = [{ mi: 0, sec: 0 }, ...goals.splitGoals
+      .slice().sort((a, b) => a.mi - b.mi).map(g => ({ mi: g.mi, sec: g.targetSec }))];
+    if (mi <= 0) return 0;
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const a = anchors[i], b = anchors[i + 1];
+      if (mi <= b.mi) return a.sec + ((b.sec - a.sec) * (mi - a.mi)) / (b.mi - a.mi || 1e-9);
+    }
+    const a = anchors[anchors.length - 2], b = anchors[anchors.length - 1];
+    return b.sec + ((b.sec - a.sec) / (b.mi - a.mi || 1e-9)) * (mi - b.mi);
+  }
+
+  /** Map (mile, elapsed seconds) → chart y for the current mode. */
+  function yOf(mi: number, sec: number): number {
+    return mode === 'delta' ? +(goalSecAt(mi) - sec).toFixed(1) : +(sec / 60).toFixed(2);
+  }
+
+  function fmtDelta(v: number): string {
+    const a = Math.abs(Math.round(v));
+    const t = `${Math.floor(a / 60)}:${String(a % 60).padStart(2, '0')}`;
+    if (a < 1) return 'on goal';
+    return v > 0 ? `${t} ahead` : `${t} behind`;
+  }
+
   // Pre-race: scenarios run from mile 0 (full race plans).
   // Mid-race: scenarios FORK from the runner's current position so each
   // line reads as "from now, what does each pace strategy look like to the
@@ -47,17 +81,17 @@
     let pts: { x: number; y: number }[];
 
     if (fromMi <= 0.05) {
-      pts = profile.map(p => ({ x: +p.mi.toFixed(3), y: +(p.sec / 60).toFixed(2) }));
+      pts = profile.map(p => ({ x: +p.mi.toFixed(3), y: yOf(p.mi, p.sec) }));
     } else {
       const tAt = timeAtMile(profile, fromMi);
       pts = profile
         .filter(p => p.mi >= fromMi)
-        .map(p => ({ x: +p.mi.toFixed(3), y: +((fromSec + (p.sec - tAt)) / 60).toFixed(2) }));
+        .map(p => ({ x: +p.mi.toFixed(3), y: yOf(p.mi, fromSec + (p.sec - tAt)) }));
       // Anchor the line to the actual current point
       if (pts.length === 0 || pts[0].x > fromMi + 0.02) {
-        pts.unshift({ x: +fromMi.toFixed(3), y: +(fromSec / 60).toFixed(2) });
+        pts.unshift({ x: +fromMi.toFixed(3), y: yOf(fromMi, fromSec) });
       } else {
-        pts[0] = { x: +fromMi.toFixed(3), y: +(fromSec / 60).toFixed(2) };
+        pts[0] = { x: +fromMi.toFixed(3), y: yOf(fromMi, fromSec) };
       }
     }
 
@@ -86,14 +120,14 @@
     if (state.paceHistory.length === 0 && state.elapsedSec <= 0) return null;
     const pts: { x: number; y: number }[] = [{ x: 0, y: 0 }];
     for (const h of state.paceHistory) {
-      pts.push({ x: +h.mi.toFixed(3), y: +(h.elapsedSec / 60).toFixed(2) });
+      pts.push({ x: +h.mi.toFixed(3), y: yOf(h.mi, h.elapsedSec) });
     }
     // Always anchor the last point at the *latest* known position from state,
     // since paceHistory may lag a single pending update.
     if (state.distMi > 0) {
       const last = pts[pts.length - 1];
       if (last.x !== +state.distMi.toFixed(3)) {
-        pts.push({ x: +state.distMi.toFixed(3), y: +(state.elapsedSec / 60).toFixed(2) });
+        pts.push({ x: +state.distMi.toFixed(3), y: yOf(state.distMi, state.elapsedSec) });
       }
     }
     // The ONLY solid line on the chart — instantly distinguishable from the
@@ -125,10 +159,10 @@
   function goalSplitsDataset() {
     return {
       label: '🎯 Goal',
-      data: goals.splitGoals
+      data: [{ mi: 0, targetSec: 0, label: 'Start' }, ...goals.splitGoals]
         .slice()
         .sort((a, b) => a.mi - b.mi)
-        .map(g => ({ x: g.mi, y: +(g.targetSec / 60).toFixed(2) })),
+        .map(g => ({ x: g.mi, y: yOf(g.mi, g.targetSec) })),
       borderColor: '#007AFF',
       backgroundColor: 'transparent',
       borderWidth: 2.5,
@@ -144,7 +178,7 @@
     };
   }
 
-  $: datasets = (() => {
+  $: datasets = ((_m) => {
     const ds: any[] = [];
     const fromMi  = midRace ? state.distMi : 0;
     const fromSec = midRace ? state.elapsedSec : 0;
@@ -158,7 +192,7 @@
     const actual = actualDataset();
     if (actual) ds.push(actual);
     return ds;
-  })();
+  })(mode);
 
   /**
    * Vertical "now" line — drawn straight onto the canvas after the datasets.
@@ -219,6 +253,7 @@
             callbacks: {
               title: (items) => `Mile ${(items[0].parsed.x ?? 0).toFixed(2)}`,
               label: (ctx) => {
+                if (mode === 'delta') return `${ctx.dataset.label}: ${fmtDelta(ctx.parsed.y ?? 0)}`;
                 const minutes = ctx.parsed.y ?? 0;
                 const m = Math.floor(minutes);
                 const s = Math.round((minutes - m) * 60);
@@ -239,9 +274,10 @@
           y: {
             beginAtZero: true,
             // Chart.js auto-scales y from visible datasets only, so hiding
-            // Dream/Tough/Run-Walk tightens the range and amplifies the gap
-            // between the lines you DO see.
-            grace: '5%',     // tiny breathing room above the slowest visible line
+            // Run/Walk etc. tightens the range and amplifies the gaps.
+            grace: '8%',
+            suggestedMin: mode === 'delta' ? -60 : undefined,
+            suggestedMax: mode === 'delta' ? 60 : undefined,
             title: { display: true, text: 'Elapsed (min)', color: '#A1A1A6', font: { size: 11 } },
             ticks: { color: '#A1A1A6', font: { size: 10 } },
             grid: { color: 'rgba(0,0,0,0.04)' },
@@ -251,7 +287,33 @@
     });
   });
 
+  function applyAxis(c: Chart) {
+    const y: any = c.options.scales!.y!;
+    if (mode === 'delta') {
+      y.suggestedMin = -60; y.suggestedMax = 60;
+      y.title.text = '◀ behind · seconds vs goal · ahead ▶';
+      y.ticks.callback = (v: number) => (v === 0 ? 'goal' : `${v > 0 ? '+' : '−'}${Math.floor(Math.abs(v) / 60)}:${String(Math.abs(v) % 60).padStart(2, '0')}`);
+      y.grid.color = (ctx: any) => (ctx.tick?.value === 0 ? 'rgba(11,127,193,0.55)' : 'rgba(0,0,0,0.04)');
+      y.grid.lineWidth = (ctx: any) => (ctx.tick?.value === 0 ? 2 : 1);
+      // Clock-friendly steps (30s / 1min / 5min) instead of 50s.
+      y.afterDataLimits = (sc: any) => {
+        const r = sc.max - sc.min;
+        sc.options.ticks.stepSize = r <= 240 ? 30 : r <= 720 ? 60 : r <= 2400 ? 300 : 600;
+      };
+    } else {
+      y.afterDataLimits = undefined;
+      y.ticks.stepSize = undefined;
+      y.suggestedMin = undefined; y.suggestedMax = undefined;
+      y.title.text = 'Elapsed (min)';
+      y.ticks.callback = (v: number) => v;
+      y.grid.color = 'rgba(0,0,0,0.04)';
+      y.grid.lineWidth = 1;
+    }
+  }
+
   $: if (chart) {
+    void mode;
+    applyAxis(chart);
     chart.data.datasets = datasets;
     chart.update('none');
   }
@@ -264,6 +326,10 @@
 
 <div class="wrap">
   <div class="hint">
+    <div class="seg" role="tablist" aria-label="Chart view">
+      <button class:active={mode === 'delta'} on:click={() => (mode = 'delta')}>± vs goal</button>
+      <button class:active={mode === 'elapsed'} on:click={() => (mode = 'elapsed')}>Elapsed</button>
+    </div>
     {#if finished}
       <span class="hint-pill hint-pill-finished">🏆 Finished — actual race plotted vs original goal</span>
     {:else if midRace}
@@ -281,8 +347,17 @@
   .wrap { display: flex; flex-direction: column; gap: 8px; }
   .hint {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
+  .seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 2px; }
+  .seg button {
+    border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px; color: var(--text-tertiary); cursor: pointer;
+  }
+  .seg button.active { background: var(--surface); color: var(--blue); box-shadow: var(--shadow-sm); }
   .hint-pill {
     padding: 4px 10px;
     border-radius: 999px;

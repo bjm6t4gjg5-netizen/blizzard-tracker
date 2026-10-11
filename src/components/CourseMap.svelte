@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import L from 'leaflet';
+  import { addBaseTiles } from '../lib/tiles';
   import {
     COURSE_LATLNGS, COURSE_BOUNDS, COURSE_CENTER,
     CHECKPOINTS, SPECTATOR_SPOTS, MILE_MARKERS, pointAtMile,
@@ -66,10 +67,7 @@
       zoomDelta: 0.5,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(map);
+    addBaseTiles(map);
 
     // Two-stroke route polyline (white outline + colored fill — race-line look).
     polyOuter = L.polyline(COURSE_LATLNGS as [number, number][], {
