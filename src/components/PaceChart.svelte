@@ -43,6 +43,14 @@
     return mode === 'delta' ? +(goalSecAt(mi) - sec).toFixed(1) : +(sec / 60).toFixed(2);
   }
 
+  function fmtClock(sec: number): string {
+    const t = Math.round(sec);
+    return `${Math.floor(t / 3600)}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  }
+
+  /** Only these scenarios are drawn: best case, goal plan, bad day. */
+  const SHOWN = new Set(['dream', 'tough']);
+
   function fmtDelta(v: number): string {
     const a = Math.abs(Math.round(v));
     const t = `${Math.floor(a / 60)}:${String(a % 60).padStart(2, '0')}`;
@@ -98,13 +106,16 @@
     // Default visible: Best/Dream + Goal + Tough — three contrast bands that
     // bracket the realistic outcome space. Strong + Run-Walk hide initially
     // (legend toggles them back on).
-    const hiddenByDefault = new Set(['strong', 'runwalk']);
     // ALL predictions are dashed. Only the actual race trace is solid, so
     // the runner's real progress visually pops away from the noise of plans.
     // The goal uses long dashes; alternatives use a short dash.
     const dash: number[] = s.key === 'goal' ? [10, 4] : [4, 4];
+    const finalSec = fromMi <= 0.05
+      ? profile[profile.length - 1].sec
+      : fromSec + (profile[profile.length - 1].sec - timeAtMile(profile, fromMi));
     return {
-      label: `${s.emoji} ${s.label}`,
+      label: `${s.emoji} ${s.label} · ${fmtClock(finalSec)}`,
+      endLabel: `${s.label.replace(' Day', '')} ${fmtClock(finalSec)}`,
       data: pts,
       borderColor: s.color,
       borderWidth: s.key === 'goal' ? 2.5 : 1.8,
@@ -112,7 +123,6 @@
       backgroundColor: 'transparent',
       pointRadius: 0,
       tension: 0.18,
-      hidden: hiddenByDefault.has(s.key),
     };
   }
 
@@ -158,7 +168,8 @@
    */
   function goalSplitsDataset() {
     return {
-      label: '🎯 Goal',
+      label: `🎯 Goal · ${fmtClock(goals.goalSec)}`,
+      endLabel: `Goal ${fmtClock(goals.goalSec)}`,
       data: [{ mi: 0, targetSec: 0, label: 'Start' }, ...goals.splitGoals]
         .slice()
         .sort((a, b) => a.mi - b.mi)
@@ -186,7 +197,7 @@
     // Show only the actual line + the original goal-split markers so the
     // story becomes "here's what happened vs the goal".
     if (!finished) {
-      for (const s of goals.scenarios) ds.push(scenarioDataset(s, goals, fromMi, fromSec));
+      for (const s of goals.scenarios) if (SHOWN.has(s.key)) ds.push(scenarioDataset(s, goals, fromMi, fromSec));
     }
     ds.push(goalSplitsDataset());
     const actual = actualDataset();
@@ -229,15 +240,46 @@
     },
   };
 
+  /** Name + projected finish written at the right end of each plan line,
+   *  so nobody has to remember what orange means. */
+  const endLabelPlugin = {
+    id: 'endLabels',
+    afterDatasetsDraw(c: any) {
+      const ctx = c.ctx;
+      const placed: number[] = [];
+      c.data.datasets.forEach((d: any, i: number) => {
+        if (!d.endLabel || !c.isDatasetVisible(i)) return;
+        const meta = c.getDatasetMeta(i);
+        const pt = meta.data[meta.data.length - 1];
+        if (!pt) return;
+        let y = pt.y;
+        // Nudge apart labels that would overlap.
+        for (const py of placed) if (Math.abs(py - y) < 12) y = py + (y >= py ? 12 : -12);
+        placed.push(y);
+        ctx.save();
+        ctx.font = '700 10px -apple-system, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.strokeText(d.endLabel, c.chartArea.right + 6, y);
+        ctx.fillStyle = d.borderColor;
+        ctx.fillText(d.endLabel, c.chartArea.right + 6, y);
+        ctx.restore();
+      });
+    },
+  };
+
   onMount(() => {
     chart = new Chart(canvas, {
       type: 'line',
       data: { datasets },
-      plugins: [nowLinePlugin],
+      plugins: [nowLinePlugin, endLabelPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
+        layout: { padding: { right: 92 } },   // room for the end labels
         interaction: { mode: 'nearest', intersect: false },
         plugins: {
           legend: {

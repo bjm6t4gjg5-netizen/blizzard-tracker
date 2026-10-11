@@ -180,10 +180,12 @@ export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
     goalSec: 3 * 3600 - 1,
     goalLabel: 'Sub-3:00 · PR',
     goalMilePaceSec: 6 * 60 + 52,
+    // flatPaceSec = flat-equivalent pace BEFORE the late-race fatigue model,
+    // solved so each plan lands on its finish time (2:55 / 3:00 / 3:06).
     scenarios: [
-      { key: 'dream',   label: 'Dream Day',  emoji: '🌟', color: '#34C759', flatPaceSec: 6 * 60 + 40, desc: 'Everything clicks — 2:55 territory' },
-      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#5856D6', flatPaceSec: 6 * 60 + 52, desc: 'Locked on sub-3 pace start to finish' },
-      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 7 * 60 + 5,  desc: 'Late fade — still a PR (~3:06)' },
+      { key: 'dream',   label: 'Dream Day',  emoji: '🌟', color: '#34C759', flatPaceSec: 393, desc: 'Everything clicks — ~2:55' },
+      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#5856D6', flatPaceSec: 404, desc: 'Locked on sub-3 pace start to finish' },
+      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 418, desc: 'Late fade — still a PR (~3:06)' },
       { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 9 * 60 + 0,  desc: 'Backup plan, guaranteed finish' },
     ],
     splitGoals: [
@@ -204,9 +206,9 @@ export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
     goalLabel: 'Sub-3:40:41 · PR',
     goalMilePaceSec: 8 * 60 + 25,
     scenarios: [
-      { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 8 * 60 + 12,  desc: 'Everything clicks — ~3:35' },
-      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 8 * 60 + 25,  desc: 'PR pace, even effort' },
-      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 8 * 60 + 55,  desc: 'Warm / conservative (~3:53)' },
+      { key: 'dream',   label: 'Best Day',   emoji: '🌟', color: '#34C759', flatPaceSec: 483, desc: 'Everything clicks — ~3:35' },
+      { key: 'strong',  label: 'Strong Day', emoji: '💪', color: '#007AFF', flatPaceSec: 496, desc: 'PR pace, even effort' },
+      { key: 'tough',   label: 'Tough Day',  emoji: '😅', color: '#FF9500', flatPaceSec: 524, desc: 'Warm / conservative (~3:53)' },
       { key: 'runwalk', label: 'Run/Walk',   emoji: '🚶', color: '#FF3B30', flatPaceSec: 10 * 60 + 30, desc: 'Backup plan' },
     ],
     splitGoals: [
