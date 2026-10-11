@@ -169,12 +169,15 @@
               stepSize: 1,
               color: '#A1A1A6',
               font: { size: 10 },
-              callback: (v) => `${v}mi`,
+              callback: (v) => (Number.isInteger(+v) ? `${v}mi` : ''),
             },
             grid: { color: 'rgba(0,0,0,0.04)' },
           },
           y: {
-            beginAtZero: true,
+            // Zoom to the real band (Chicago spans ~45 ft) — from 0 the
+            // profile is a flat line and "Mount Roosevelt" disappears.
+            suggestedMin: Math.floor((Math.min(...ELEVATION_PROFILE.map(e => e.ft)) - 8) / 10) * 10,
+            suggestedMax: Math.ceil((Math.max(...ELEVATION_PROFILE.map(e => e.ft)) + 12) / 10) * 10,
             ticks: {
               color: '#A1A1A6',
               font: { size: 10 },

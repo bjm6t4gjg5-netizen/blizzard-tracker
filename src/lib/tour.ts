@@ -79,7 +79,7 @@ export const TOUR_STEPS: ReadonlyArray<TourStep> = [
   {
     target: '[data-tour="tabs"]',
     title: 'Tabs are draggable',
-    body: 'Drag any tab to reorder them — your preferred layout is remembered across sessions. On iPad / iPhone, long-press a tab then slide it. Click ⊕ at the end to add a custom runner (anyone with an RTRT tracker ID).',
+    body: 'Drag any tab to reorder them — your preferred layout is remembered across sessions. On iPad / iPhone, long-press a tab then slide it. Click ⊕ at the end to add a custom runner (anyone running — just their bib number).',
   },
   {
     target: '[data-tour="appearance"]',

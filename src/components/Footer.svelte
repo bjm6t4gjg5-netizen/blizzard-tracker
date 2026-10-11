@@ -28,7 +28,7 @@
     <div class="meta">
       <span class="pill">📐 {COURSE.length} GPS points</span>
       <span class="pill">⛰ {TOTAL_GAIN_FT}ft elev gain</span>
-      <span class="pill">📡 RTRT.me live data</span>
+      <span class="pill">📡 Official live splits</span>
       <VenmoButton variant="pill" label="🍺 Buy them a beer" />
       <VenmoButton variant="pill" label="🛠 Tip the dev" user="leonschulte" note="Tip for Leon's Blizzard Tracker work 🛠" />
       <button

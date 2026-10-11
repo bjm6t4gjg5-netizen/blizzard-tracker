@@ -3,13 +3,14 @@
 // RACE_START is timezone-locked to America/Chicago so the
 // countdown is correct regardless of the viewer's locale.
 // ============================================================
+import { CURRENT_RACE } from './races';
 
 /**
  * Bank of America Chicago Marathon 2026: Sunday October 11, 2026.
  * 7:30 AM CDT = pro start; Wave 1 goes off at 7:35 (offset handled
  * in runners.ts WAVE_START_OFFSET_MIN).
  */
-export const RACE_START = new Date('2026-10-11T07:30:00-05:00');
+export const RACE_START = new Date(CURRENT_RACE.gunISO);
 
 /** Kept for the Old Races archive — RBC Brooklyn Half 2026 Wave 1 gun. */
 export const BROOKLYN_HALF_2026 = new Date('2026-05-16T07:00:00-04:00');
@@ -18,7 +19,7 @@ export const BROOKLYN_HALF_2026 = new Date('2026-05-16T07:00:00-04:00');
 export const CHICAGO_MARATHON_2026 = RACE_START;
 
 /** Total race distance, miles. Fixed by World Athletics certification (42.195 km). */
-export const TOTAL_MI = 26.2188;
+export const TOTAL_MI = CURRENT_RACE.distanceMi;
 
 /** "Now", overridable for tests. */
 export function now(): number {

@@ -43,7 +43,7 @@
     <div class="avatar">{profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
     <div class="who">
       <div class="name">{profile.emoji} {profile.name}</div>
-      <div class="sub">Tracker · {profile.trackId}</div>
+      <div class="sub">Bib · {profile.trackId}</div>
     </div>
     <span class="status status-{badge.tone}">
       <span class="dot"></span>

@@ -22,18 +22,19 @@ export interface AccentPreset {
 }
 
 export const ACCENT_PRESETS: AccentPreset[] = [
+  { key: 'chicago', label: 'Chicago Flag', hue: '#0B7FC1', hueDeep: '#0A5A8C', hueSoft: 'rgba(65, 182, 230, 0.14)' },
   { key: 'blue',    label: 'iOS Blue',    hue: '#007AFF', hueDeep: '#0040DD', hueSoft: 'rgba(0, 122, 255, 0.10)' },
   { key: 'indigo',  label: 'Indigo',      hue: '#5856D6', hueDeep: '#3F3D9C', hueSoft: 'rgba(88, 86, 214, 0.12)' },
-  { key: 'magenta', label: 'Chicago',    hue: '#FF2D55', hueDeep: '#C8002F', hueSoft: 'rgba(255, 45, 85, 0.10)' },
+  { key: 'magenta', label: 'Magenta',    hue: '#FF2D55', hueDeep: '#C8002F', hueSoft: 'rgba(255, 45, 85, 0.10)' },
   { key: 'orange',  label: 'Race-day',    hue: '#FF9500', hueDeep: '#C26B00', hueSoft: 'rgba(255, 149, 0, 0.12)' },
   { key: 'green',   label: 'Park',        hue: '#34C759', hueDeep: '#1F9D4F', hueSoft: 'rgba(52, 199, 89, 0.12)' },
   { key: 'teal',    label: 'Ocean',       hue: '#0AB1B1', hueDeep: '#017A7A', hueSoft: 'rgba(10, 177, 177, 0.12)' },
   { key: 'graphite',label: 'Graphite',    hue: '#3A3A3C', hueDeep: '#1C1C1E', hueSoft: 'rgba(58, 58, 60, 0.10)' },
 ];
 
-/** Light + iOS Blue is the canonical starting look, matching the original v1. */
+/** Race-week default: Chicago flag blue (switch back any time in Appearance). */
 const DEFAULT_THEME: ThemeMode = 'light';
-const DEFAULT_ACCENT = 'blue';
+const DEFAULT_ACCENT = 'chicago';
 
 export const theme  = writable<ThemeMode>(load<ThemeMode>('theme', DEFAULT_THEME));
 export const accent = writable<string>(load<string>('accent', DEFAULT_ACCENT));

@@ -46,7 +46,7 @@
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rm-title">
       <button class="x" on:click={close} aria-label="Close">✕</button>
       <div id="rm-title" class="title">Manage runners</div>
-      <p class="lede">Catherine and Helaine are anchored. Add anyone with an RTRT tracker ID for the BKH 2026 event.</p>
+      <p class="lede">Catherine and Helaine are anchored. Add anyone running Chicago by bib number — live splits come from the official results site.</p>
 
       <div class="list">
         {#each $profiles as p (p.id)}
@@ -71,7 +71,7 @@
             <input id="rm-name" class="form-input" bind:value={newName} placeholder="Alex Blizzard" />
           </div>
           <div class="form-group g-2">
-            <label class="form-label" for="rm-tid">RTRT tracker ID</label>
+            <label class="form-label" for="rm-tid">Bib number</label>
             <input
               id="rm-tid"
               class="form-input mono"

@@ -16,13 +16,16 @@
  *     13.1mi race trace renders mid-course on the Chicago pace chart.
  *     Bump again (or change the race slug) for every future race.
  */
-const PREFIX = 'blizzard:v5:chi2026:';
+import { CURRENT_RACE } from './races';
 
-// One-time tidy-up: drop orphaned v4 keys so they don't linger forever.
+// v6: race-keyed namespace from races.ts (Chicago bibs + PR goals).
+const PREFIX = `blizzard:v6:${CURRENT_RACE.id}:`;
+
+// Tidy-up: drop keys from older schemas / previous races so they don't linger forever.
 try {
   if (typeof localStorage !== 'undefined') {
     for (const k of Object.keys(localStorage)) {
-      if (k.startsWith('blizzard:v4:') || k.startsWith('blizzard:v3:')) {
+      if (k.startsWith('blizzard:') && !k.startsWith(PREFIX)) {
         localStorage.removeItem(k);
       }
     }

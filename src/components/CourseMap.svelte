@@ -7,6 +7,7 @@
   } from '../lib/course';
   import type { RunnerProfile } from '../lib/runners';
   import { TOTAL_MI } from '../lib/time';
+  import { CURRENT_RACE } from '../lib/races';
   import { profiles, runnerState } from '../lib/stores';
 
   /** Show all spectator pins, mile markers, etc. */
@@ -28,8 +29,8 @@
 
   function fitBounds() {
     if (!map) return;
-    const padX = 0.005;
-    const padY = 0.005;
+    const padX = 0.002;
+    const padY = 0.002;
     map.fitBounds(
       [
         [COURSE_BOUNDS.south - padY, COURSE_BOUNDS.west - padX],
@@ -60,6 +61,9 @@
       zoomControl: true,
       attributionControl: true,
       preferCanvas: true,
+      // Fractional zoom so the tall N–S Chicago course fills the panel.
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -76,7 +80,7 @@
       lineCap: 'round',
     }).addTo(map);
     polyInner = L.polyline(COURSE_LATLNGS as [number, number][], {
-      color: '#007AFF',
+      color: CURRENT_RACE.theme.motif === 'chicago' ? '#41B6E6' : '#007AFF',
       weight: 4.5,
       opacity: 0.95,
       lineJoin: 'round',
@@ -104,9 +108,18 @@
     }).bindPopup('<b>Finish</b><br>Grant Park, Columbus Dr').addTo(map);
 
     if (detailed) {
-      // Mile markers
+      // Mile markers only once zoomed in — 26 badges at city zoom is soup.
+      const mileLayer = L.layerGroup();
+      const syncMiles = () => {
+        const m = map;
+        if (!m) return;
+        if (m.getZoom() >= 13) { if (!m.hasLayer(mileLayer)) mileLayer.addTo(m); }
+        else if (m.hasLayer(mileLayer)) m.removeLayer(mileLayer);
+      };
+      map.on('zoomend', syncMiles);
+      setTimeout(syncMiles, 0);
       for (const mm of MILE_MARKERS) {
-        if (mm.mi === 0 || mm.mi >= 13) continue;
+        if (mm.mi === 0) continue;
         L.marker([mm.lat, mm.lng], {
           icon: L.divIcon({
             className: 'mile-marker-wrap',
@@ -114,7 +127,18 @@
             iconSize: [22, 22],
             iconAnchor: [11, 11],
           }),
-        }).bindPopup(`<b>Mile ${mm.mi}</b><br>${Math.round(mm.eleFt)} ft elevation`).addTo(map);
+        }).bindPopup(`<b>Mile ${mm.mi}</b><br>${Math.round(mm.eleFt)} ft elevation`).addTo(mileLayer);
+      }
+
+      // Official timing mats — where live splits come from. Chicago-flag
+      // stars so they read at a glance against the blue route.
+      const STAR = '<svg viewBox="-1 -1 2 2" width="16" height="16"><polygon fill="#E4002B" stroke="#fff" stroke-width="0.18" points="0,-1 0.21,-0.364 0.866,-0.5 0.42,0 0.866,0.5 0.21,0.364 0,1 -0.21,0.364 -0.866,0.5 -0.42,0 -0.866,-0.5 -0.21,-0.364"/></svg>';
+      for (const c of CHECKPOINTS) {
+        if (c.label === 'Start' || c.label === 'Finish') continue;
+        L.marker([c.lat, c.lng], {
+          icon: L.divIcon({ className: 'mat-marker-wrap', html: `<div class="mat-marker">${STAR}</div>`, iconSize: [16, 16], iconAnchor: [8, 8] }),
+          zIndexOffset: 200,
+        }).bindPopup(`<b>⏱ ${c.label} timing mat</b><br>Mile ${c.mi.toFixed(1)} — official split posts here`).addTo(map);
       }
 
       // Spectator spots
@@ -243,6 +267,9 @@
   }
   :global(.flag-finish) { border-color: var(--green); }
 
+  :global(.mat-marker-wrap) { background: transparent; border: none; }
+  :global(.mat-marker) { width: 16px; height: 16px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  :global(.mat-marker svg) { display: block; }
   :global(.mile-marker-wrap) { background: transparent; border: none; }
   :global(.mile-marker) {
     width: 22px;

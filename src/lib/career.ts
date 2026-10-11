@@ -127,7 +127,7 @@ export const CATHERINE_RACES: Race[] = [
   { date: '2026-05-16', name: 'RBC Brooklyn Half',            location: 'Brooklyn, NY',    distance: 'Half',     event: '13.1 mi', time: '1:30:28', highlight: 'Half PR · 6:54/mi', notes: 'Sub-1:32 goal smashed by 1:32.' },
 
   // ─── Upcoming ───
-  { date: '2026-10-11', name: 'Bank of America Chicago Marathon', location: 'Chicago, IL', distance: 'Marathon', time: null, worldMajor: true, notes: 'Sub-3:05 goal — PR attempt on the flattest Major.' },
+  { date: '2026-10-11', name: 'Bank of America Chicago Marathon', location: 'Chicago, IL', distance: 'Marathon', time: null, worldMajor: true, notes: 'Sub-3:00 goal — PR attempt on the flattest Major. Bib 15749.' },
 ];
 
 // ────────────────────────────────────────────────────────────
@@ -277,7 +277,11 @@ export function summarize(races: Race[]): CareerSummary {
   let halves = 0;
   let wins = 0;
 
+  const todayISO = new Date().toISOString().slice(0, 10);
   for (const r of races) {
+    // Don't count a race that hasn't been run yet (e.g. today's Chicago
+    // before the chip time is entered) as a finish / World Major star.
+    if (r.time == null && r.date >= todayISO) continue;
     const yr = +r.date.slice(0, 4);
     if (Number.isFinite(yr)) firstYear = Math.min(firstYear, yr);
     if (r.distance === 'Marathon') marathons++;

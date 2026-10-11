@@ -7,44 +7,7 @@
    * points at. The live dashboard (Family HQ, runner tabs, map) is always
    * about the CURRENT race — history lives here.
    */
-  interface ArchivedResult {
-    emoji: string;
-    name: string;
-    color: string;
-    goal: string;
-    /** Official chip time, or null if not recorded yet. */
-    time: string | null;
-    note?: string;
-  }
-
-  interface ArchivedRace {
-    id: string;
-    name: string;
-    date: string;
-    dateLabel: string;
-    distance: string;
-    course: string;
-    summary: string;
-    results: ArchivedResult[];
-    resultsHref?: string;
-  }
-
-  const ARCHIVED: ArchivedRace[] = [
-    {
-      id: 'bkh2026',
-      name: 'RBC Brooklyn Half 2026',
-      date: '2026-05-16',
-      dateLabel: 'Saturday, May 16, 2026 · 7:00 AM ET',
-      distance: '13.1 mi',
-      course: 'Brooklyn Museum → Grand Army Plaza → Prospect Park → Ocean Pkwy → Coney Island Boardwalk',
-      summary: 'The race this tracker was originally built for — mother and daughter on the same start line, 246ft of bumps, finish by the Atlantic.',
-      results: [
-        { emoji: '💙', name: 'Catherine Blizzard', color: '#007AFF', goal: 'Sub-1:32 (PR attempt)', time: '1:30:28', note: 'Half PR · 6:54/mi — goal beaten by 1:32' },
-        { emoji: '⚡', name: 'Helaine Blizzard',   color: '#FF2D55', goal: 'Sub-1:50',             time: '1:50:03', note: '8:24/mi at 62 — 3 seconds off the goal' },
-      ],
-      resultsHref: 'https://results.nyrr.org/',
-    },
-  ];
+  import { ARCHIVE as ARCHIVED, CURRENT_RACE } from '../lib/races';
 
   let selectedId: string | null = ARCHIVED[0]?.id ?? null;
   $: selected = ARCHIVED.find(r => r.id === selectedId) ?? null;
@@ -53,7 +16,7 @@
 <h2 class="title">Old races · archive</h2>
 <p class="sub">
   Frozen snapshots of past race days. The live dashboard has moved on to
-  Chicago — the history lives here.
+  {CURRENT_RACE.city} — the history lives here.
 </p>
 
 <div class="picker gap-md">

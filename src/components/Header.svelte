@@ -12,6 +12,8 @@
   import { devUnlocked, lockDevMode } from '../lib/devMode';
   import AppearanceModal from './AppearanceModal.svelte';
   import { openTour } from '../lib/tour';
+  import { CURRENT_RACE } from '../lib/races';
+  import ChicagoFlagBand from './ChicagoFlagBand.svelte';
 
   let appearanceOpen = false;
 
@@ -33,7 +35,7 @@
 
   /** Preset jump-points, picked to demonstrate the staggered wave races.
    *  min = minutes past 7:30 AM CT. Catherine starts ~7:37 (Wave 1 · B),
-   *  Helaine ~8:04 (Wave 2 · C). Goals: 3:05 and 4:00. */
+   *  Helaine ~8:04 (Wave 2 · C). Goals: sub-3:00 and sub-3:40:41 (PRs). */
   const SIM_PRESETS: { label: string; min: number; note: string }[] = [
     { label: 'Pre-race',         min: -10, note: '7:20 AM' },
     { label: 'Wave 1 gun',       min:   7, note: '7:37 — Catherine starts' },
@@ -135,7 +137,7 @@
       </svg>
       <div class="brand-text">
         <div class="brand-title">Blizzard Tracker</div>
-        <div class="brand-sub">Chicago Marathon · Oct 11 · 7:30 AM CT</div>
+        <div class="brand-sub">{CURRENT_RACE.shortName} · Oct 11 · 7:30 AM {CURRENT_RACE.tzLabel}</div>
       </div>
     </div>
 
@@ -198,7 +200,7 @@
                   <div class="demo-pop-title">Race-day time simulator</div>
                   <div class="demo-pop-sub">
                     {#if $demoTimeMin === null}
-                      <span class="live-dot"></span> Currently <strong>Live</strong> (real RTRT data)
+                      <span class="live-dot"></span> Currently <strong>Live</strong> (official timing data)
                     {:else}
                       Simulating <strong>{fmtTimeOfDay($demoTimeMin)}</strong> · runners projected from their own wave start
                     {/if}
@@ -249,7 +251,7 @@
                 on:click={() => { demoTimeMin.set(null); demoOpen = false; }}
               >
                 <span>📡 Lock to Live data</span>
-                <span class="demo-row-tip">Real RTRT</span>
+                <span class="demo-row-tip">Real timing</span>
               </button>
               <button class="demo-row demo-row-logout" on:click={() => { lockDevMode(); demoTimeMin.set(null); demoOpen = false; }}>
                 <span>Lock dev mode</span>
@@ -261,6 +263,7 @@
       {/if}
     </div>
   </div>
+  {#if CURRENT_RACE.theme.motif === 'chicago'}<ChicagoFlagBand />{/if}
 </header>
 
 <AppearanceModal bind:open={appearanceOpen} />

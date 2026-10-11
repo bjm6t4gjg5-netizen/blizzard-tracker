@@ -1,4 +1,4 @@
-# ⚡ Blizzard Tracker — v6
+# ⚡ Blizzard Tracker — v7 (Chicago 2026)
 
 Live race-day dashboard for **Catherine** and **Helaine Blizzard** at the
 **Bank of America Chicago Marathon 2026** (Sunday, October 11 — pros 7:30 AM CT,
@@ -66,6 +66,25 @@ vanilla-JS tracker. Highlights of the rebuild:
 - **Tiny bundle:** ~150 KB gzipped (Leaflet + Chart.js + Svelte runtime).
 
 ---
+
+## Adding a new race (v7)
+
+Everything race-specific lives in **`src/lib/races.ts`**:
+
+1. Copy the finished race's chip times into a new `ARCHIVE` entry (newest first) — it shows up in the **Old Races** tab automatically.
+2. Replace `CURRENT_RACE`: name, date, timezone, pro gun time, waves, tracking provider (`mika` / `rtrt` / `none`), runner bibs, theme.
+3. Drop the new course GPX into `src/lib/course.gpx`.
+4. Update goals in `src/lib/runners.ts` → `DEFAULT_GOALS`.
+
+Local storage is namespaced by `CURRENT_RACE.id`, so old pace traces/goals never leak into the new race.
+
+### Live data — Chicago (mika:timing)
+
+Chicago splits come from results.chicagomarathon.com via the tiny relay in
+[`worker-results/`](worker-results/README.md) (the results site has no CORS).
+Set the repo variable `VITE_RESULTS_PROXY` to the worker URL. If the relay is
+unreachable the app shows "Feed offline · goal-pace projection" and keeps the
+runners moving on their goal pace until real splits return.
 
 ## Run locally
 

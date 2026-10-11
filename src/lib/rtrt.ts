@@ -47,6 +47,9 @@ export interface RtrtSnapshot {
   fetchedAt: number;
   /** Where the snapshot came from (api, sim, …) — diagnostics only. */
   source: string;
+  /** Last REAL measured point (timing mat). When present, pace history
+   *  records this instead of distMi (which may be extrapolated). */
+  anchor?: { mi: number; elapsedSec: number };
 }
 
 // ────────────────────────────────────────────────────────────

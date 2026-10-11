@@ -1,7 +1,7 @@
 {
   "name": "blizzard-tracker",
-  "version": "2.6.0",
-  "description": "Team Blizzard live race tracker for the RBC Brooklyn Half. Svelte + TypeScript rewrite.",
+  "version": "2.7.0",
+  "description": "Team Blizzard live race tracker (Chicago Marathon 2026). Svelte + TypeScript.",
   "private": true,
   "type": "module",
   "scripts": {

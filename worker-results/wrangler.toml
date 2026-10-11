@@ -1,0 +1,7 @@
+name = "blizzard-results"
+main = "worker.js"
+compatibility_date = "2026-06-01"
+
+[vars]
+# Comma-separated list of sites allowed to use the relay (localhost is always allowed).
+ALLOWED_ORIGINS = "https://blizzard-racing.deich-dynamics.com,https://bjm6t4gjg5-netizen.github.io"

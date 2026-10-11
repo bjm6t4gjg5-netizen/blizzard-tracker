@@ -14,6 +14,10 @@
   --orange: #FF9500;
   --red: #FF3B30;
   --yellow: #FFD60A;
+  /* Chicago flag */
+  --chi-blue: #41B6E6;
+  --chi-red: #E4002B;
+  --chi-navy: #0A3D62;
 
   /* Race brand gradients */
   --grad-blizzard: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
@@ -98,6 +102,7 @@
    Accent overrides — re-map the chrome accent without touching
    per-runner brand colors. Applied via [data-accent="…"].
    ──────────────────────────────────────────────────────────── */
+:root[data-accent="chicago"]  { --blue: #0B7FC1; --blue-deep: #0A5A8C; --blue-soft: rgba(65, 182, 230, 0.14); --grad-blizzard: linear-gradient(135deg, #41B6E6 0%, #0B7FC1 60%, #0A3D62 100%); --grad-bg: radial-gradient(ellipse at top, #DDF1FB 0%, #EEF8FD 35%, #F5F7F9 100%); }
 :root[data-accent="indigo"]   { --blue: #5856D6; --blue-deep: #3F3D9C; --blue-soft: rgba(88, 86, 214, 0.12); --grad-bg: radial-gradient(ellipse at top, #EAE9FA 0%, #F4F3FF 35%, #F5F5F7 100%); }
 :root[data-accent="magenta"]  { --blue: #FF2D55; --blue-deep: #C8002F; --blue-soft: rgba(255, 45, 85, 0.12); --grad-bg: radial-gradient(ellipse at top, #FFE5EC 0%, #FFF3F5 35%, #F5F5F7 100%); }
 :root[data-accent="orange"]   { --blue: #FF9500; --blue-deep: #C26B00; --blue-soft: rgba(255, 149, 0, 0.14); --grad-bg: radial-gradient(ellipse at top, #FFF1DB 0%, #FFF8EB 35%, #F5F5F7 100%); }
@@ -106,6 +111,7 @@
 :root[data-accent="graphite"] { --blue: #3A3A3C; --blue-deep: #1C1C1E; --blue-soft: rgba(58, 58, 60, 0.12); --grad-bg: radial-gradient(ellipse at top, #ECECEE 0%, #F4F4F6 35%, #F5F5F7 100%); }
 
 /* Dark + accent overrides keep dark gradient + brighter accent */
+:root[data-theme="dark"][data-accent="chicago"]  { --blue: #41B6E6; --blue-soft: rgba(65, 182, 230, 0.20); --grad-bg: radial-gradient(ellipse at top, #0C2433 0%, #0A1620 35%, #060B10 100%); }
 :root[data-theme="dark"][data-accent="indigo"]   { --blue: #7D7BFE; --grad-bg: radial-gradient(ellipse at top, #1F1E3A 0%, #131320 35%, #0A0A14 100%); }
 :root[data-theme="dark"][data-accent="magenta"]  { --blue: #FF6480; --grad-bg: radial-gradient(ellipse at top, #2E1620 0%, #1A0E14 35%, #0A0608 100%); }
 :root[data-theme="dark"][data-accent="orange"]   { --blue: #FFB340; --grad-bg: radial-gradient(ellipse at top, #2C1E0A 0%, #1A1208 35%, #0F0904 100%); }

@@ -8,7 +8,7 @@ import {
   makeRunnerState, persistRunnerState, applySnapshot,
   runnerStartOffsetMin, mileAtElapsed,
 } from './runners';
-import { fetchRunner } from './rtrt';
+import { fetchLive } from './tracking';
 import { fetchWeather, type WeatherSnapshot } from './weather';
 import { now } from './time';
 import { TOTAL_MI, RACE_START } from './time';
@@ -112,6 +112,11 @@ function stopTicker(): void {
   }
 }
 
+/** Last successful live fetch per runner (ms). */
+const lastLiveOk = new Map<string, number>();
+/** null = unknown yet, true = live feed working, false = feed unreachable. */
+export const liveFeedOk = writable<boolean | null>(null);
+
 export async function refreshOne(id: string): Promise<void> {
   const profile = get(profiles).find(p => p.id === id);
   if (!profile) return;
@@ -148,9 +153,37 @@ export async function refreshOne(id: string): Promise<void> {
     return;
   }
 
-  const snap = await fetchRunner(profile.trackId);
+  const goals = loadGoals(id);
+  const goalPaceSec = goals.goalSec / TOTAL_MI;
+  const snap = await fetchLive(profile.trackId, { goalPaceSec });
   if (snap) {
+    lastLiveOk.set(id, now());
+    liveFeedOk.set(true);
     runnerState(id).update(s => applySnapshot(s, snap));
+  } else {
+    // Feed unavailable (relay not deployed, network blip, site down).
+    // After the runner's wave has gone off and we've had no live data for
+    // 2 minutes, fall back to a goal-pace projection so the map + ETAs still
+    // move. Real data replaces it the moment the feed comes back.
+    const lastOk = lastLiveOk.get(id) ?? 0;
+    if (now() - lastOk > 120_000) {
+      if (lastOk === 0) liveFeedOk.set(false);
+      const cur = get(runnerState(id));
+      const startMs = RACE_START.getTime() + runnerStartOffsetMin(profile) * 60_000;
+      const elapsedSec = Math.floor((now() - startMs) / 1000);
+      if (cur.status !== 'finished' && elapsedSec > 0 && (cur.source === 'projected' || cur.status === 'pre' || !cur.source)) {
+        // Never declare a projected finish — only the timing mat can do that.
+        const projMi = Math.min(mileAtElapsed(Math.min(elapsedSec, goals.goalSec), goals.goalSec), TOTAL_MI - 0.1);
+        runnerState(id).update(s => applySnapshot(s, {
+          status: 'running',
+          distMi: projMi,
+          elapsedSec,
+          splits: [],
+          fetchedAt: now(),
+          source: 'projected',
+        }));
+      }
+    }
   }
   // Fire any missed milestone notifications.
   checkMilestones(profile, get(runnerState(id)));
@@ -242,7 +275,7 @@ export function addRunner(input: {
   const color = input.color || '#5856D6';
 
   if (!name) return { ok: false, error: 'Name is required' };
-  if (!/^[A-Z0-9]{4,12}$/.test(trackId)) return { ok: false, error: 'Tracker ID must be 4-12 letters/digits (RTRT format)' };
+  if (!/^[A-Z0-9]{1,12}$/.test(trackId)) return { ok: false, error: 'Bib / tracker ID must be 1-12 letters or digits' };
   if (!/^#[0-9a-f]{6}$/i.test(color)) return { ok: false, error: 'Color must be 6-digit hex' };
 
   const list = get(profiles);

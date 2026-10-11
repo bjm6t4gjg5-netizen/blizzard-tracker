@@ -2,7 +2,12 @@
   import { get } from 'svelte/store';
   import { derived } from 'svelte/store';
   import type { Readable } from 'svelte/store';
-  import { profiles, runnerState, notify } from '../lib/stores';
+  import { profiles, runnerState, notify, liveFeedOk, goalsStore } from '../lib/stores';
+  import { CURRENT_RACE } from '../lib/races';
+  import ChicagoStar from '../components/ChicagoStar.svelte';
+  import ChicagoSkyline from '../components/ChicagoSkyline.svelte';
+  const gfGoals = goalsStore('gf');
+  const momGoals = goalsStore('mom');
   import type { RunnerState } from '../lib/runners';
   import { TOTAL_GAIN_FT } from '../lib/course';
   import { buildIcsFile, downloadIcs } from '../lib/ical';
@@ -57,16 +62,21 @@
 <HowTheyDoing />
 
 <div class="hero card">
+  <div class="hero-skyline"><ChicagoSkyline opacity={0.16} /></div>
   <div class="hero-left">
-    <div class="hero-eyebrow">💙 Team Blizzard · Bank of America Chicago Marathon 2026 ⚡</div>
+    <div class="hero-eyebrow"><span class="stars"><ChicagoStar size={11} /><ChicagoStar size={11} /><ChicagoStar size={11} /><ChicagoStar size={11} /></span> Team Blizzard · Bank of America Chicago Marathon 2026</div>
     <h1 class="hero-title">Catherine &amp; Helaine race Chicago.</h1>
     <p class="hero-sub">
       Sunday, October 11 · 7:30 AM CT · Grant Park → 29 neighborhoods → Grant Park · 26.2 miles · only {TOTAL_GAIN_FT}ft of total elevation gain.
     </p>
     <div class="hero-meta">
-      <span class="pill">🏁 Grant Park</span>
-      <span class="pill">🏆 Grant Park</span>
+      <span class="pill">🏁 Start + 🏆 finish · Grant Park</span>
       <span class="pill">⛰ {TOTAL_GAIN_FT}ft · flattest Major</span>
+      <span class="pill bib" style="--c: {$profiles[0]?.color ?? '#007AFF'}">💙 Bib {$profiles[0]?.trackId ?? '—'} · {$gfGoals.goalLabel}</span>
+      <span class="pill bib" style="--c: {$profiles[1]?.color ?? '#FF2D55'}">⚡ Bib {$profiles[1]?.trackId ?? '—'} · {$momGoals.goalLabel}</span>
+      <span class="pill feed" class:ok={$liveFeedOk === true} class:down={$liveFeedOk === false}>
+        {#if $liveFeedOk === true}📡 Live official splits{:else if $liveFeedOk === false}🛰 Feed offline · goal-pace projection{:else}📡 Official splits · {CURRENT_RACE.tracking.label.split('·')[0].trim()}{/if}
+      </span>
     </div>
   </div>
   <div class="hero-photo-pair">
@@ -129,6 +139,8 @@
 
 <style>
   .hero {
+    position: relative;
+    overflow: hidden;
     display: grid;
     grid-template-columns: 1.5fr 1fr;
     gap: var(--gap-md);
@@ -137,7 +149,13 @@
     background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--blue) 8%, var(--surface)) 60%, color-mix(in srgb, var(--blue) 18%, var(--surface)) 100%);
     border: 1px solid var(--separator-soft);
   }
-  .hero-eyebrow { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 0.4px; text-transform: uppercase; }
+  .hero-eyebrow { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 0.4px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hero-eyebrow .stars { display: inline-flex; gap: 3px; }
+  .hero-skyline { position: absolute; left: 0; right: 38%; bottom: 0; height: 62%; color: var(--blue); z-index: 0; }
+  .hero > :global(*:not(.hero-skyline)) { position: relative; z-index: 1; }
+  .hero-meta .pill.bib { border-color: color-mix(in srgb, var(--c) 35%, transparent); color: var(--c); }
+  .hero-meta .pill.feed.ok { border-color: color-mix(in srgb, var(--green) 45%, transparent); color: var(--green); }
+  .hero-meta .pill.feed.down { border-color: color-mix(in srgb, var(--orange) 45%, transparent); color: var(--orange); }
   .hero-title { font-size: 32px; font-weight: 800; letter-spacing: -1.2px; margin: 8px 0 10px; line-height: 1.05; color: var(--text-primary); }
   .hero-sub { font-size: 14px; color: var(--text-secondary); margin: 0 0 12px; line-height: 1.5; }
   .hero-meta { display: flex; gap: 6px; flex-wrap: wrap; }

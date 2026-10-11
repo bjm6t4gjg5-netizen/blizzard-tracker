@@ -81,7 +81,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(pace|goal|sub.?(\d+|90|2.?\d)|split|target|strategy)\b/i,
     reply: () =>
-      `Catherine's goal is **sub-3:05** — about 7:03/mi on Chicago's pancake-flat course. The plan: settle through the crowded start (~7:15 mile 1), lock into 7:00–7:05s through halfway (~1:32:20), hold steady through the 18-mile check, survive the 20–24 wall zone, then empty the tank up Mount Roosevelt.\n\nHelaine's goal is **sub-4:00** — about 9:09/mi, even-split with a 2:00:00 halfway.\n\nEither runner's settings (⚙ on the runner card) lets you tweak any of those splits.`,
+      `Catherine's goal is **sub-3:00** — 6:52/mi on Chicago's pancake-flat course, a 7½-minute PR. The plan: stay patient through the crowded start (~6:58 mile 1), lock into 6:50s through halfway (1:30:00 flat), hold steady through the 18-mile check (~2:03:40), survive the 20–24 wall zone, then empty the tank up Mount Roosevelt.\n\nHelaine's goal is **a PR — under 3:40:41** (her Marine Corps 2018 time), about 8:25/mi with a ~1:50:20 halfway. Her 1:50:03 Brooklyn half at 62 says the engine is there.\n\nEither runner's settings (⚙ on the runner card) lets you tweak any of those splits.`,
   },
   // Cheer zones
   {
@@ -120,7 +120,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(rtrt|refresh|update|live.?data|tracker|app)\b/i,
     reply: () =>
-      `Live data comes from RTRT.me, refreshing every 60 seconds. Tap ↻ in the header for a manual refresh. If RTRT goes flaky, the tracker tries three CORS-proxy fallbacks before giving up.`,
+      `Live data comes from the official Chicago results (mika:timing) through our own relay, checked every few seconds. Tap ↻ in the header for a manual refresh. If the feed drops, the tracker keeps the runners moving on a goal-pace projection (marked "projected") until real splits return.`,
   },
   // Demo / dev mode
   {
@@ -185,7 +185,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(percentile|rank|top.?\d+|where.*finish|how.*compare|field)\b/i,
     reply: () =>
-      `Catherine's sub-3:05 target lands her in the **top ~3% of the women's field** at Chicago. Helaine's sub-4:00 puts her in the **top ~22% of all women** — and miles ahead of the 5:45 median for her 60–64 age group. Open the Stats tab → "Lookup any finish time" to test other times.`,
+      `Catherine's sub-3:00 target lands her in the **top ~2% of the women's field** at Chicago. Helaine's sub-3:40:41 PR puts her in roughly the **top ~12% of all women** — and well over two hours ahead of the median for her 60–64 age group. Open the Stats tab → "Lookup any finish time" to test other times.`,
   },
   // Tour replay
   {
@@ -215,7 +215,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(rtrt.?down|not.?work|broken|stuck|frozen|offline|stale)\b/i,
     reply: () =>
-      `If live data freezes: tap the ↻ in the header to force a refresh. The client retries with timeouts, so it usually self-heals within a minute. As a last resort, the official Chicago Marathon app / app.rtrt.me tracker is the source of truth.`,
+      `If live data freezes: tap the ↻ in the header to force a refresh. The client retries with timeouts, so it usually self-heals within a minute. As a last resort, the official Chicago Marathon app / results.chicagomarathon.com is the source of truth.`,
   },
   // Why "Blizzard"
   {
@@ -239,7 +239,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(how.?hard|sub.?90.?mean|fast.?is.?fast|elite|top.?tier)\b/i,
     reply: () =>
-      `Sub-3:05 at Chicago puts Catherine in the **top ~3% of the women's field** — and comfortably under the 3:23 Boston-qualifying standard for her age group. Her Boston 3:06:12 (7:06/mi) on a much harder course says the fitness is there; Chicago's flatness is worth a minute or two on its own.`,
+      `Sub-3:00 at Chicago puts Catherine in the **top ~2% of the women's field** — and 23 minutes under the Boston-qualifying standard for her age group. Her Boston 3:07:36 (7:09/mi) on a much harder course plus a 1:30:28 half PR say the fitness is there; Chicago's flatness is worth a couple of minutes on its own.`,
   },
   // 6-Star history
   {
@@ -257,7 +257,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(rtrt.?vs|why.?different|garmin.?vs|gps.?off|distance.?off)\b/i,
     reply: () =>
-      `RTRT updates come from timing mats embedded in the course every 5K — they're definitive but discrete. The runner's Garmin records continuously but adds GPS noise (typically 1–2% extra on 26.2, and worse in the Loop's skyscraper canyons). Between mats, this app *interpolates* RTRT position using the runner's recent average pace, which is why the marker glides smoothly.`,
+      `Official updates come from timing mats embedded in the course every 5K — they're definitive but discrete. The runner's Garmin records continuously but adds GPS noise (typically 1–2% extra on 26.2, and worse in the Loop's skyscraper canyons). Between mats, this app *extrapolates* her position using the runner's recent average pace, which is why the marker glides smoothly.`,
   },
   // Heart rate / training nerdery
   {
@@ -302,7 +302,7 @@ const TOPICS: Topic[] = [
       const facts = [
         `🍕 Marathoners burn ~2,600–3,400 calories over 26.2 — that's an **entire Lou Malnati's deep dish** worth.`,
         `🌆 The course passes through **29 Chicago neighborhoods** and never climbs more than ~30ft at once. Both current marathon world records were set on it.`,
-        `⏱ At Catherine's sub-3:05 pace (7:03/mi), she completes each of the 26 miles in less time than a typical Spotify song plus its intro.`,
+        `⏱ At Catherine's sub-3:00 pace (6:52/mi), she completes each of the 26 miles in less time than a typical Spotify song plus its intro.`,
         `🚇 The Red Line tracks the course at four separate points — spectators can realistically see their runner 4–5 times in one morning.`,
         `🦄 Helaine has run more marathons (25) than there are CTA 'L' stations inside the Loop (there are 9).`,
         `📐 The course covers 42.195 km — by World Athletics certification, the blue line painted on the road is the *shortest legal path*. Every turn taken wide adds real distance.`,
@@ -316,7 +316,7 @@ const TOPICS: Topic[] = [
   {
     match: /\b(marathon.?vs|half.?vs|5k.?vs|10k.?vs|compare.?distance)\b/i,
     reply: () =>
-      `**Distance equivalence rules of thumb** (Riegel formula):\nIf you run a half in **X**, expect a marathon around **X × 2.1**. Catherine's 1:30:28 half PR (Brooklyn 2026) scales to a ~3:10 marathon — and she's already run 3:07:36 at Boston on a much harder course. That's why sub-3:05 at flat Chicago is the right target, with sub-3:00 as the dream-day scenario.`,
+      `**Distance equivalence rules of thumb** (Riegel formula):\nIf you run a half in **X**, expect a marathon around **X × 2.1**. Catherine's 1:30:28 half PR (Brooklyn 2026) scales to a ~3:10 marathon — and she's already run 3:07:36 at Boston on a much harder course. That's why sub-3:00 at flat Chicago is the bold-but-real target — the half PR and a flat course make up the gap.`,
   },
   // Helaine's marathon list
   {

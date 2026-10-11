@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { officialTrackerUrl } from '../lib/tracking';
+  import { CURRENT_RACE } from '../lib/races';
   import type { RunnerProfile } from '../lib/runners';
   import { runnerState, goalsStore, notify, runnerSettingsFor } from '../lib/stores';
   import RunnerCard from '../components/RunnerCard.svelte';
@@ -48,9 +50,8 @@
   };
 
   function sendCheer() {
-    const url = `https://rtrt.me/bkh2026/track/${profile.trackId}#cheer`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-    notify(`Cheer sent to ${profile.name.split(' ')[0]} 🎉`);
+    window.open(officialTrackerUrl(profile.trackId), '_blank', 'noopener,noreferrer');
+    notify(`Opening ${profile.name.split(' ')[0]}'s official tracker page 🏁`);
   }
 </script>
 
@@ -67,7 +68,7 @@
           data-tour="runner-settings"
         >⚙</button>
       </div>
-      <div class="hero-sub">Chicago Marathon 2026 · {profile.trackId} · Goal: {formatHMS($goals.goalSec)} ({$goals.goalLabel})</div>
+      <div class="hero-sub">{CURRENT_RACE.shortName} {CURRENT_RACE.date.slice(0,4)} · Bib {profile.trackId} · Goal: {formatHMS($goals.goalSec)} ({$goals.goalLabel})</div>
       {#if profile.wave}
         <div class="hero-wave-row">
           <span class="hero-wave">🏁 {waveLabel(profile, RACE_START)}</span>
@@ -77,7 +78,7 @@
       {#if profile.id === 'gf'}
         <div class="hero-badges">
           <span class="hb mono">🏆 3:07:36 Boston PR</span>
-          <span class="hb mono">🏃‍♀️ 1:32:17 half PR</span>
+          <span class="hb mono">🏃‍♀️ 1:30:28 half PR</span>
           <span class="hb">⚡ 5 marathons in 22 months</span>
         </div>
         {#if CATHERINE_SUMMARY.starCount > 0}
@@ -98,7 +99,7 @@
       {/if}
     </div>
     <div class="hero-cta">
-      <button class="cheer" on:click={sendCheer}>📣 Send cheer</button>
+      <button class="cheer" on:click={sendCheer}>🏁 Official live splits</button>
       <VenmoButton variant="ghost" label={profile.id === 'gf' ? `🍺 Beer for ${profile.name.split(' ')[0]}` : '🍺 Buy them a beer'} note={profile.id === 'gf' ? 'Catherine — race-day beer 🍺' : 'For the Blizzards — race-day beer 🍺'} />
     </div>
   </div>
