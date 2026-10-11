@@ -94,6 +94,18 @@ describe('parseMikaDetail', () => {
     expect(p.distMi!).toBeGreaterThan(15.4);
   });
 
+  it('live 2026 morning page: "not started" status + &ndash; entities read as empty', () => {
+    // Exactly what the relay returned for both bibs at ~6:00 CT on race day.
+    const html = fx('mika-2026-pre.html')
+      .replace(/(<td class="f-__race_status last">)<span class="text-muted">–<\/span>/, '$1not started')
+      .replace(/<span class="text-muted">–<\/span>/g, '&ndash;');
+    const p = parseMikaDetail(html, { ...OPTS, nowMs: Date.parse('2026-10-11T11:00:00Z') });
+    expect(p.status).toBe('pre');
+    expect(p.lastSplit).toBeNull();
+    expect(p.startEpochMs).toBeNull();
+    expect(p.rows.every(r => r.sec === null)).toBe(true);
+  });
+
   it('started but before the first mat: falls back to goal pace', () => {
     const html = fx('mika-2026-pre.html').replace(
       /(<td class="f-starttime_net last">)<span class="text-muted">–<\/span>/, '$107:37:12');

@@ -60,7 +60,14 @@ export interface MikaParsed extends Omit<RtrtSnapshot, 'fetchedAt' | 'source'> {
 // ────────────────────────────────────────────────────────────
 
 function stripTags(s: string): string {
-  return s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  return s
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;|&#8211;/g, '–')
+    .replace(/&mdash;|&#8212;/g, '—')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** "HH:MM:SS" / "H:MM:SS" / "MM:SS" → seconds; dashes/blank → null. */
@@ -78,7 +85,7 @@ function field(html: string, f: string): string | null {
   const m = html.match(re);
   if (!m) return null;
   const v = stripTags(m[1]);
-  return v && v !== '–' && v !== '-' ? v : null;
+  return v && v !== '–' && v !== '—' && v !== '-' ? v : null;
 }
 
 /** Split label → course miles. */
