@@ -52,13 +52,14 @@ const WAVE_START_OFFSET_MIN: Record<1 | 2 | 3 | 4, number> = (() => {
   return { 1: off(1), 2: off(2), 3: off(3), 4: off(4) };
 })();
 
-/** Approximate corral-to-corral funnel delay within a wave (minutes). */
-function corralOffsetMin(corral: string | undefined): number {
-  if (!corral) return 0;
-  const idx = corral.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-  if (idx < 0 || idx > 25) return 0;
-  // ~2 minutes between adjacent corrals — placeholder until Chicago confirms.
-  return idx * 2;
+/**
+ * Corral funnel delay within a wave. Chicago letters run across waves
+ * (A–E, F–…, …), so a letter alone doesn't say how far back in its wave a
+ * runner is — and the official start-mat time replaces any estimate the
+ * moment she crosses. Show the wave gun time; corral is display-only.
+ */
+function corralOffsetMin(_corral: string | undefined): number {
+  return 0;
 }
 
 /** Compute a runner's actual gun/chip start time on race day. */
@@ -165,12 +166,12 @@ export const DEFAULT_PROFILES: ReadonlyArray<RunnerProfile> = [
   // pulled from results.chicagomarathon.com on race morning. Corral letters
   // are estimates — the official start-mat time overrides them once crossed.
   // Catherine — born 25 May 1998 (age 28). Wave 1.
-  { id: 'gf',  name: 'Catherine Blizzard', trackId: CURRENT_RACE.bibs.gf, emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, corral: 'B', stravaUrl: 'https://strava.app.link/9FmbkvYZQ3b' },
+  { id: 'gf',  name: 'Catherine Blizzard', trackId: CURRENT_RACE.bibs.gf, emoji: '💙', color: '#007AFF', fixed: true, dob: '1998-05-25', gender: 'F', heightIn: 65, weightLb: 125, wave: 1, stravaUrl: 'https://strava.app.link/9FmbkvYZQ3b' },
   // Helaine — born 13 Apr 1964 (age 62). Wave 2 (bib 36364).
   // Brand color: Apple Pink (#FF2D55) — visually distinct from Catherine's
   // blue so heat maps + map markers + chart lines never read as the same
   // runner at a glance.
-  { id: 'mom', name: 'Helaine Blizzard',   trackId: CURRENT_RACE.bibs.mom, emoji: '⚡', color: '#FF2D55', fixed: true, dob: '1964-04-13', gender: 'F', heightIn: 67, weightLb: 120, wave: 2, corral: 'C' },
+  { id: 'mom', name: 'Helaine Blizzard',   trackId: CURRENT_RACE.bibs.mom, emoji: '⚡', color: '#FF2D55', fixed: true, dob: '1964-04-13', gender: 'F', heightIn: 67, weightLb: 120, wave: 2 },
 ];
 
 export const DEFAULT_GOALS: Record<string, RunnerGoals> = {
@@ -506,4 +507,25 @@ export function applySnapshot(state: RunnerState, snap: RtrtSnapshot): RunnerSta
   updated.etaSec = eta.etaSec;
   updated.confidence = eta.confidence;
   return updated;
+}
+
+// ────────────────────────────────────────────────────────────
+// Start-time display helpers (header pills + HQ cards)
+// ────────────────────────────────────────────────────────────
+
+/** "7:37 AM" in the race timezone for this runner's wave + corral. */
+export function startClockLabel(profile: RunnerProfile, raceStart: Date): string {
+  return runnerStartTime(profile, raceStart).toLocaleTimeString('en-US', {
+    hour: 'numeric', minute: '2-digit', timeZone: CURRENT_RACE.tz,
+  });
+}
+
+/** "in 2h 05m" / "in 4m" / "now" until this runner's start. */
+export function startsInLabel(profile: RunnerProfile, raceStart: Date, nowMs: number = Date.now()): string {
+  const ms = runnerStartTime(profile, raceStart).getTime() - nowMs;
+  if (ms <= 0) return 'starting now';
+  const totalMin = Math.ceil(ms / 60_000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `in ${h}h ${String(m).padStart(2, '0')}m` : `in ${m}m`;
 }

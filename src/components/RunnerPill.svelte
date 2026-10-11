@@ -1,6 +1,7 @@
 <script lang="ts">
-  import type { RunnerProfile } from '../lib/runners';
+  import { type RunnerProfile, startClockLabel } from '../lib/runners';
   import { runnerState } from '../lib/stores';
+  import { RACE_START } from '../lib/time';
   import { createEventDispatcher } from 'svelte';
 
   export let profile: RunnerProfile;
@@ -11,7 +12,7 @@
     if (status === 'finished') return 'Finished 🏆';
     if (status === 'running')  return `${dist.toFixed(1)}mi · ${Math.round(pct)}%`;
     if (status === 'unknown')  return 'No data';
-    return 'Pre-race';
+    return `starts ${startClockLabel(profile, RACE_START).replace(' AM', '').replace(' PM', 'pm')}`;
   }
 
   $: r = $state;

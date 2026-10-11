@@ -1,6 +1,15 @@
 <script lang="ts">
-  import type { RunnerProfile } from '../lib/runners';
+  import { onMount, onDestroy } from 'svelte';
+  import { type RunnerProfile, startClockLabel, startsInLabel } from '../lib/runners';
   import { runnerState, activeTab } from '../lib/stores';
+  import { RACE_START } from '../lib/time';
+  import { CURRENT_RACE } from '../lib/races';
+
+  // Refresh the "starts in" countdown every 15s.
+  let nowMs = Date.now();
+  let tick: ReturnType<typeof setInterval> | null = null;
+  onMount(() => { tick = setInterval(() => (nowMs = Date.now()), 15_000); });
+  onDestroy(() => { if (tick) clearInterval(tick); });
   import { formatHMSFull, formatPace } from '../lib/format';
 
   export let profile: RunnerProfile;
@@ -31,6 +40,15 @@
 
   <div class="vs-name">{profile.emoji} {profile.name}</div>
 
+  {#if r.status === 'pre'}
+    <div class="vs-start">
+      <div class="vs-start-time">🏁 {startClockLabel(profile, RACE_START)} {CURRENT_RACE.tzLabel}</div>
+      <div class="vs-start-sub">
+        Wave {profile.wave ?? 1}{profile.corral ? ` · Corral ${profile.corral}` : ''} · <b>{startsInLabel(profile, RACE_START, nowMs)}</b>
+      </div>
+    </div>
+  {/if}
+
   <div class="vs-rows">
     <div class="vs-row"><span>Distance</span><b>{r.distMi > 0 ? r.distMi.toFixed(2) + ' mi' : '—'}</b></div>
     <div class="vs-row"><span>Elapsed</span><b class="mono">{r.elapsedSec > 0 ? formatHMSFull(r.elapsedSec) : '—'}</b></div>
@@ -40,6 +58,16 @@
 </div>
 
 <style>
+  .vs-start {
+    margin: 10px 0 4px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--pc) 9%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--pc) 22%, transparent);
+  }
+  .vs-start-time { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--pc); font-variant-numeric: tabular-nums; }
+  .vs-start-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .vs-start-sub b { color: var(--text-primary); }
   .vs-card {
     --pc: var(--blue);
     position: relative;
